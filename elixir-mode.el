@@ -92,6 +92,35 @@
   '((t (:inherit default)))
   "For use with numbers.")
 
+(defun elixir--treesit-beginning-of-defun (&optional arg)
+  (let ((arg (or arg 1)))
+    (if (> arg 0)
+        ;; Go backward.
+        (while (and (> arg 0)
+                    (treesit-search-forward-goto
+                     "do_block" 'start nil t))
+          (setq arg (1- arg)))
+      ;; Go forward.
+      (while (and (< arg 0)
+                  (treesit-search-forward-goto
+                   "do_block" 'start))
+        (setq arg (1+ arg))))))
+
+(defun elixir--treesit-end-of-defun (&optional arg)
+  (let ((arg (or arg 1)))
+    (if (< arg 0)
+        ;; Go backward.
+        (while (and (< arg 0)
+                    (treesit-search-forward-goto
+                     "do_block" 'end nil t))
+          (setq arg (1+ arg)))
+      ;; Go forward.
+      (while (and (> arg 0)
+                  (treesit-search-forward-goto
+                   "do_block" 'end))
+        (setq arg (1- arg))))))
+
+
 (defvar elixir--treesit-font-lock-settings
   (treesit-font-lock-rules
    :language 'elixir
@@ -136,6 +165,9 @@
 
   (setq-local treesit-simple-indent-rules elixir--treesit-indent-rules)
   (setq-local indent-line-function #'treesit-indent)
+
+  (setq-local beginning-of-defun-function #'elixir--treesit-beginning-of-defun)
+  (setq-local end-of-defun-function #'elixir--treesit-end-of-defun)
 
 
   (setq-local comment-start "# ")
