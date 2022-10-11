@@ -92,7 +92,7 @@
   '((t (:inherit default)))
   "For use with numbers.")
 
-(defvar elixir--treesit-settings
+(defvar elixir--treesit-font-lock-settings
   (treesit-font-lock-rules
    :language 'elixir
    :level 1
@@ -111,15 +111,31 @@
   "Tree-sitter font-lock settings.")
 
 
+(defvar elixir--treesit-indent-rules
+  (let ((offset elixir-indent-level))
+    `((elixir
+       ((node-is "end") parent-bol 0)
+       ((node-is "]") parent-bol 0)
+       ((parent-is "do_block") parent-bol ,offset)
+       ((parent-is "list") parent-bol ,offset)
+       ((parent-is "keywords") parent-bol 0)
+       ))))
+
 ;;;###autoload
 (define-derived-mode elixir-mode prog-mode "Elixir"
   (treesit-parser-create 'elixir)
+
+
   ;; This turns off the syntax-based font-lock for comments and
   ;; strings.  So it doesn’t override tree-sitter’s fontification.
   (setq-local font-lock-keywords-only t)
   (setq-local treesit-font-lock-settings
-              elixir--treesit-settings)
+              elixir--treesit-font-lock-settings)
   (treesit-font-lock-enable)
+
+
+  (setq-local treesit-simple-indent-rules elixir--treesit-indent-rules)
+  (setq-local indent-line-function #'treesit-indent)
 
 
   (setq-local comment-start "# ")
