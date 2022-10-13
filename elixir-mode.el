@@ -32,6 +32,8 @@
   '((t (:inherit default)))
   "For use with numbers.")
 
+;; TODO: This goes into infinite loop at eob and does not
+;; handle multi-line def's
 (defun elixir--treesit-beginning-of-defun (&optional arg)
   (let ((arg (or arg 1)))
     (if (> arg 0)
@@ -46,6 +48,8 @@
                   (treesit-search-forward-goto "do_block" 'end))
         (setq arg (1+ arg))))))
 
+;; TODO: This goes into infinite loop at eob and does not
+;; handle multi-line def's
 (defun elixir--treesit-end-of-defun (&optional arg)
   (let ((arg (or arg 1)))
     (if (< arg 0)
@@ -80,7 +84,6 @@
 
 
 (defun elixir--treesit-find-parent-block (&optional node)
-  ""
   (let ((node (or node (treesit-node-at (point))))
         (result nil))
     (while (and node (not result))
@@ -90,7 +93,6 @@
     result))
 
 (defun elixir--treesit-backward-up-list ()
-  ""
   ;; The passed in parent seems to be wrong, so we get it ourselves"
   (lambda (node _parent _bol &rest _)
     (let ((parent (elixir--treesit-find-parent-block node)))
@@ -136,9 +138,8 @@
     ;; This should work for all macros as well
     (cl-loop while node
              if (pcase (treesit-node-type node)
-                  ("do_block" t)
-                  (_ nil))
-             do (push (elixir--treesit-node-block-name node) name-list)
+                  ("call" (elixir--imenu-node-type node)))
+             do (push (elixir--imenu-node-name node) name-list)
              do (setq node (treesit-node-parent node))
              finally return (concat (if include-type
                                         (format "%s " type)
@@ -155,13 +156,6 @@
 (defun elixir--imenu-jump-label (_type _name)
   (message "..."))
 
-(defun elixir--treesit-node-block-name (node)
-  (let* ((child (treesit-node-child (treesit-node-child (treesit-node-parent node) 1) 0)))
-    (if (> (treesit-node-child-count child) 0)
-        (treesit-node-text (treesit-node-child child 0))
-      (treesit-node-text child))
-    ))
-
 (defun elixir--imenu-treesit-create-index (&optional node)
   "Return tree Imenu alist for the current Elixir buffer."
   (let* ((node (or node (treesit-buffer-root-node 'elixir)))
@@ -170,9 +164,9 @@
                 (rx (seq bol (or "call") eol)))))
     (elixir--imenu-treesit-create-index-from-tree tree)))
 
-(defun elixir--imenu-node-name (node type)
+(defun elixir--imenu-node-name (node &optional type)
   ""
-  (pcase type
+  (pcase (or type (elixir--imenu-node-type node))
     ((or 'def 'defp) (treesit-node-text
            (treesit-search-subtree
             (treesit-search-subtree node "arguments") "identifier")))
@@ -202,30 +196,6 @@
                       `((,parent-label ,(cons jump-label marker) ,@subtrees))))
           (t (let ((label (funcall 'elixir--imenu-item-label type name)))
                (list (cons label marker)))))))
-
-;; (defun elixir--imenu-treesit-create-index (&optional node)
-;;   "Return tree Imenu alist for the current Elixir buffer."
-;;   (let* ((node (or node (treesit-buffer-root-node 'elixir)))
-;;          (tree (treesit-induce-sparse-tree
-;;                 node
-;;                 (rx (seq bol (or "do_block") eol)))))
-;;     (elixir--imenu-treesit-create-index-from-tree tree)))
-
-;; (defun elixir--imenu-treesit-create-index-from-tree (node)
-;;   (let* ((ts-node (car node))
-;;          (children (cdr node))
-;;          (subtrees (mapcan #'elixir--imenu-treesit-create-index-from-tree children))
-;;          (type 'def)
-;;          (name (when ts-node (elixir--treesit-node-block-name ts-node)))
-;;          (marker (when ts-node
-;;                    (set-marker (make-marker)
-;;                                (treesit-node-start ts-node)))))
-;;     (cond ((null ts-node) subtrees)
-;;           (subtrees (let ((parent-label (funcall 'elixir--imenu-item-parent-label type name))
-;;                           (jump-label (funcall 'elixir--imenu-jump-label type name)))
-;;                       `((,parent-label ,(cons jump-label marker) ,@subtrees))))
-;;           (t (let ((label (funcall 'elixir--imenu-item-label type name)))
-;;                (list (cons label marker)))))))
 
 ;;;###autoload
 (define-derived-mode elixir-mode prog-mode "Elixir"
