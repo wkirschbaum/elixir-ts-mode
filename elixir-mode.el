@@ -17,70 +17,6 @@
   :type 'integer
   :safe 'integerp)
 
-(defvar elixir-mode-syntax-table
-  (let ((table (make-syntax-table)))
-    ;; Operators
-    ;; (modify-syntax-entry ?< "." table)
-    ;; (modify-syntax-entry ?> "." table)
-    ;; (modify-syntax-entry ?& "." table)
-    ;; (modify-syntax-entry ?| "." table)
-    (modify-syntax-entry ?= "." table)
-    ;; (modify-syntax-entry ?/ "." table)
-    ;; (modify-syntax-entry ?+ "." table)
-    ;; (modify-syntax-entry ?* "." table)
-    ;; (modify-syntax-entry ?- "." table)
-    (modify-syntax-entry ?: "'" table)
-
-    ;; Comments
-    (modify-syntax-entry ?# "<" table)
-    (modify-syntax-entry ?\n ">" table)
-
-    ;; Strings
-    ;; (modify-syntax-entry ?\' "\"'" table)
-    ;; (modify-syntax-entry ?\" "\"\"" table)
-
-    ;; Symbol constituents
-    ;; (modify-syntax-entry ?! "_" table)
-    ;; (modify-syntax-entry ?? "_" table)
-    ;; (modify-syntax-entry ?_ "_" table)
-    ;; (modify-syntax-entry ?@ "_" table)
-
-    ;; expressions
-    (modify-syntax-entry ?\( "()" table)
-    (modify-syntax-entry ?\) ")(" table)
-    (modify-syntax-entry ?\{ "(}" table)
-    (modify-syntax-entry ?\} "){" table)
-    (modify-syntax-entry ?\[ "(]" table)
-    (modify-syntax-entry ?\] ")[" table)
-
-    ;; escape character
-    ;; (modify-syntax-entry ?# "\\" table)
-
-    (modify-syntax-entry ?% "'" table)
-
-    table)
-  "Syntax table to use in Elixir mode.")
-
-
-
-(defvar elixir--treesit-keywords
-  '("do" "end"))
-
-(defvar elixir--treesit-builtins
-  '("Enum" "List" "Map"))
-
-(defvar elixir--treesit-constants
-  '("@tag"))
-
-(defvar elixir--treesit-operators
-  '("-" "+" ">"))
-
-(defvar elixir--treesit-special-attributes
-  '("__MODULE__" "__STACKTRACE__"))
-
-(defvar elixir--treesit-exceptions
-  '("Error"))
-
 (defvar elixir-attribute-face 'elixir-attribute-face)
 (defface elixir-attribute-face
   '((t (:inherit font-lock-preprocessor-face)))
@@ -101,13 +37,13 @@
     (if (> arg 0)
         ;; Go backward.
         (while (and (> arg 0)
-                    (treesit-search-forward-goto
-                     "do_block" 'start nil t))
+                    (progn
+                      (treesit-search-forward-goto "do_block" 'start nil t)
+                      (back-to-indentation)))
           (setq arg (1- arg)))
       ;; Go forward.
       (while (and (< arg 0)
-                  (treesit-search-forward-goto
-                   "do_block" 'start))
+                  (treesit-search-forward-goto "do_block" 'end))
         (setq arg (1+ arg))))))
 
 (defun elixir--treesit-end-of-defun (&optional arg)
@@ -115,13 +51,13 @@
     (if (< arg 0)
         ;; Go backward.
         (while (and (< arg 0)
-                    (treesit-search-forward-goto
-                     "do_block" 'end nil t))
+                    (treesit-search-forward-goto "do_block" 'end nil t))
           (setq arg (1+ arg)))
       ;; Go forward.
       (while (and (> arg 0)
-                  (treesit-search-forward-goto
-                   "do_block" 'end))
+                  (progn
+                      (treesit-search-forward-goto "do_block" 'start)
+                      (back-to-indentation)))
         (setq arg (1- arg))))))
 
 
@@ -133,6 +69,7 @@
      (call (arguments) @font-lock-type-face)
      (keyword) @elixir-atom-face
      (do_block ("do") @font-lock-keyword-face)
+     (else_block ("else") @font-lock-keyword-face)
      (do_block ("end") @font-lock-keyword-face)
      (identifier) @font-lock-variable-name-face
      (comment) @font-lock-comment-face
@@ -141,28 +78,40 @@
      ))
   "Tree-sitter font-lock settings.")
 
+;; (defun elixir--treesit-backward-up-list ()
+;;   (lambda (_node _parent _bol &rest _)
+;;     (save-excursion
+;;       (backward-up-list 1 nil t)
+;;       (goto-char
+;;        (treesit-node-start
+;;         (treesit-node-at (point))))
+;;       (back-to-indentation)
+;;       (point))))
+
 
 (defvar elixir--treesit-indent-rules
   (let ((offset elixir-indent-level))
     `((elixir
+       ;; (no-node (elixir--treesit-backward-up-list) ,offset)
        ((node-is "}") parent-bol 0)
        ((node-is ")") parent-bol 0)
        ((node-is "]") parent-bol 0)
        ((node-is ">") parent-bol 0)
        ((node-is "]") parent-bol 0)
        ((node-is "|>") parent-bol 0)
+       ((node-is "|") parent-bol 0)
        ((node-is "end") parent-bol 0)
+       ((node-is "else_block") parent-bol 0)
        ((node-is ".") parent-bol ,offset)
+       ((parent-is "body") parent-bol ,offset)
        ((parent-is "do_block") parent-bol ,offset)
+       ((parent-is "else_block") parent-bol ,offset)
+       ((parent-is "stab_clause") parent-bol ,offset)
        ((parent-is "arguments") parent-bol ,offset)
        ((parent-is "list") parent-bol ,offset)
-       ((parent-is "keywords") parent-bol 0)
+       ((parent-is "keywords") first-sibling 0)
+       ((parent-is "binary_operator") parent ,offset)
        ))))
-
-(defun treecap (query)
-  (interactive)
-  (let ((node (treesit-node-at (point))))
-    (treesit-query-capture node query)))
 
 (defun elixir--treesit-current-defun (&optional include-type)
   "Find current Elixir function. Optional argument INCLUDE-TYPE indicates to include the type of the defun."
@@ -206,9 +155,7 @@
   (let* ((node (or node (treesit-buffer-root-node 'elixir)))
          (tree (treesit-induce-sparse-tree
                 node
-                (rx (seq bol
-                         (or "do_block")
-                         eol)))))
+                (rx (seq bol (or "do_block") eol)))))
     (elixir--imenu-treesit-create-index-from-tree tree)))
 
 (defun elixir--imenu-treesit-create-index-from-tree (node)
