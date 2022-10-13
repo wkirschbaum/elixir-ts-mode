@@ -173,7 +173,7 @@
 (defun elixir--imenu-node-name (node type)
   ""
   (pcase type
-    ('def (treesit-node-text
+    ((or 'def 'defp) (treesit-node-text
            (treesit-search-subtree
             (treesit-search-subtree node "arguments") "identifier")))
     ('module (treesit-node-text
@@ -183,6 +183,7 @@
   ""
   (pcase (treesit-node-text (treesit-search-subtree node "identifier"))
     ("def" 'def)
+    ("defp" 'defp)
     ("defmodule" 'module)))
 
 (defun elixir--imenu-treesit-create-index-from-tree (node)
