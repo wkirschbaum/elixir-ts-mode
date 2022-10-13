@@ -185,13 +185,14 @@
                                     (string-join name-list ".")))))
 
 
-(defun elixir--imenu-item-label (type name)
-  (format "%s (%s)" name type))
+(defun elixir--imenu-item-parent-label (_type name)
+  (format "%s" name))
 
-(defun elixir--imenu-jump-label (type _name)
-  (if (string= type "alias")
-      "*module definition*"
-    "*function definition*"))
+(defun elixir--imenu-item-label (type name)
+  (format "%s %s" type name))
+
+(defun elixir--imenu-jump-label (_type _name)
+  "...")
 
 (defun elixir--treesit-node-block-name (node)
   (let* ((child (treesit-node-child (treesit-node-child (treesit-node-parent node) 1) 0)))
@@ -220,7 +221,7 @@
                    (set-marker (make-marker)
                                (treesit-node-start ts-node)))))
     (cond ((null ts-node) subtrees)
-          (subtrees (let ((parent-label (funcall 'elixir--imenu-item-label type name))
+          (subtrees (let ((parent-label (funcall 'elixir--imenu-item-parent-label type name))
                           (jump-label (funcall 'elixir--imenu-jump-label type name)))
                       `((,parent-label ,(cons jump-label marker) ,@subtrees))))
           (t (let ((label (funcall 'elixir--imenu-item-label type name)))
