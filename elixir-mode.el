@@ -177,34 +177,54 @@
              if (pcase (treesit-node-type node)
                   ("do_block" t)
                   (_ nil))
-             do
-             (let* ((child (treesit-node-child (treesit-node-child (treesit-node-parent node) 1) 0))
-                    (text-node (if (> (treesit-node-child-count child) 0)
-                                    (treesit-node-text (treesit-node-child child 0))
-                                  (treesit-node-text child))))
-               (push text-node name-list))
-
+             do (push (elixir--treesit-node-block-name node) name-list)
              do (setq node (treesit-node-parent node))
              finally return (concat (if include-type
                                         (format "%s " type)
                                       "")
                                     (string-join name-list ".")))))
 
-;; (defun elixir--treesit-current-defun (&optional include-type)
-;;   "Find current Elixir function. Optional argument INCLUDE-TYPE indicates to include the type of the defun."
-;;   (let ((type 'def))
-;;     (save-excursion
-;;       (treesit-search-forward-goto "call" 'start nil t t)
-;;       (treesit-search-forward-goto "identifier" 'start nil nil nil)
-;;       (let ((node (treesit-node-at (point))))
-;;         (concat (if include-type (format "%s " type) "")
-;;                 "foo")))))
 
+(defun elixir--imenu-item-label (type name)
+  (format "%s (%s)" name type))
 
+(defun elixir--imenu-jump-label (type _name)
+  (if (string= type "alias")
+      "*module definition*"
+    "*function definition*"))
 
-(defun elixir--treesit-imenu-create-index (&optional node)
-  "Something"
-  ())
+(defun elixir--treesit-node-block-name (node)
+  (let* ((child (treesit-node-child (treesit-node-child (treesit-node-parent node) 1) 0)))
+    (if (> (treesit-node-child-count child) 0)
+        (treesit-node-text (treesit-node-child child 0))
+      (treesit-node-text child))
+    ))
+
+(defun elixir--imenu-treesit-create-index (&optional node)
+  "Return tree Imenu alist for the current Elixir buffer."
+  (let* ((node (or node (treesit-buffer-root-node 'elixir)))
+         (tree (treesit-induce-sparse-tree
+                node
+                (rx (seq bol
+                         (or "do_block")
+                         eol)))))
+    (elixir--imenu-treesit-create-index-from-tree tree)))
+
+(defun elixir--imenu-treesit-create-index-from-tree (node)
+  (let* ((ts-node (car node))
+         (children (cdr node))
+         (subtrees (mapcan #'elixir--imenu-treesit-create-index-from-tree children))
+         (type 'def)
+         (name (when ts-node (elixir--treesit-node-block-name ts-node)))
+         (marker (when ts-node
+                   (set-marker (make-marker)
+                               (treesit-node-start ts-node)))))
+    (cond ((null ts-node) subtrees)
+          (subtrees (let ((parent-label (funcall 'elixir--imenu-item-label type name))
+                          (jump-label (funcall 'elixir--imenu-jump-label type name)))
+                      `((,parent-label ,(cons jump-label marker) ,@subtrees))))
+          (t (let ((label (funcall 'elixir--imenu-item-label type name)))
+               (list (cons label marker)))))))
 
 ;;;###autoload
 (define-derived-mode elixir-mode prog-mode "Elixir"
@@ -225,7 +245,7 @@
   (setq-local beginning-of-defun-function #'elixir--treesit-beginning-of-defun)
   (setq-local end-of-defun-function #'elixir--treesit-end-of-defun)
 
-  (setq-local imenu-create-index-function #'elixir--treesit-imenu-create-index)
+  (setq-local imenu-create-index-function #'elixir--imenu-treesit-create-index)
 
   (add-hook 'which-func-functions #'elixir--treesit-current-defun nil t)
 
