@@ -169,20 +169,21 @@
   (let ((node (treesit-node-at (point)))
         (name-list ())
         (type 'def))
+    ;; We have to find the do_block first and then
+    ;; go up one level to find either an alias or call.
+    ;; When finding a call, we need to get the first identifier.
+    ;; This should work for all macros as well
     (cl-loop while node
              if (pcase (treesit-node-type node)
-                  ("call" t)
+                  ("do_block" t)
                   (_ nil))
              do
-             (message "%s"
-                      (treesit-node-text
-                      (treesit-node-first-child-for-pos
-                       node 2)))
-             (push
-                 (treesit-node-text
-                  (treesit-node-child node 1)
-                  t)
-                 name-list)
+             (let* ((child (treesit-node-child (treesit-node-child (treesit-node-parent node) 1) 0))
+                    (text-node (if (> (treesit-node-child-count child) 0)
+                                    (treesit-node-text (treesit-node-child child 0))
+                                  (treesit-node-text child))))
+               (push text-node name-list))
+
              do (setq node (treesit-node-parent node))
              finally return (concat (if include-type
                                         (format "%s " type)
