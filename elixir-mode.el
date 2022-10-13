@@ -1,10 +1,14 @@
+;;; elixir-mode.el --- Elixir support for Emacs -*- lexical-binding: t -*-
+
 (ignore-errors
   (unload-feature 'elixir-mode))
 
+(require 'cl-lib)
 (require 'treesit)
 
 (defgroup elixir nil
   "Major mode for editing Elixir code."
+  :tag "Elixir"
   :prefix "elixir-"
   :group 'languages)
 
@@ -124,10 +128,7 @@
 (defvar elixir--treesit-font-lock-settings
   (treesit-font-lock-rules
    :language 'elixir
-   :level 1
-   `(
-     (call
-      target: (identifier) @font-lock-keyword-face)
+   `((call target: (identifier) @font-lock-keyword-face)
      (unary_operator) @elixir-attribute-face
      (call (arguments) @font-lock-type-face)
      (keyword) @elixir-atom-face
@@ -136,6 +137,7 @@
      (identifier) @font-lock-variable-name-face
      (comment) @font-lock-comment-face
      (string) @elixir--treesit-fontify-string
+     (interpolation) @elixir-attribute-face
      ))
   "Tree-sitter font-lock settings.")
 
@@ -143,12 +145,65 @@
 (defvar elixir--treesit-indent-rules
   (let ((offset elixir-indent-level))
     `((elixir
-       ((node-is "end") parent-bol 0)
+       ((node-is "}") parent-bol 0)
+       ((node-is ")") parent-bol 0)
        ((node-is "]") parent-bol 0)
+       ((node-is ">") parent-bol 0)
+       ((node-is "]") parent-bol 0)
+       ((node-is "|>") parent-bol 0)
+       ((node-is "end") parent-bol 0)
+       ((node-is ".") parent-bol ,offset)
        ((parent-is "do_block") parent-bol ,offset)
+       ((parent-is "arguments") parent-bol ,offset)
        ((parent-is "list") parent-bol ,offset)
        ((parent-is "keywords") parent-bol 0)
        ))))
+
+(defun treecap (query)
+  (interactive)
+  (let ((node (treesit-node-at (point))))
+    (treesit-query-capture node query)))
+
+(defun elixir--treesit-current-defun (&optional include-type)
+  "Find current Elixir function. Optional argument INCLUDE-TYPE indicates to include the type of the defun."
+  (let ((node (treesit-node-at (point)))
+        (name-list ())
+        (type 'def))
+    (cl-loop while node
+             if (pcase (treesit-node-type node)
+                  ("call" t)
+                  (_ nil))
+             do
+             (message "%s"
+                      (treesit-node-text
+                      (treesit-node-first-child-for-pos
+                       node 2)))
+             (push
+                 (treesit-node-text
+                  (treesit-node-child node 1)
+                  t)
+                 name-list)
+             do (setq node (treesit-node-parent node))
+             finally return (concat (if include-type
+                                        (format "%s " type)
+                                      "")
+                                    (string-join name-list ".")))))
+
+;; (defun elixir--treesit-current-defun (&optional include-type)
+;;   "Find current Elixir function. Optional argument INCLUDE-TYPE indicates to include the type of the defun."
+;;   (let ((type 'def))
+;;     (save-excursion
+;;       (treesit-search-forward-goto "call" 'start nil t t)
+;;       (treesit-search-forward-goto "identifier" 'start nil nil nil)
+;;       (let ((node (treesit-node-at (point))))
+;;         (concat (if include-type (format "%s " type) "")
+;;                 "foo")))))
+
+
+
+(defun elixir--treesit-imenu-create-index (&optional node)
+  "Something"
+  ())
 
 ;;;###autoload
 (define-derived-mode elixir-mode prog-mode "Elixir"
@@ -169,6 +224,9 @@
   (setq-local beginning-of-defun-function #'elixir--treesit-beginning-of-defun)
   (setq-local end-of-defun-function #'elixir--treesit-end-of-defun)
 
+  (setq-local imenu-create-index-function #'elixir--treesit-imenu-create-index)
+
+  (add-hook 'which-func-functions #'elixir--treesit-current-defun nil t)
 
   (setq-local comment-start "# ")
   (setq-local comment-end "")
