@@ -78,21 +78,18 @@
      ))
   "Tree-sitter font-lock settings.")
 
-;; (defun elixir--treesit-backward-up-list ()
-;;   (lambda (_node _parent _bol &rest _)
-;;     (save-excursion
-;;       (backward-up-list 1 nil t)
-;;       (goto-char
-;;        (treesit-node-start
-;;         (treesit-node-at (point))))
-;;       (back-to-indentation)
-;;       (point))))
+(defun elixir--treesit-backward-up-list ()
+  ""
+  (lambda (_node _parent _bol &rest _)
+    (save-excursion
+      (elixir--treesit-beginning-of-defun)
+        (point))))
 
 
 (defvar elixir--treesit-indent-rules
   (let ((offset elixir-indent-level))
     `((elixir
-       ;; (no-node (elixir--treesit-backward-up-list) ,offset)
+       (no-node (elixir--treesit-backward-up-list) ,offset)
        ((node-is "}") parent-bol 0)
        ((node-is ")") parent-bol 0)
        ((node-is "]") parent-bol 0)
