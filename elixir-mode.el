@@ -188,30 +188,36 @@
 
 ;;;###autoload
 (define-derived-mode elixir-mode prog-mode "Elixir"
-  (treesit-parser-create 'elixir)
-
-
-  ;; This turns off the syntax-based font-lock for comments and
-  ;; strings.  So it doesn’t override tree-sitter’s fontification.
-  (setq-local font-lock-keywords-only t)
-  (setq-local treesit-font-lock-settings
-              elixir--treesit-font-lock-settings)
-  (treesit-font-lock-enable)
-
-
-  (setq-local treesit-simple-indent-rules elixir--treesit-indent-rules)
-  (setq-local indent-line-function #'treesit-indent)
-
-  (setq-local beginning-of-defun-function #'elixir--treesit-beginning-of-defun)
-  (setq-local end-of-defun-function #'elixir--treesit-end-of-defun)
-
-  (setq-local imenu-create-index-function #'elixir--imenu-treesit-create-index)
-
-  (add-hook 'which-func-functions #'elixir--treesit-current-defun nil t)
-
   (setq-local comment-start "# ")
+  (setq-local comment-start-skip "#+\\s-*")
   (setq-local comment-end "")
-  (setq-local comment-start-skip "#+ *"))
+
+  (setq-local parse-sexp-lookup-properties t)
+  (setq-local parse-sexp-ignore-comments t)
+
+
+  (if (treesit-can-enable-p)
+      (progn
+        (treesit-parser-create 'elixir)
+
+        ;; This turns off the syntax-based font-lock for comments and
+        ;; strings.  So it doesn’t override tree-sitter’s fontification.
+        (setq-local font-lock-keywords-only t)
+        (setq-local treesit-font-lock-settings
+                    elixir--treesit-font-lock-settings)
+        (treesit-font-lock-enable)
+
+
+        (setq-local treesit-simple-indent-rules elixir--treesit-indent-rules)
+        (setq-local indent-line-function #'treesit-indent)
+
+        (setq-local beginning-of-defun-function #'elixir--treesit-beginning-of-defun)
+        (setq-local end-of-defun-function #'elixir--treesit-end-of-defun)
+
+        (setq-local imenu-create-index-function #'elixir--imenu-treesit-create-index)
+
+        (add-hook 'which-func-functions #'elixir--treesit-current-defun nil t)
+        )))
 
 
 ;;;###autoload
