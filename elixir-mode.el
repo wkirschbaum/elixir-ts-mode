@@ -78,13 +78,28 @@
      ))
   "Tree-sitter font-lock settings.")
 
+
+(defun elixir--treesit-find-parent-block (&optional node)
+  ""
+  (let ((node (or node (treesit-node-at (point))))
+        (result nil))
+    (while (and node (not result))
+      (if (equal (treesit-node-type node) "do_block")
+          (setq result node)
+        (setq node (treesit-node-parent node))))
+    result))
+
 (defun elixir--treesit-backward-up-list ()
   ""
-  (lambda (_node _parent _bol &rest _)
-    (save-excursion
-      (elixir--treesit-beginning-of-defun)
-        (point))))
-
+  ;; The passed in parent seems to be wrong, so we get it ourselves"
+  (lambda (node _parent _bol &rest _)
+    (let ((parent (elixir--treesit-find-parent-block node)))
+      (if parent
+          (save-excursion
+            (goto-char (treesit-node-start parent))
+            (back-to-indentation)
+            (point))
+        nil))))
 
 (defvar elixir--treesit-indent-rules
   (let ((offset elixir-indent-level))
