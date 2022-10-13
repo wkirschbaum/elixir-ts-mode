@@ -153,7 +153,7 @@
   (format "%s %s" type name))
 
 (defun elixir--imenu-jump-label (_type _name)
-  "...")
+  (message "..."))
 
 (defun elixir--treesit-node-block-name (node)
   (let* ((child (treesit-node-child (treesit-node-child (treesit-node-parent node) 1) 0)))
@@ -167,24 +167,64 @@
   (let* ((node (or node (treesit-buffer-root-node 'elixir)))
          (tree (treesit-induce-sparse-tree
                 node
-                (rx (seq bol (or "do_block") eol)))))
+                (rx (seq bol (or "call") eol)))))
     (elixir--imenu-treesit-create-index-from-tree tree)))
+
+(defun elixir--imenu-node-name (node type)
+  ""
+  (pcase type
+    ('def (treesit-node-text
+           (treesit-search-subtree
+            (treesit-search-subtree node "arguments") "identifier")))
+    ('module (treesit-node-text
+              (treesit-search-subtree node "alias")))))
+
+(defun elixir--imenu-node-type (node)
+  ""
+  (pcase (treesit-node-text (treesit-search-subtree node "identifier"))
+    ("def" 'def)
+    ("defmodule" 'module)))
 
 (defun elixir--imenu-treesit-create-index-from-tree (node)
   (let* ((ts-node (car node))
          (children (cdr node))
          (subtrees (mapcan #'elixir--imenu-treesit-create-index-from-tree children))
-         (type 'def)
-         (name (when ts-node (elixir--treesit-node-block-name ts-node)))
+         (type (when ts-node (elixir--imenu-node-type ts-node)))
+         (name (when type (elixir--imenu-node-name ts-node type)))
          (marker (when ts-node
                    (set-marker (make-marker)
                                (treesit-node-start ts-node)))))
     (cond ((null ts-node) subtrees)
+          ((null type) subtrees)
           (subtrees (let ((parent-label (funcall 'elixir--imenu-item-parent-label type name))
                           (jump-label (funcall 'elixir--imenu-jump-label type name)))
                       `((,parent-label ,(cons jump-label marker) ,@subtrees))))
           (t (let ((label (funcall 'elixir--imenu-item-label type name)))
                (list (cons label marker)))))))
+
+;; (defun elixir--imenu-treesit-create-index (&optional node)
+;;   "Return tree Imenu alist for the current Elixir buffer."
+;;   (let* ((node (or node (treesit-buffer-root-node 'elixir)))
+;;          (tree (treesit-induce-sparse-tree
+;;                 node
+;;                 (rx (seq bol (or "do_block") eol)))))
+;;     (elixir--imenu-treesit-create-index-from-tree tree)))
+
+;; (defun elixir--imenu-treesit-create-index-from-tree (node)
+;;   (let* ((ts-node (car node))
+;;          (children (cdr node))
+;;          (subtrees (mapcan #'elixir--imenu-treesit-create-index-from-tree children))
+;;          (type 'def)
+;;          (name (when ts-node (elixir--treesit-node-block-name ts-node)))
+;;          (marker (when ts-node
+;;                    (set-marker (make-marker)
+;;                                (treesit-node-start ts-node)))))
+;;     (cond ((null ts-node) subtrees)
+;;           (subtrees (let ((parent-label (funcall 'elixir--imenu-item-parent-label type name))
+;;                           (jump-label (funcall 'elixir--imenu-jump-label type name)))
+;;                       `((,parent-label ,(cons jump-label marker) ,@subtrees))))
+;;           (t (let ((label (funcall 'elixir--imenu-item-label type name)))
+;;                (list (cons label marker)))))))
 
 ;;;###autoload
 (define-derived-mode elixir-mode prog-mode "Elixir"
