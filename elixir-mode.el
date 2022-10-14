@@ -118,6 +118,7 @@
        ((node-is "else_block") parent-bol 0)
        ((node-is ".") parent-bol ,offset)
        ((parent-is "body") parent-bol ,offset)
+       ((parent-is "tuple") parent-bol ,offset)
        ((parent-is "do_block") parent-bol ,offset)
        ((parent-is "else_block") parent-bol ,offset)
        ((parent-is "stab_clause") parent-bol ,offset)
