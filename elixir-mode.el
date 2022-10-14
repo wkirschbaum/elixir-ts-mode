@@ -1,5 +1,9 @@
 ;;; elixir-mode.el --- Elixir support for Emacs -*- lexical-binding: t -*-
 
+;; Examples of AST
+;;https://github.com/elixir-lang/tree-sitter-elixir/blob/main/test/corpus/integration/function_definition.txt
+
+
 (ignore-errors
   (unload-feature 'elixir-mode))
 
@@ -40,12 +44,12 @@
         ;; Go backward.
         (while (and (> arg 0)
                     (progn
-                      (treesit-search-forward-goto "do_block" 'start nil t)
+                      (treesit-search-forward-goto "call" 'start nil t t)
                       (back-to-indentation)))
           (setq arg (1- arg)))
       ;; Go forward.
       (while (and (< arg 0)
-                  (treesit-search-forward-goto "do_block" 'end))
+                  (treesit-search-forward-goto "call" 'end nil nil t))
         (setq arg (1+ arg))))))
 
 ;; TODO: This goes into infinite loop at eob and does not
@@ -55,12 +59,12 @@
     (if (< arg 0)
         ;; Go backward.
         (while (and (< arg 0)
-                    (treesit-search-forward-goto "do_block" 'end nil t))
+                    (treesit-search-forward-goto "call" 'end nil t t))
           (setq arg (1+ arg)))
       ;; Go forward.
       (while (and (> arg 0)
                   (progn
-                      (treesit-search-forward-goto "do_block" 'start)
+                      (treesit-search-forward-goto "call" 'start nil nil t)
                       (back-to-indentation)))
         (setq arg (1- arg))))))
 
@@ -83,7 +87,15 @@
   "Tree-sitter font-lock settings.")
 
 
-(defun elixir--treesit-find-parent-block (&optional node)
+(defun elixir--treesit-capture-defun ()
+  (interactive)
+  (message
+   "%s"
+   (treesit-query-capture
+    (treesit-buffer-root-node)
+    "(call target: (identifier) @ident)")))
+
+(defun elixir--treesit-find-parent-do-block (&optional node)
   (let ((node (or node (treesit-node-at (point))))
         (result nil))
     (while (and node (not result))
@@ -93,9 +105,8 @@
     result))
 
 (defun elixir--treesit-backward-up-list ()
-  ;; The passed in parent seems to be wrong, so we get it ourselves"
   (lambda (node _parent _bol &rest _)
-    (let ((parent (elixir--treesit-find-parent-block node)))
+    (let ((parent (elixir--treesit-find-parent-do-block node)))
       (if parent
           (save-excursion
             (goto-char (treesit-node-start parent))
@@ -150,35 +161,15 @@
   (format "%s %s" type name))
 
 (defun elixir--imenu-jump-label (_type _name)
-  (message "..."))
+  (format "..."))
 
 (defun elixir--imenu-treesit-create-index (&optional node)
   "Return tree Imenu alist for the current Elixir buffer."
-  (let* ((node (or node (treesit-buffer-root-node 'elixir)))
+  (let* ((node (or node (treesit-buffer-root-node)))
          (tree (treesit-induce-sparse-tree
                 node
                 (rx (seq bol (or "call") eol)))))
     (elixir--imenu-treesit-create-index-from-tree tree)))
-
-(defun elixir--imenu-node-name (node &optional type)
-  ""
-  (pcase (or type (elixir--imenu-node-type node))
-    ((or 'def 'defp) (treesit-node-text
-           (treesit-search-subtree
-            (treesit-search-subtree node "arguments") "identifier")))
-    ((or 'test 'describe) (treesit-node-text
-            (treesit-search-subtree node "string")))
-    ('module (treesit-node-text
-              (treesit-search-subtree node "alias")))))
-
-(defun elixir--imenu-node-type (node)
-  ""
-  (pcase (treesit-node-text (treesit-search-subtree node "identifier"))
-    ("def" 'def)
-    ("defp" 'defp)
-    ("test" 'test)
-    ("describe" 'describe)
-    ("defmodule" 'module)))
 
 (defun elixir--imenu-treesit-create-index-from-tree (node)
   (let* ((ts-node (car node))
@@ -196,6 +187,82 @@
                       `((,parent-label ,(cons jump-label marker) ,@subtrees))))
           (t (let ((label (funcall 'elixir--imenu-item-label type name)))
                (list (cons label marker)))))))
+
+(defvar elixir-query)
+(setq elixir-query "(call target: (identifier) (arguments [(alias) @name (identifier) @name]))")
+
+(defun elixir-treesit-up-sexp ()
+  (interactive)
+  (let ((largest-node (elixir--treesit-largest-node-at-point)))
+    (goto-char (treesit-node-start (treesit-node-parent largest-node)))))
+
+(defun elixir-treesit-next-sibling ()
+  (interactive)
+  (let* ((largest-node (elixir--treesit-largest-node-at-point))
+         (parent (when largest-node (treesit-node-parent largest-node)))
+         (index (when parent (treesit-node-index parent))))
+    (message "%s" index)
+    (goto-char
+       (if largest-node
+           (treesit-node-end largest-node)
+         (treesit-node-end largest-node)))))
+
+(defun elixir-treesit-prev-sibling ()
+  (interactive)
+  (let ((largest-node (elixir--treesit-largest-node-at-point)))
+    (goto-char
+     (treesit-node-start
+      (let ((prev-node (treesit-node-prev-sibling
+                        largest-node t)))
+        (if prev-node prev-node largest-node))))))
+
+(defun elixir-treesit-show-largest-node ()
+  (interactive)
+  (message
+   "%s %s"
+   (treesit-node-type (elixir--treesit-largest-node-at-point))
+   (treesit-node-text (elixir--treesit-largest-node-at-point)))
+  )
+
+(defun elixir--treesit-largest-node-at-point ()
+  (save-excursion
+    (forward-comment (point-max))
+    (let* ((node-at-point (treesit-node-at (point)))
+           (node-list
+            (cl-loop for node = node-at-point
+                     then (treesit-node-parent node)
+                     while node
+                     if (eq (treesit-node-start node)
+                            (point))
+                     collect node))
+           (largest-node (car (last node-list))))
+      (if (null largest-node)
+          (treesit-node-at (point))
+        largest-node))))
+
+(defun elixir--imenu-node-name (node &optional type)
+  ""
+  ;; (let ((query "(call target: (identifier) @type (arguments [(alias) @name (identifier) @name]))"))
+  ;;   ;; (message "%s"  (treesit-query-capture node query)))
+  ;; (message "%s %s" (treesit-node-index node) (treesit-node-type node)))
+
+  (pcase (or type (elixir--imenu-node-type node))
+    ((or 'def 'defp) (treesit-node-text
+           (treesit-search-subtree
+            (treesit-search-subtree node "arguments") "identifier")))
+    ((or 'test 'describe) (treesit-node-text
+            (treesit-search-subtree node "string")))
+    ('module (treesit-node-text
+              (treesit-search-subtree node "alias")))))
+
+(defun elixir--imenu-node-type (node)
+  ""
+  (pcase (treesit-node-text (treesit-search-subtree node "identifier"))
+    ("def" 'def)
+    ("defp" 'defp)
+    ("test" 'test)
+    ("describe" 'describe)
+    ("defmodule" 'module)))
 
 (defun elixir-backward-sexp (&optional arg)
   "Move backwards across expressions.  With ARG, do it that many times.  Negative arg -N means move forwards N times."
@@ -225,14 +292,17 @@
 (defun elixir-forward-sexp (&optional arg)
   "Move forward across expressions.  With ARG, do it that many times.  Negative arg -N means move backward N times."
   (interactive "^p")
-  (let* ((node (treesit-node-at (point)))
-         (parent (treesit-node-parent node))
-        (found
-         (if (> arg 0)
-             (treesit-search-subtree parent "do_block" 'end)
-           (progn
-             (treesit-search-subtree parent "do_block" 'start t)))))
-    (when found (goto-char (treesit-node-start found)))))
+  (if (> arg 0)
+      (let ((largest-node (elixir--treesit-largest-node-at-point)))
+        (goto-char (let ((next (treesit-node-next-sibling largest-node)))
+                     (if next
+                         (treesit-node-start next)
+                       (point)))))
+    (let ((largest-node (elixir--treesit-largest-node-at-point)))
+      (goto-char
+       (let ((prev-node (treesit-node-prev-sibling
+                         largest-node t)))
+         (if prev-node (treesit-node-start prev-node) (point)))))))
 
 ;;;###autoload
 (define-derived-mode elixir-mode prog-mode "Elixir"
