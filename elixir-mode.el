@@ -130,15 +130,14 @@
 (defun elixir--treesit-current-defun (&optional include-type)
   "Find current Elixir function. Optional argument INCLUDE-TYPE indicates to include the type of the defun."
   (let ((node (treesit-node-at (point)))
-        (name-list ())
-        (type 'def))
+        (name-list ()))
     (cl-loop while node
              if (pcase (treesit-node-type node)
                   ("call" (elixir--imenu-node-type node)))
              do (push (elixir--imenu-node-name node) name-list)
              do (setq node (treesit-node-parent node))
              finally return (concat (if include-type
-                                        (format "%s " type)
+                                        (format "%s " (treesit-node-type node))
                                       "")
                                     (string-join name-list ".")))))
 
@@ -166,6 +165,8 @@
     ((or 'def 'defp) (treesit-node-text
            (treesit-search-subtree
             (treesit-search-subtree node "arguments") "identifier")))
+    ((or 'test 'describe) (treesit-node-text
+            (treesit-search-subtree node "string")))
     ('module (treesit-node-text
               (treesit-search-subtree node "alias")))))
 
@@ -174,6 +175,8 @@
   (pcase (treesit-node-text (treesit-search-subtree node "identifier"))
     ("def" 'def)
     ("defp" 'defp)
+    ("test" 'test)
+    ("describe" 'describe)
     ("defmodule" 'module)))
 
 (defun elixir--imenu-treesit-create-index-from-tree (node)
