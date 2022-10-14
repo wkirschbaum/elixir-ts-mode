@@ -132,10 +132,6 @@
   (let ((node (treesit-node-at (point)))
         (name-list ())
         (type 'def))
-    ;; We have to find the do_block first and then
-    ;; go up one level to find either an alias or call.
-    ;; When finding a call, we need to get the first identifier.
-    ;; This should work for all macros as well
     (cl-loop while node
              if (pcase (treesit-node-type node)
                   ("call" (elixir--imenu-node-type node)))
@@ -197,6 +193,43 @@
           (t (let ((label (funcall 'elixir--imenu-item-label type name)))
                (list (cons label marker)))))))
 
+(defun elixir-backward-sexp (&optional arg)
+  "Move backwards across expressions.  With ARG, do it that many times.  Negative arg -N means move forwards N times."
+  (interactive "^p")
+  (elixir-forward-sexp (- arg)))
+
+(defun elixir--treesit-real-parent (&optional node)
+  (let ((child (or node (treesit-node-at (point)))))
+    (treesit-node-parent child)))
+
+(defun elixir-parent-goto (&optional arg)
+  (interactive "^P")
+  (if (> (or arg 1) 0)
+      (goto-char (treesit-node-start (elixir--treesit-real-parent)))
+    (goto-char (treesit-node-end (elixir--treesit-real-parent)))))
+
+(defun elixir-sibling-goto (&optional arg)
+  (interactive)
+  (if (> (or arg 1) 0)
+      (goto-char
+       (treesit-node-end (treesit-node-next-sibling (treesit-node-at (point)))))
+    (goto-char
+     (treesit-node-start (treesit-node-prev-sibling (treesit-node-at (point)))))))
+
+
+
+(defun elixir-forward-sexp (&optional arg)
+  "Move forward across expressions.  With ARG, do it that many times.  Negative arg -N means move backward N times."
+  (interactive "^p")
+  (let* ((node (treesit-node-at (point)))
+         (parent (treesit-node-parent node))
+        (found
+         (if (> arg 0)
+             (treesit-search-subtree parent "do_block" 'end)
+           (progn
+             (treesit-search-subtree parent "do_block" 'start t)))))
+    (when found (goto-char (treesit-node-start found)))))
+
 ;;;###autoload
 (define-derived-mode elixir-mode prog-mode "Elixir"
   (setq-local comment-start "# ")
@@ -225,10 +258,10 @@
         (setq-local beginning-of-defun-function #'elixir--treesit-beginning-of-defun)
         (setq-local end-of-defun-function #'elixir--treesit-end-of-defun)
 
-        (setq-local imenu-create-index-function #'elixir--imenu-treesit-create-index)
+        (setq-local forward-sexp-function #'elixir-forward-sexp)
 
-        (add-hook 'which-func-functions #'elixir--treesit-current-defun nil t)
-        )))
+        (setq-local imenu-create-index-function #'elixir--imenu-treesit-create-index)
+        (add-hook 'which-func-functions #'elixir--treesit-current-defun nil t))))
 
 
 ;;;###autoload
