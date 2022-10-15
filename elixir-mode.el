@@ -54,6 +54,110 @@
         (setq arg (1- arg))))))
 
 
+;; Faces start
+
+(defface elixir-font-keyword-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @keyword tag.")
+
+(defface elixir-font-comment-doc-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @comment.doc tag.")
+
+(defface elixir-font-comment-doc-attribute-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @comment.doc.__attribute__ tag.")
+
+(defface elixir-font-attribute-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @attribute tag.")
+
+(defface elixir-font-operator-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @operator tag.")
+
+(defface elixir-font-constant-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @constant tag.")
+
+(defface elixir-font-number-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @number tag.")
+
+(defface elixir-font-module-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @module tag.")
+
+(defface elixir-font-punctuation-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @punctuation tag.")
+
+(defface elixir-font-punctuation-delimiter-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @punctuation.delimiter tag.")
+
+(defface elixir-font-punctuation-bracket-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @punctuation.bracket.")
+
+(defface elixir-font-punctuation-special-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @punctuation.special tag.")
+
+(defface elixir-font-embedded-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @embedded tag.")
+
+(defface elixir-font-string-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @string tag.")
+
+(defface elixir-font-string-escape-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with Reserved keywords.")
+
+(defface elixir-font-string-escape-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @string.escape tag.")
+
+(defface elixir-font-string-regex-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @string.regex tag.")
+
+(defface elixir-font-string-special-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @string.special tag.")
+
+(defface elixir-font-string-special-symbol-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @string.special.symbol tag.")
+
+(defface elixir-font-function-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @function tag.")
+
+(defface elixir-font-sigil-name-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @__name__ tag.")
+
+(defface elixir-font-variable-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @variable tag.")
+
+(defface elixir-font-contant-builtin-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @constant.builtin tag.")
+
+(defface elixir-font-comment-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @comment tag.")
+
+(defface elixir-font-comment-unused-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @comment.unused tag.")
+
+;; Faces end
+
 (defconst elixir--definition-keywords
   '("def" "defdelegate" "defexception" "defguard" "defguardp" "defimpl" "defmacro" "defmacrop" "defmodule" "defn" "defnp" "defoverridable" "defp" "defprotocol" "defstruct"))
 
@@ -66,12 +170,18 @@
 (defconst elixir--kernel-keywords-re
   (concat "^" (regexp-opt elixir--kernel-keywords) "$"))
 
+(defconst elixir--builtin-keywords
+  '("__MODULE__" "__DIR__" "__ENV__" "__CALLER__" "__STACKTRACE__"))
+
+(defconst elixir--builtin-keywords-re
+  (concat "^" (regexp-opt elixir--builtin-keywords) "$"))
+
+
 (defconst elixir--doc-keywords
   '("moduledoc" "typedoc" "doc"))
 
 (defconst elixir--doc-keywords-re
   (concat "^" (regexp-opt elixir--doc-keywords) "$"))
-
 
 (defconst elixir--reserved-keywords
   '("when" "and" "or" "not" "in"
@@ -80,28 +190,6 @@
 (defconst elixir--reserved-keywords-vector
   (apply #'vector elixir--reserved-keywords))
 
-(defvar elixir-attribute-face 'elixir-attribute-face)
-(defface elixir-attribute-face
-  '((t (:inherit font-lock-preprocessor-face)))
-  "For use with module attribute tokens.")
-
-(defvar elixir-atom-face 'elixir-atom-face)
-(defface elixir-atom-face
-  '((t (:inherit font-lock-builtin-face)))
-  "For use with atoms & map keys.")
-
-(defvar elixir-number-face 'elixir-number-face)
-(defface elixir-number-face
-  '((t (:inherit default)))
-  "For use with numbers.")
-
-(defface elixir-font-reserved-keyword-face
-  '((t (:inherit font-lock-keyword-face)))
-  "For use with Reserved keywords.")
-
-(defface elixir-font-operator-face
-  '((t (:inherit font-lock-keyword-face)))
-  "For use with Reserved keywords.")
 
 ;; reference:
 ;; https://github.com/elixir-lang/tree-sitter-elixir/blob/main/queries/highlights.scm
@@ -110,53 +198,109 @@
    :language 'elixir
    :level 1
    `(
-     ,elixir--reserved-keywords-vector @elixir-font-reserved-keyword-face
-     (call target: (identifier) @font-lock-keyword-face
-           (:match ,elixir--definition-keywords-re @font-lock-keyword-face))
+     ,elixir--reserved-keywords-vector @elixir-font-keyword-face
      (unary_operator
-      operator: "@" @font-lock-variable-name-face
+      operator: "@" @elixir-font-comment-doc-face
       operand: (call
-                target: (identifier) @font-lock-variable-name-face
+                target: (identifier) @elixir-font-comment-doc-attribute-face
                 (arguments
                  [
-                  (string) @font-lock-doc-face
-                  (charlist) @font-lock-doc-face
+                  (string) @elixir-font-comment-doc-face
+                  (charlist) @elixir-font-comment-doc-face
                   (sigil
-                   quoted_start: _ @font-lock-doc-face
-                   quoted_end: _ @font-lock-doc-face) @font-lock-doc-face
-                  (boolean) @font-lock-doc-face
+                   quoted_start: _ @elixir-font-comment-doc-face
+                   quoted_end: _ @elixir-font-comment-doc-face)
+                  @elixir-font-comment-doc-face
+                  (boolean) @elixir-font-comment-doc-face
                   ]))
-      (:match ,elixir--doc-keywords-re @font-lock-variable-name-face ))
-     (call
-      target: (identifier) @font-lock-keyword-face
-      (:match ,elixir--kernel-keywords-re @font-lock-keyword-face))
-     (alias) @elixir-atom-face
-     [(boolean) (nil)] @elixir-atom-face
-     [(integer) (float)] @elixir-atom-face
-     (call target: (dot left: (atom) @elixir-atom-face))
-     (char) @elixir-atom-face
-     (comment) @font-lock-comment-face
-     (string) @font-lock-string-face
+      (:match ,elixir--doc-keywords-re @elixir-font-comment-doc-attribute-face))
      (unary_operator
-      operator: "@" @font-lock-variable-name-face
+      operator: "@" @elixir-font-attribute-face
       operand: [
-                (identifier) @font-lock-variable-name-face
+                (identifier) @elixir-font-attribute-face
                 (call
-                 target: (identifier) @font-lock-variable-name-face)
-                (boolean) @font-lock-variable-name-face
-                (nil) @font-lock-variable-name-face
+                 target: (identifier) @elixir-font-attribute-face)
+                (boolean) @elixir-font-attribute-face
+                (nil) @elixir-font-attribute-face
                 ])
-
-     ((interpolation) @elixir-atom-face "#{" @elixir-atom-face "}" @elixir-atom-face)
+     (unary_operator operator: "&" operand: (integer) @elixir-font-operator-face)
+     (operator_identifier) @elixir-font-operator-face
+     (unary_operator operator: _ @elixir-font-operator-face)
+     (binary_operator operator: _ @elixir-font-operator-face)
+     (dot operator: _ @elixir-font-operator-face)
+     (stab_clause operator: _ @elixir-font-operator-face)
+     [(boolean) (nil)] @elixir-font-constant-face
+     [(integer) (float)] @elixir-font-number-face
+     (alias) @elixir-font-module-face
+     (call target: (dot left: (atom) @elixir-font-module-face))
+     (char) @elixir-font-constant-face
+     (interpolation "#{" @elixir-font-punctuation-special-face "}" @elixir-font-punctuation-special-face) @elixir-font-embedded-face
+     (escape_sequence) @elixir-font-string-escape-face
+     [
+      (atom)
+      (quoted_atom)
+      (keyword)
+      (quoted_keyword)
+      ] @elixir-font-string-special-symbol-face
+     [(string) (charlist)] @elixir-font-string-face
+     (sigil
+      (sigil_name) @elixir-font-sigil-name-face
+      quoted_start: _ @elixir-font-string-face
+      quoted_end: _ @elixir-font-string-face
+      (:match "^[sS]$" @elixir-font-sigil-name-face)) @elixir-font-string-face
+     (sigil
+      (sigil_name) @elixir-font-sigil-name-face
+      quoted_start: _ @elixir-font-string-regex-face
+      quoted_end: _ @elixir-font-string-regex-face
+      (:match "^[rR]$" @elixir-font-sigil-name-face)) @elixir-font-string-regex-face
+     (sigil
+      (sigil_name) @elixir-font-sigil-name-face
+      quoted_start: _ @elixir-font-string-special-face
+      quoted_end: _ @elixir-font-string-special-face) @elixir-font-string-special-face
+     (call
+      target: (identifier) @elixir-font-keyword-face
+      (:match ,elixir--definition-keywords-re @elixir-font-keyword-face))
+     (call
+      target: (identifier) @elixir-font-keyword-face
+      (:match ,elixir--kernel-keywords-re @elixir-font-keyword-face))
+     (call
+      target: [
+                                        ; local
+               (identifier) @elixir-font-function-face
+                                        ; remote
+               (dot
+                right: (identifier) @elixir-font-function-face)
+               ])
+     (call
+      target: (identifier) @elixir-font-keyword-face
+      (arguments
+       [
+        (identifier) @elixir-font-function-face
+        (binary_operator
+         left: (identifier) @elixir-font-function-face
+         operator: "when")
+        ])
+      (:match ,elixir--definition-keywords-re @elixir-font-keyword-face))
+     (call
+      target: (identifier) @elixir-font-keyword-face
+      (arguments
+       (binary_operator
+        operator: "|>"
+        right: (identifier) @elixir-font-variable-face))
+      (:match ,elixir--definition-keywords-re @elixir-font-keyword-face))
+     (binary_operator operator: "|>" right: (identifier) @elixir-font-function-face)
+     ((identifier) @elixir-font-constant-builtin-face
+      (:match ,elixir--builtin-keywords-re @elixir-font-constant-builtin-face))
+     ((identifier) @elixir-font-comment-unused-face
+      (:match "^_" @elixir-font-comment-unused-face))
+     (identifier) @elixir-font-variable-face
+     (comment) @elixir-font-comment-face
+     ["%"] @elixir-font-punctuation-face
+     ["," ";"] @elixir-font-punctuation-delimiter-face
+     ["(" ")" "[" "]" "{" "}" "<<" ">>"] @elixir-font-punctuation-bracket-face
      ))
   "Tree-sitter font-lock settings.")
 
-   ;; :language 'heex
-   ;; :level 2
-   ;; `(
-   ;;   (doctype) @font-lock-keyword-face
-   ;;   (ERROR) @error
-   ;;   )
 
 (defun elixir--treesit-capture-defun ()
   (interactive)
