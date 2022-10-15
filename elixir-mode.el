@@ -74,7 +74,11 @@
    :language 'elixir
    `(
      ["when" "and" "or" "not" "in" "not in" "fn" "do" "end" "catch" "rescue" "after" "else"] @font-lock-keyword-face
-     (call target: (identifier) @font-lock-keyword-face)
+     (call target: (identifier) @font-lock-keyword-face
+           (:match "^\\(def\\|defdelegate\\|defexception\\|defguard\\|defguardp\\|defimpl\\|defmacro\\|defmacrop\\|defmodule\\|defn\\|defnp\\|defoverridable\\|defp\\|defprotocol\\|defstruct\\)$" @font-lock-keyword-face))
+     (call
+      target: (identifier) @font-lock-keyword-face
+      (:match "^\\(alias\\|case\\|cond\\|else\\|for\\|if\\|import\\|quote\\|raise\\|receive\\|require\\|reraise\\|super\\|throw\\|try\\|unless\\|unquote\\|unquote_splicing\\|use\\|with\\)$" @font-lock-keyword-face))
      (alias) @elixir-atom-face
      [(boolean) (nil)] @elixir-atom-face
      [(integer) (float)] @elixir-atom-face
