@@ -69,16 +69,35 @@
         (setq arg (1- arg))))))
 
 
+(defconst elixir--definition-keywords
+  '("def" "defdelegate" "defexception" "defguard" "defguardp" "defimpl" "defmacro" "defmacrop" "defmodule" "defn" "defnp" "defoverridable" "defp" "defprotocol" "defstruct"))
+
+(defconst elixir--definition-keywords-re
+  (concat "^" (regexp-opt elixir--definition-keywords) "$"))
+
+(defconst elixir--kernel-keywords
+  '("alias" "case" "cond" "else" "for" "if" "import" "quote" "raise" "receive" "require" "reraise" "super" "throw" "try" "unless" "unquote" "unquote_splicing" "use" "with"))
+
+(defconst elixir--kernel-keywords-re
+  (concat "^" (regexp-opt elixir--kernel-keywords) "$"))
+
+(defconst elixir--reserved-keywords
+  '("when" "and" "or" "not" "in"
+   "not in" "fn" "do" "end" "catch" "rescue" "after" "else"))
+
+(defconst elixir--reserved-keywords-vector
+  (apply #'vector elixir--reserved-keywords))
+
 (defvar elixir--treesit-font-lock-settings
   (treesit-font-lock-rules
    :language 'elixir
    `(
-     ["when" "and" "or" "not" "in" "not in" "fn" "do" "end" "catch" "rescue" "after" "else"] @font-lock-keyword-face
+     ,elixir--reserved-keywords-vector @font-lock-keyword-face
      (call target: (identifier) @font-lock-keyword-face
-           (:match "^\\(def\\|defdelegate\\|defexception\\|defguard\\|defguardp\\|defimpl\\|defmacro\\|defmacrop\\|defmodule\\|defn\\|defnp\\|defoverridable\\|defp\\|defprotocol\\|defstruct\\)$" @font-lock-keyword-face))
+           (:match ,elixir--definition-keywords-re @font-lock-keyword-face))
      (call
       target: (identifier) @font-lock-keyword-face
-      (:match "^\\(alias\\|case\\|cond\\|else\\|for\\|if\\|import\\|quote\\|raise\\|receive\\|require\\|reraise\\|super\\|throw\\|try\\|unless\\|unquote\\|unquote_splicing\\|use\\|with\\)$" @font-lock-keyword-face))
+      (:match ,elixir--kernel-keywords-re @font-lock-keyword-face))
      (alias) @elixir-atom-face
      [(boolean) (nil)] @elixir-atom-face
      [(integer) (float)] @elixir-atom-face
