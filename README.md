@@ -13,6 +13,7 @@ which-function-mode and navigation.
 ## TODO
 
     [ ] Handle Heex
+    [ ] Improve handling of interpolation
     [ ] Fix Begin/End defun
     [ ] Improve Indentation
     [ ] Improve imenu

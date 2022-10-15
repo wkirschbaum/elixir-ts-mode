@@ -135,7 +135,7 @@
   "For use with @function tag.")
 
 (defface elixir-font-sigil-name-face
-  '((t (:inherit font-lock-function-name-face)))
+  '((t (:inherit font-lock-string-face)))
   "For use with @__name__ tag.")
 
 (defface elixir-font-variable-face
@@ -286,6 +286,10 @@
                                ])
      (sigil
       (sigil_name) @elixir-font-sigil-name-face
+      quoted_start: _ @elixir-font-string-special-face
+      quoted_end: _ @elixir-font-string-special-face) @elixir-font-string-special-face
+     (sigil
+      (sigil_name) @elixir-font-sigil-name-face
       quoted_start: _ @elixir-font-string-face
       quoted_end: _ @elixir-font-string-face
       (:match "^[sS]$" @elixir-font-sigil-name-face)) @elixir-font-string-face
@@ -294,10 +298,6 @@
       quoted_start: _ @elixir-font-string-regex-face
       quoted_end: _ @elixir-font-string-regex-face
       (:match "^[rR]$" @elixir-font-sigil-name-face)) @elixir-font-string-regex-face
-     (sigil
-      (sigil_name) @elixir-font-sigil-name-face
-      quoted_start: _ @elixir-font-string-special-face
-      quoted_end: _ @elixir-font-string-special-face) @elixir-font-string-special-face
      ))
   "Tree-sitter font-lock settings.")
 
