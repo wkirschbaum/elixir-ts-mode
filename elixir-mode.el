@@ -72,20 +72,25 @@
 (defvar elixir--treesit-font-lock-settings
   (treesit-font-lock-rules
    :language 'elixir
-   `((call target: (identifier) @font-lock-keyword-face)
-     (unary_operator) @elixir-attribute-face
-     (call (arguments) @font-lock-type-face)
-     (keyword) @elixir-atom-face
-     (do_block ("do") @font-lock-keyword-face)
-     (else_block ("else") @font-lock-keyword-face)
-     (do_block ("end") @font-lock-keyword-face)
-     (identifier) @font-lock-variable-name-face
-     (comment) @font-lock-comment-face
-     (string) @elixir--treesit-fontify-string
-     (interpolation) @elixir-attribute-face
+   `(
+     ["when" "and" "or" "not" "in" "not in" "fn" "do" "end" "catch" "rescue" "after" "else"] @font-lock-keyword-face
+     (call target: (identifier) @font-lock-keyword-face)
+     (alias) @elixir-atom-face
+     [(boolean) (nil)] @elixir-atom-face
+     [(integer) (float)] @elixir-atom-face
+     (call target: (dot left: (atom) @elixir-atom-face))
+     (char) @elixir-atom-face
+     (unary_operator
+      operator: "@" @font-lock-variable-name-face
+      operand: [
+                (identifier) @font-lock-variable-name-face
+                (call
+                 target: (identifier) @font-lock-variable-name-face)
+                (boolean) @font-lock-variable-name-face
+                (nil) @font-lock-variable-name-face
+                ])
      ))
-  "Tree-sitter font-lock settings.")
-
+    "Tree-sitter font-lock settings.")
 
 (defun elixir--treesit-capture-defun ()
   (interactive)
@@ -191,6 +196,8 @@
 (defvar elixir-query)
 (setq elixir-query "(call target: (identifier) (arguments [(alias) @name (identifier) @name]))")
 
+;; (setq elixir-query "(call target: (identifier) @type (arguments [(alias) @name (identifier) @name]) (.match? @type \"^(def|defmodule)$\")")
+
 (defun elixir-treesit-up-sexp ()
   (interactive)
   (let ((largest-node (elixir--treesit-largest-node-at-point)))
@@ -225,20 +232,18 @@
   )
 
 (defun elixir--treesit-largest-node-at-point ()
-  (save-excursion
-    (forward-comment (point-max))
-    (let* ((node-at-point (treesit-node-at (point)))
-           (node-list
-            (cl-loop for node = node-at-point
-                     then (treesit-node-parent node)
-                     while node
-                     if (eq (treesit-node-start node)
-                            (point))
-                     collect node))
-           (largest-node (car (last node-list))))
-      (if (null largest-node)
-          (treesit-node-at (point))
-        largest-node))))
+  (let* ((node-at-point (treesit-node-at (point)))
+         (node-list
+          (cl-loop for node = node-at-point
+                   then (treesit-node-parent node)
+                   while node
+                   if (eq (treesit-node-start node)
+                          (point))
+                   collect node))
+         (largest-node (car (last node-list))))
+    (if (null largest-node)
+        (treesit-node-at (point))
+      largest-node)))
 
 (defun elixir--imenu-node-name (node &optional type)
   ""
@@ -281,28 +286,41 @@
 
 (defun elixir-sibling-goto (&optional arg)
   (interactive)
-  (if (> (or arg 1) 0)
-      (goto-char
-       (treesit-node-end (treesit-node-next-sibling (treesit-node-at (point)))))
-    (goto-char
-     (treesit-node-start (treesit-node-prev-sibling (treesit-node-at (point)))))))
+  (message "%s" (treesit-node-index (elixir--treesit-largest-node-at-point)))
+  (forward-comment (+ (point-max)))
+  (let ((node (elixir--treesit-largest-node-at-point)))
+    (goto-char (treesit-node-end node)))
+  (forward-comment (+ (point-max))))
+
+(defun elixir-next-sibling ()
+  (interactive)
+  (forward-comment (point-max))
+  (goto-char
+   (treesit-node-end
+    (treesit-search-subtree
+     (treesit-node-parent (elixir--treesit-largest-node-at-point))
+     "call"))))
+
+(defun elixir-prev-sibling ()
+  (interactive)
 
 
+)
 
 (defun elixir-forward-sexp (&optional arg)
   "Move forward across expressions.  With ARG, do it that many times.  Negative arg -N means move backward N times."
   (interactive "^p")
   (if (> arg 0)
+      (progn
+        (forward-comment (point-max))
+        (let ((next (elixir--treesit-largest-node-at-point)))
+          (when next (goto-char (treesit-node-end next)))))
+    (progn
+      (forward-comment (point-max))
       (let ((largest-node (elixir--treesit-largest-node-at-point)))
-        (goto-char (let ((next (treesit-node-next-sibling largest-node)))
-                     (if next
-                         (treesit-node-start next)
-                       (point)))))
-    (let ((largest-node (elixir--treesit-largest-node-at-point)))
-      (goto-char
-       (let ((prev-node (treesit-node-prev-sibling
-                         largest-node t)))
-         (if prev-node (treesit-node-start prev-node) (point)))))))
+        (goto-char
+         (let ((prev-node (treesit-node-prev-sibling largest-node)))
+           (if prev-node (treesit-node-start prev-node) (point))))))))
 
 ;;;###autoload
 (define-derived-mode elixir-mode prog-mode "Elixir"
