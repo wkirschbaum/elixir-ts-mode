@@ -93,6 +93,7 @@
 (defvar elixir--treesit-font-lock-settings
   (treesit-font-lock-rules
    :language 'elixir
+   :level 1
    `(
      ,elixir--reserved-keywords-vector @font-lock-keyword-face
      (call target: (identifier) @font-lock-keyword-face
@@ -114,8 +115,20 @@
                 (boolean) @font-lock-variable-name-face
                 (nil) @font-lock-variable-name-face
                 ])
+
+     (interpolation
+      "#{"
+      @font-lock-variable-name-face
+      "}" @font-lock-variable-name-face)
      ))
-    "Tree-sitter font-lock settings.")
+  "Tree-sitter font-lock settings.")
+
+   ;; :language 'heex
+   ;; :level 2
+   ;; `(
+   ;;   (doctype) @font-lock-keyword-face
+   ;;   (ERROR) @error
+   ;;   )
 
 (defun elixir--treesit-capture-defun ()
   (interactive)
@@ -159,6 +172,8 @@
        ((node-is "else_block") parent-bol 0)
        ((node-is ".") parent-bol ,offset)
        ((parent-is "body") parent-bol ,offset)
+       ((parent-is "sigil") parent-bol 0)
+       ((parent-is "string") parent-bol 0)
        ((parent-is "tuple") parent-bol ,offset)
        ((parent-is "do_block") parent-bol ,offset)
        ((parent-is "else_block") parent-bol ,offset)
@@ -359,6 +374,7 @@
 
   (if (treesit-can-enable-p)
       (progn
+        (treesit-parser-create 'heex)
         (treesit-parser-create 'elixir)
 
         ;; This turns off the syntax-based font-lock for comments and
