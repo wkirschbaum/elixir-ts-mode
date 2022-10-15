@@ -88,6 +88,8 @@
 (defconst elixir--reserved-keywords-vector
   (apply #'vector elixir--reserved-keywords))
 
+;; reference:
+;; https://github.com/elixir-lang/tree-sitter-elixir/blob/main/queries/highlights.scm
 (defvar elixir--treesit-font-lock-settings
   (treesit-font-lock-rules
    :language 'elixir
