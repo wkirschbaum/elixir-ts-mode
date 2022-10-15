@@ -5,7 +5,8 @@
 
 
 (ignore-errors
-  (unload-feature 'elixir-mode))
+    (unload-feature 'elixir-mode))
+
 
 (require 'cl-lib)
 (require 'treesit)
@@ -61,11 +62,11 @@
   "For use with @keyword tag.")
 
 (defface elixir-font-comment-doc-face
-  '((t (:inherit font-lock-keyword-face)))
+  '((t (:inherit font-lock-preprocessor-face)))
   "For use with @comment.doc tag.")
 
 (defface elixir-font-comment-doc-attribute-face
-  '((t (:inherit font-lock-keyword-face)))
+  '((t (:inherit font-lock-preprocessor-face)))
   "For use with @comment.doc.__attribute__ tag.")
 
 (defface elixir-font-attribute-face
@@ -73,19 +74,19 @@
   "For use with @attribute tag.")
 
 (defface elixir-font-operator-face
-  '((t (:inherit font-lock-keyword-face)))
+  '((t (:inherit default)))
   "For use with @operator tag.")
 
 (defface elixir-font-constant-face
-  '((t (:inherit font-lock-keyword-face)))
+  '((t (:inherit font-lock-constant-face)))
   "For use with @constant tag.")
 
 (defface elixir-font-number-face
-  '((t (:inherit font-lock-keyword-face)))
+  '((t (:inherit default)))
   "For use with @number tag.")
 
 (defface elixir-font-module-face
-  '((t (:inherit font-lock-keyword-face)))
+  '((t (:inherit font-lock-type-face)))
   "For use with @module tag.")
 
 (defface elixir-font-punctuation-face
@@ -105,43 +106,39 @@
   "For use with @punctuation.special tag.")
 
 (defface elixir-font-embedded-face
-  '((t (:inherit font-lock-keyword-face)))
+  '((t (:inherit default)))
   "For use with @embedded tag.")
 
 (defface elixir-font-string-face
-  '((t (:inherit font-lock-keyword-face)))
+  '((t (:inherit font-lock-string-face)))
   "For use with @string tag.")
 
 (defface elixir-font-string-escape-face
-  '((t (:inherit font-lock-keyword-face)))
+  '((t (:inherit font-lock-string-face)))
   "For use with Reserved keywords.")
 
-(defface elixir-font-string-escape-face
-  '((t (:inherit font-lock-keyword-face)))
-  "For use with @string.escape tag.")
-
 (defface elixir-font-string-regex-face
-  '((t (:inherit font-lock-keyword-face)))
+  '((t (:inherit font-lock-string-face)))
   "For use with @string.regex tag.")
 
 (defface elixir-font-string-special-face
-  '((t (:inherit font-lock-keyword-face)))
+  '((t (:inherit font-lock-string-face)))
   "For use with @string.special tag.")
 
 (defface elixir-font-string-special-symbol-face
-  '((t (:inherit font-lock-keyword-face)))
+  '((t (:inherit font-lock-builtin-face)))
   "For use with @string.special.symbol tag.")
 
 (defface elixir-font-function-face
-  '((t (:inherit font-lock-keyword-face)))
+  '((t (:inherit font-lock-function-name-face)))
   "For use with @function tag.")
 
 (defface elixir-font-sigil-name-face
-  '((t (:inherit font-lock-keyword-face)))
+  '((t (:inherit font-lock-function-name-face)))
   "For use with @__name__ tag.")
 
 (defface elixir-font-variable-face
-  '((t (:inherit font-lock-keyword-face)))
+  '((t (:inherit font-lock-variable-name-face)))
   "For use with @variable tag.")
 
 (defface elixir-font-contant-builtin-face
@@ -149,11 +146,11 @@
   "For use with @constant.builtin tag.")
 
 (defface elixir-font-comment-face
-  '((t (:inherit font-lock-keyword-face)))
+  '((t (:inherit font-lock-comment-face)))
   "For use with @comment tag.")
 
 (defface elixir-font-comment-unused-face
-  '((t (:inherit font-lock-keyword-face)))
+  '((t (:inherit font-lock-comment-face)))
   "For use with @comment.unused tag.")
 
 ;; Faces end
@@ -196,11 +193,10 @@
 (defvar elixir--treesit-font-lock-settings
   (treesit-font-lock-rules
    :language 'elixir
-   :level 1
    `(
      ,elixir--reserved-keywords-vector @elixir-font-keyword-face
      (unary_operator
-      operator: "@" @elixir-font-comment-doc-face
+      operator: "@" @elixir-font-attribute-face
       operand: (call
                 target: (identifier) @elixir-font-comment-doc-attribute-face
                 (arguments
