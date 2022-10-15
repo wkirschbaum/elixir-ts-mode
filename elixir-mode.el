@@ -55,7 +55,8 @@
         (setq arg (1- arg))))))
 
 
-;; Faces start
+;; Custom faces match highlights.scm as close as possible
+;; to help with updates
 
 (defface elixir-font-keyword-face
   '((t (:inherit font-lock-keyword-face)))

@@ -9,3 +9,11 @@ which-function-mode and navigation.
 - Follow instructions from [emacs-src-folder]/admin/notes/tree-sitter/starter-guide 
 - eval-buffer when opening `elixir-mode.el`
 
+
+## TODO
+
+    [ ] Handle Heex
+    [ ] Fix Begin/End defun
+    [ ] Improve Indentation
+    [ ] Improve imenu
+    [ ] Improve forward-sexp
