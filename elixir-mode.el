@@ -21,21 +21,6 @@
   :type 'integer
   :safe 'integerp)
 
-(defvar elixir-attribute-face 'elixir-attribute-face)
-(defface elixir-attribute-face
-  '((t (:inherit font-lock-preprocessor-face)))
-  "For use with module attribute tokens.")
-
-(defvar elixir-atom-face 'elixir-atom-face)
-(defface elixir-atom-face
-  '((t (:inherit font-lock-builtin-face)))
-  "For use with atoms & map keys.")
-
-(defvar elixir-number-face 'elixir-number-face)
-(defface elixir-number-face
-  '((t (:inherit default)))
-  "For use with numbers.")
-
 ;; TODO: This goes into infinite loop at eob and does not
 ;; handle multi-line def's
 (defun elixir--treesit-beginning-of-defun (&optional arg)
@@ -81,12 +66,42 @@
 (defconst elixir--kernel-keywords-re
   (concat "^" (regexp-opt elixir--kernel-keywords) "$"))
 
+(defconst elixir--doc-keywords
+  '("moduledoc" "typedoc" "doc"))
+
+(defconst elixir--doc-keywords-re
+  (concat "^" (regexp-opt elixir--doc-keywords) "$"))
+
+
 (defconst elixir--reserved-keywords
   '("when" "and" "or" "not" "in"
    "not in" "fn" "do" "end" "catch" "rescue" "after" "else"))
 
 (defconst elixir--reserved-keywords-vector
   (apply #'vector elixir--reserved-keywords))
+
+(defvar elixir-attribute-face 'elixir-attribute-face)
+(defface elixir-attribute-face
+  '((t (:inherit font-lock-preprocessor-face)))
+  "For use with module attribute tokens.")
+
+(defvar elixir-atom-face 'elixir-atom-face)
+(defface elixir-atom-face
+  '((t (:inherit font-lock-builtin-face)))
+  "For use with atoms & map keys.")
+
+(defvar elixir-number-face 'elixir-number-face)
+(defface elixir-number-face
+  '((t (:inherit default)))
+  "For use with numbers.")
+
+(defface elixir-font-reserved-keyword-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with Reserved keywords.")
+
+(defface elixir-font-operator-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with Reserved keywords.")
 
 ;; reference:
 ;; https://github.com/elixir-lang/tree-sitter-elixir/blob/main/queries/highlights.scm
@@ -95,9 +110,23 @@
    :language 'elixir
    :level 1
    `(
-     ,elixir--reserved-keywords-vector @font-lock-keyword-face
+     ,elixir--reserved-keywords-vector @elixir-font-reserved-keyword-face
      (call target: (identifier) @font-lock-keyword-face
            (:match ,elixir--definition-keywords-re @font-lock-keyword-face))
+     (unary_operator
+      operator: "@" @font-lock-variable-name-face
+      operand: (call
+                target: (identifier) @font-lock-variable-name-face
+                (arguments
+                 [
+                  (string) @font-lock-doc-face
+                  (charlist) @font-lock-doc-face
+                  (sigil
+                   quoted_start: _ @font-lock-doc-face
+                   quoted_end: _ @font-lock-doc-face) @font-lock-doc-face
+                  (boolean) @font-lock-doc-face
+                  ]))
+      (:match ,elixir--doc-keywords-re @font-lock-variable-name-face ))
      (call
       target: (identifier) @font-lock-keyword-face
       (:match ,elixir--kernel-keywords-re @font-lock-keyword-face))
@@ -106,6 +135,8 @@
      [(integer) (float)] @elixir-atom-face
      (call target: (dot left: (atom) @elixir-atom-face))
      (char) @elixir-atom-face
+     (comment) @font-lock-comment-face
+     (string) @font-lock-string-face
      (unary_operator
       operator: "@" @font-lock-variable-name-face
       operand: [
@@ -116,10 +147,7 @@
                 (nil) @font-lock-variable-name-face
                 ])
 
-     (interpolation
-      "#{"
-      @font-lock-variable-name-face
-      "}" @font-lock-variable-name-face)
+     ((interpolation) @elixir-atom-face "#{" @elixir-atom-face "}" @elixir-atom-face)
      ))
   "Tree-sitter font-lock settings.")
 
@@ -377,9 +405,7 @@
         (treesit-parser-create 'heex)
         (treesit-parser-create 'elixir)
 
-        ;; This turns off the syntax-based font-lock for comments and
-        ;; strings.  So it doesn’t override tree-sitter’s fontification.
-        (setq-local font-lock-keywords-only t)
+        (setq-local font-lock-defaults '(nil t))
         (setq-local treesit-font-lock-settings
                     elixir--treesit-font-lock-settings)
         (treesit-font-lock-enable)
