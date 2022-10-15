@@ -194,11 +194,6 @@
   (treesit-font-lock-rules
    :language 'elixir
    `(
-     (interpolation "#{" @elixir-font-punctuation-special-face "}" @elixir-font-punctuation-special-face)
-     )
-   :language 'elixir
-   :override t
-   `(
      ,elixir--reserved-keywords-vector @elixir-font-keyword-face
      (unary_operator operator: "&" operand: (integer) @elixir-font-operator-face)
      (operator_identifier) @elixir-font-operator-face
@@ -260,6 +255,12 @@
      ["%"] @elixir-font-punctuation-face
      ["," ";"] @elixir-font-punctuation-delimiter-face
      ["(" ")" "[" "]" "{" "}" "<<" ">>"] @elixir-font-punctuation-bracket-face
+      (interpolation "#{" @elixir-font-a-face "}" @elixir-font-punctuation-special-face)
+     )
+
+   :language 'elixir
+   :override t
+   `(
      (sigil
       (sigil_name) @elixir-font-sigil-name-face
       quoted_start: _ @elixir-font-string-special-face
@@ -269,16 +270,13 @@
       quoted_start: _ @elixir-font-string-face
       quoted_end: _ @elixir-font-string-face
       (:match "^[sS]$" @elixir-font-sigil-name-face)) @elixir-font-string-face
-     (sigil
+      (sigil
       (sigil_name) @elixir-font-sigil-name-face
       quoted_start: _ @elixir-font-string-regex-face
       quoted_end: _ @elixir-font-string-regex-face
       (:match "^[rR]$" @elixir-font-sigil-name-face)) @elixir-font-string-regex-face
-     )
 
-   :language 'elixir
-   :override t
-   `(
+
      (unary_operator
       operator: "@" @elixir-font-comment-doc-attribute-face
       operand: (call
@@ -302,7 +300,8 @@
                                (nil)  @elixir-font-attribute-face
                                ])
 
-     ))
+     )
+   )
   "Tree-sitter font-lock settings.")
 
 
@@ -553,7 +552,6 @@
         (treesit-parser-create 'heex)
         (treesit-parser-create 'elixir)
 
-        (setq-local font-lock-defaults '(nil t))
         (setq-local treesit-font-lock-settings
                     elixir--treesit-font-lock-settings)
         (treesit-font-lock-enable)
