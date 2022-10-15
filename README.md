@@ -18,3 +18,4 @@ which-function-mode and navigation.
     [ ] Improve Indentation
     [ ] Improve imenu
     [ ] Improve forward-sexp
+    [ ] Figure out why sigil start breaks fonts

@@ -261,7 +261,7 @@
    :level 2
    :override t
    `(
-     (interpolation "#{" @elixir-font-punctuation-special-face "}" @elixir-font-punctuation-special-face) @elixir-font-embedded-face
+     (interpolation "#{" @elixir-font-punctuation-special-face "}" @elixir-font-punctuation-special-face) @elixir-font-module-face
      (unary_operator
       operator: "@" @elixir-font-comment-doc-attribute-face
       operand: (call
