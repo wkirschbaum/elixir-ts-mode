@@ -193,6 +193,7 @@
 (defvar elixir--treesit-font-lock-settings
   (treesit-font-lock-rules
    :language 'elixir
+   :feature 'basic
    `(
      ,elixir--reserved-keywords-vector @elixir-font-keyword-face
      (unary_operator operator: "&" operand: (integer) @elixir-font-operator-face)
@@ -552,8 +553,9 @@
         (treesit-parser-create 'heex)
         (treesit-parser-create 'elixir)
 
-        (setq-local treesit-font-lock-settings
-                    elixir--treesit-font-lock-settings)
+        (setq-local font-lock-keywords-only t)
+        (setq-local treesit-font-lock-feature-list '((basic)))
+        (setq-local treesit-font-lock-settings elixir--treesit-font-lock-settings)
         (treesit-font-lock-enable)
 
 
