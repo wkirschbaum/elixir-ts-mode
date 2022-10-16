@@ -6,6 +6,9 @@
 (require 'cl-lib)
 (require 'treesit)
 
+(ignore-errors
+  (unload-feature 'elixir-mode))
+
 (defgroup elixir nil
   "Major mode for editing Elixir code."
   :tag "Elixir"
@@ -16,6 +19,13 @@
   "Indentation of Elixir statements."
   :type 'integer
   :safe 'integerp)
+
+(defcustom elixir-use-tree-sitter t
+  "If non-nil, `elixir-mode' tries to use tree-sitter.
+Currently `elixir-mode' uses tree-sitter for font-locking, imenu,
+and movement functions."
+  :type 'boolean
+  :version "29.1")
 
 ;; TODO: This goes into infinite loop at eob and does not
 ;; handle multi-line def's
@@ -58,6 +68,10 @@
   "For use with @keyword tag.")
 
 (defface elixir-font-comment-doc-face
+  '((t (:inherit font-lock-doc-face)))
+  "For use with @comment.doc tag.")
+
+(defface elixir-font-comment-doc-identifier-face
   '((t (:inherit font-lock-doc-face)))
   "For use with @comment.doc tag.")
 
@@ -149,6 +163,10 @@
   '((t (:inherit font-lock-comment-face)))
   "For use with @comment.unused tag.")
 
+(defface elixir-font-error-face
+  '((t (:inherit error)))
+  "For use with @comment.unused tag.")
+
 ;; Faces end
 
 (defconst elixir--definition-keywords
@@ -191,6 +209,26 @@
    :feature 'basic
    `(
      (comment) @elixir-font-comment-face
+     (unary_operator
+      operator: "@" @elixir-font-comment-doc-attribute-face
+      operand: (call
+                target: (identifier) @elixir-font-comment-doc-identifier-face
+                (arguments
+                 [
+                  (string) @elixir-font-comment-doc-face
+                  (charlist) @elixir-font-comment-doc-face
+                  (sigil) @elixir-font-comment-doc-face
+                  (boolean) @elixir-font-comment-doc-face
+                  ]))
+      (:match ,elixir--doc-keywords-re @elixir-font-comment-doc-identifier-face))
+
+     (unary_operator operator: "@" @elixir-font-attribute-face
+                     operand: [
+                               (identifier)  @elixir-font-attribute-face
+                               (call target: (identifier)  @elixir-font-attribute-face)
+                               (boolean)  @elixir-font-attribute-face
+                               (nil)  @elixir-font-attribute-face
+                               ])
 
      ;; keywords
      ,elixir--reserved-keywords-vector @elixir-font-keyword-face
@@ -210,7 +248,7 @@
      (call target: (dot left: (atom) @elixir-font-module-face))
      (char) @elixir-font-constant-face
      [(atom) (quoted_atom)] @elixir-font-module-face
-     [(keyword) (quoted_keyword)] @elixir-font-attribute-face
+     [(keyword) (quoted_keyword)] @elixir-font-string-special-symbol-face
 
      (call
       target: (identifier) @elixir-font-keyword-face
@@ -245,18 +283,9 @@
      ((identifier) @elixir-font-comment-unused-face
       (:match "^_" @elixir-font-comment-unused-face))
      (identifier) @elixir-font-variable-face
-     (comment) @elixir-font-comment-face
      ["%"] @elixir-font-punctuation-face
      ["," ";"] @elixir-font-punctuation-delimiter-face
      ["(" ")" "[" "]" "{" "}" "<<" ">>"] @elixir-font-punctuation-bracket-face
-
-     (unary_operator operator: "@" @elixir-font-attribute-face
-                     operand: [
-                               (identifier)  @elixir-font-attribute-face
-                               (call target: (identifier)  @elixir-font-attribute-face)
-                               (boolean)  @elixir-font-attribute-face
-                               (nil)  @elixir-font-attribute-face
-                               ])
      (charlist
       [
        quoted_end: _ @elixir-font-string-face
@@ -297,27 +326,12 @@
       quoted_start: _ @elixir-font-string-regex-face
       quoted_end: _ @elixir-font-string-regex-face
       (:match "^[rR]$" @elixir-font-sigil-name-face)) @elixir-font-string-regex-face
-
-     (unary_operator
-      operator: "@" @elixir-font-comment-doc-attribute-face
-      operand: (call
-                target: (identifier) @elixir-font-comment-doc-attribute-face
-                (arguments
-                 [
-                  (string) @elixir-font-comment-doc-face
-                  (charlist) @elixir-font-comment-doc-face
-                  (sigil
-                   quoted_start: _ @elixir-font-comment-doc-face
-                   quoted_end: _ @elixir-font-comment-doc-face)
-                  @elixir-font-comment-doc-face
-                  (boolean) @elixir-font-comment-doc-face
-                  ]))
-      (:match ,elixir--doc-keywords-re @elixir-font-comment-doc-attribute-face))
      )
    :language 'elixir
    :feature 'elaborate
    :override t
-   `((escape_sequence) @elixir-font-string-escape-face))
+   `((escape_sequence) @elixir-font-string-escape-face)
+   )
   "Tree-sitter font-lock settings.")
 
 (defun elixir--treesit-capture-defun ()
@@ -554,15 +568,21 @@
   (setq-local comment-start-skip "#+\\s-*")
   (setq-local comment-end "")
 
-  ;; (setq-local parse-sexp-lookup-properties t)
-  ;; (setq-local parse-sexp-ignore-comments t)
+  ;; TODO: check what impact parse-sexps have
+  (setq-local parse-sexp-lookup-properties t)
+  (setq-local parse-sexp-ignore-comments t)
 
+  ;; (setq-local syntax-propertize-function elixir-syntax-propertize-function)
 
-  (if (treesit-can-enable-p)
+  (if (and elixir-use-tree-sitter
+           (treesit-can-enable-p))
       (progn
         (treesit-parser-create 'elixir)
 
-        (setq-local font-lock-keywords-only nil)
+        ;; (setq-local font-lock-keywords-only t) ; does not seem to work
+        ;; so using no defaults for now
+        (setq-local font-lock-defaults '(nil t))
+
         (setq-local treesit-font-lock-feature-list '((basic) (moderate) (elaborate)))
         (setq-local treesit-font-lock-settings elixir--treesit-font-lock-settings)
         (treesit-font-lock-enable)
