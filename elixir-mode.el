@@ -198,6 +198,13 @@ and movement functions."
   '("when" "and" "or" "not" "in"
    "not in" "fn" "do" "end" "catch" "rescue" "after" "else"))
 
+(defconst elixir--reserved-keywords
+  '("when" "and" "or" "not" "in"
+   "not in" "fn" "do" "end" "catch" "rescue" "after" "else"))
+
+(defconst elixir--reserved-keywords-re
+  (concat "^" (regexp-opt elixir--reserved-keywords) "$"))
+
 (defconst elixir--reserved-keywords-vector
   (apply #'vector elixir--reserved-keywords))
 
@@ -209,10 +216,18 @@ and movement functions."
    :feature 'basic
    `(
      (comment) @elixir-font-comment-face
+
+     ,elixir--reserved-keywords-vector @elixir-font-keyword-face
+
      (unary_operator
       operator: "@" @elixir-font-comment-doc-attribute-face
       operand: (call
                 target: (identifier) @elixir-font-comment-doc-identifier-face
+                ;; arguments can be optional, but not sure how to specify
+                ;; so adding another entry without arguments
+                ;; if we don't handle then we don't apply font
+                ;; and the non doc fortification query will take specify
+                ;; a more specific font which takes precedence
                 (arguments
                  [
                   (string) @elixir-font-comment-doc-face
@@ -220,6 +235,12 @@ and movement functions."
                   (sigil) @elixir-font-comment-doc-face
                   (boolean) @elixir-font-comment-doc-face
                   ]))
+      (:match ,elixir--doc-keywords-re @elixir-font-comment-doc-identifier-face))
+
+     (unary_operator
+      operator: "@" @elixir-font-comment-doc-attribute-face
+      operand: (call
+                target: (identifier) @elixir-font-comment-doc-identifier-face)
       (:match ,elixir--doc-keywords-re @elixir-font-comment-doc-identifier-face))
 
      (unary_operator operator: "@" @elixir-font-attribute-face
@@ -230,18 +251,18 @@ and movement functions."
                                (nil)  @elixir-font-attribute-face
                                ])
 
-     ;; keywords
-     ,elixir--reserved-keywords-vector @elixir-font-keyword-face
-
-     ;; operators
-     (unary_operator operator: "&" operand: (integer) @elixir-font-operator-face)
+     (unary_operator operator: "&") @elixir-font-function-face
      (operator_identifier) @elixir-font-operator-face
-     (binary_operator operator: "when" @elixir-font-keyword-face)
+
+     ;; these are operators, should we mark them as keywords?
+     (binary_operator
+      operator: _ @elixir-font-keyword-face
+      (:match ,elixir--reserved-keywords-re @elixir-font-keyword-face))
+
      (binary_operator operator: _ @elixir-font-operator-face)
      (dot operator: _ @elixir-font-operator-face)
      (stab_clause operator: _ @elixir-font-operator-face)
 
-     ;; atoms and functions
      [(boolean) (nil)] @elixir-font-constant-face
      [(integer) (float)] @elixir-font-number-face
      (alias) @elixir-font-module-face
@@ -286,6 +307,7 @@ and movement functions."
      ["%"] @elixir-font-punctuation-face
      ["," ";"] @elixir-font-punctuation-delimiter-face
      ["(" ")" "[" "]" "{" "}" "<<" ">>"] @elixir-font-punctuation-bracket-face
+
      (charlist
       [
        quoted_end: _ @elixir-font-string-face
@@ -305,9 +327,7 @@ and movement functions."
        "#{"
        @elixir-font-string-escape-face
        "}" @elixir-font-string-escape-face)
-      ])
-
-     )
+      ]))
    :language 'elixir
    :feature 'moderate
    :override t
