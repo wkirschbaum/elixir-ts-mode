@@ -3,11 +3,6 @@
 ;; Examples of AST
 ;;https://github.com/elixir-lang/tree-sitter-elixir/blob/main/test/corpus/integration/function_definition.txt
 
-
-(ignore-errors
-    (unload-feature 'elixir-mode))
-
-
 (require 'cl-lib)
 (require 'treesit)
 
@@ -115,7 +110,7 @@
   "For use with @string tag.")
 
 (defface elixir-font-string-escape-face
-  '((t (:inherit font-lock-string-face)))
+  '((t (:inherit font-lock-regexp-grouping-backslash)))
   "For use with Reserved keywords.")
 
 (defface elixir-font-string-regex-face
@@ -195,26 +190,30 @@
    :language 'elixir
    :feature 'basic
    `(
+     ;; strings and comments
+     [(charlist) (string)] @elixir-font-string-face
+     (comment) @elixir-font-comment-face
+
+     ;; keywords
      ,elixir--reserved-keywords-vector @elixir-font-keyword-face
+
+     ;; operators
      (unary_operator operator: "&" operand: (integer) @elixir-font-operator-face)
      (operator_identifier) @elixir-font-operator-face
-     (unary_operator operator: _ @elixir-font-operator-face)
+     (binary_operator operator: "when" @elixir-font-keyword-face)
      (binary_operator operator: _ @elixir-font-operator-face)
      (dot operator: _ @elixir-font-operator-face)
      (stab_clause operator: _ @elixir-font-operator-face)
+
+     ;; atoms and functions
      [(boolean) (nil)] @elixir-font-constant-face
      [(integer) (float)] @elixir-font-number-face
      (alias) @elixir-font-module-face
      (call target: (dot left: (atom) @elixir-font-module-face))
      (char) @elixir-font-constant-face
-     (escape_sequence) @elixir-font-string-escape-face
-     [
-      (atom)
-      (quoted_atom)
-      (keyword)
-      (quoted_keyword)
-      ] @elixir-font-string-special-symbol-face
-     [(string) (charlist)] @elixir-font-string-face
+     [(atom) (quoted_atom)] @elixir-font-module-face
+     [(keyword) (quoted_keyword)] @elixir-font-attribute-face
+
      (call
       target: (identifier) @elixir-font-keyword-face
       (:match ,elixir--definition-keywords-re @elixir-font-keyword-face))
@@ -222,13 +221,8 @@
       target: (identifier) @elixir-font-keyword-face
       (:match ,elixir--kernel-keywords-re @elixir-font-keyword-face))
      (call
-      target: [
-                                        ; local
-               (identifier) @elixir-font-function-face
-                                        ; remote
-               (dot
-                right: (identifier) @elixir-font-function-face)
-               ])
+      target: [(identifier) @elixir-font-function-face
+               (dot right: (identifier) @elixir-font-function-face)])
      (call
       target: (identifier) @elixir-font-keyword-face
       (arguments
@@ -246,6 +240,7 @@
         operator: "|>"
         right: (identifier) @elixir-font-variable-face))
       (:match ,elixir--definition-keywords-re @elixir-font-keyword-face))
+
      (binary_operator operator: "|>" right: (identifier) @elixir-font-function-face)
      ((identifier) @elixir-font-constant-builtin-face
       (:match ,elixir--builtin-keywords-re @elixir-font-constant-builtin-face))
@@ -256,10 +251,18 @@
      ["%"] @elixir-font-punctuation-face
      ["," ";"] @elixir-font-punctuation-delimiter-face
      ["(" ")" "[" "]" "{" "}" "<<" ">>"] @elixir-font-punctuation-bracket-face
-      (interpolation "#{" @elixir-font-a-face "}" @elixir-font-punctuation-special-face)
-     )
 
+     (unary_operator operator: "@" @elixir-font-attribute-face
+                     operand: [
+                               (identifier)  @elixir-font-attribute-face
+                               (call target: (identifier)  @elixir-font-attribute-face)
+                               (boolean)  @elixir-font-attribute-face
+                               (nil)  @elixir-font-attribute-face
+                               ])
+
+     )
    :language 'elixir
+   :feature 'moderate
    :override t
    `(
      (sigil
@@ -277,7 +280,6 @@
       quoted_end: _ @elixir-font-string-regex-face
       (:match "^[rR]$" @elixir-font-sigil-name-face)) @elixir-font-string-regex-face
 
-
      (unary_operator
       operator: "@" @elixir-font-comment-doc-attribute-face
       operand: (call
@@ -293,18 +295,15 @@
                   (boolean) @elixir-font-comment-doc-face
                   ]))
       (:match ,elixir--doc-keywords-re @elixir-font-comment-doc-attribute-face))
-     (unary_operator operator: "@"  @elixir-font-attribute-face
-                     operand: [
-                               (identifier)  @elixir-font-attribute-face
-                               (call target: (identifier)  @elixir-font-attribute-face)
-                               (boolean)  @elixir-font-attribute-face
-                               (nil)  @elixir-font-attribute-face
-                               ])
-
      )
-   )
+   :language 'elixir
+   :feature 'elaborate
+   :override t
+   `(
+     (escape_sequence) @elixir-font-string-escape-face
+     (interpolation "#{" @elixir-font-string-escape-face "}" @elixir-font-string-escape-face)
+     ))
   "Tree-sitter font-lock settings.")
-
 
 (defun elixir--treesit-capture-defun ()
   (interactive)
@@ -346,6 +345,8 @@
        ((node-is "|") parent-bol 0)
        ((node-is "end") parent-bol 0)
        ((node-is "else_block") parent-bol 0)
+       ((node-is "stab_clause") parent-bol ,offset)
+       ((node-is "rescue_block") parent-bol 0)
        ((node-is ".") parent-bol ,offset)
        ((parent-is "body") parent-bol ,offset)
        ((parent-is "sigil") parent-bol 0)
@@ -517,12 +518,6 @@
      (treesit-node-parent (elixir--treesit-largest-node-at-point))
      "call"))))
 
-(defun elixir-prev-sibling ()
-  (interactive)
-
-
-)
-
 (defun elixir-forward-sexp (&optional arg)
   "Move forward across expressions.  With ARG, do it that many times.  Negative arg -N means move backward N times."
   (interactive "^p")
@@ -544,17 +539,16 @@
   (setq-local comment-start-skip "#+\\s-*")
   (setq-local comment-end "")
 
-  (setq-local parse-sexp-lookup-properties t)
-  (setq-local parse-sexp-ignore-comments t)
+  ;; (setq-local parse-sexp-lookup-properties t)
+  ;; (setq-local parse-sexp-ignore-comments t)
 
 
   (if (treesit-can-enable-p)
       (progn
-        (treesit-parser-create 'heex)
         (treesit-parser-create 'elixir)
 
         (setq-local font-lock-keywords-only t)
-        (setq-local treesit-font-lock-feature-list '((basic)))
+        (setq-local treesit-font-lock-feature-list '((basic) (moderate) (elaborate)))
         (setq-local treesit-font-lock-settings elixir--treesit-font-lock-settings)
         (treesit-font-lock-enable)
 
