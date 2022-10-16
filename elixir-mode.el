@@ -137,7 +137,7 @@
   '((t (:inherit default)))
   "For use with @variable tag.")
 
-(defface elixir-font-contant-builtin-face
+(defface elixir-font-constant-builtin-face
   '((t (:inherit font-lock-keyword-face)))
   "For use with @constant.builtin tag.")
 
@@ -190,8 +190,6 @@
    :language 'elixir
    :feature 'basic
    `(
-     ;; strings and comments
-     [(charlist) (string)] @elixir-font-string-face
      (comment) @elixir-font-comment-face
 
      ;; keywords
@@ -259,6 +257,26 @@
                                (boolean)  @elixir-font-attribute-face
                                (nil)  @elixir-font-attribute-face
                                ])
+     (charlist
+      [
+       quoted_end: _ @elixir-font-string-face
+       quoted_start: _ @elixir-font-string-face
+      (quoted_content) @elixir-font-string-face
+      (interpolation
+       "#{"
+       @elixir-font-string-escape-face
+       "}" @elixir-font-string-escape-face)
+      ])
+     (string
+      [
+       quoted_end: _ @elixir-font-string-face
+       quoted_start: _ @elixir-font-string-face
+      (quoted_content) @elixir-font-string-face
+      (interpolation
+       "#{"
+       @elixir-font-string-escape-face
+       "}" @elixir-font-string-escape-face)
+      ])
 
      )
    :language 'elixir
@@ -299,10 +317,7 @@
    :language 'elixir
    :feature 'elaborate
    :override t
-   `(
-     (escape_sequence) @elixir-font-string-escape-face
-     (interpolation "#{" @elixir-font-string-escape-face "}" @elixir-font-string-escape-face)
-     ))
+   `((escape_sequence) @elixir-font-string-escape-face))
   "Tree-sitter font-lock settings.")
 
 (defun elixir--treesit-capture-defun ()
@@ -547,7 +562,7 @@
       (progn
         (treesit-parser-create 'elixir)
 
-        (setq-local font-lock-keywords-only t)
+        (setq-local font-lock-keywords-only nil)
         (setq-local treesit-font-lock-feature-list '((basic) (moderate) (elaborate)))
         (setq-local treesit-font-lock-settings elixir--treesit-font-lock-settings)
         (treesit-font-lock-enable)
