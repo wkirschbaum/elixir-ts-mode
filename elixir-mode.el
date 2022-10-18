@@ -371,43 +371,74 @@ and movement functions."
         (setq node (treesit-node-parent node))))
     result))
 
-(defun elixir--treesit-backward-up-list ()
-  (lambda (node _parent _bol &rest _)
-    (let ((parent (elixir--treesit-find-parent-do-block node)))
-      (if parent
-          (save-excursion
-            (goto-char (treesit-node-start parent))
-            (back-to-indentation)
-            (point))
-        nil))))
+(defun elixir--treesit-find-parent-node (type &optional node)
+  "Find parent node of TYPE. Start at point or use NODE if specified."
+  (let* ((node (or node (treesit-node-at (point))))
+        (parent (treesit-node-parent node))
+        (result nil))
+    (while (and parent (not result))
+      (if (equal (treesit-node-type parent) type)
+          (setq result parent)
+        (setq parent (treesit-node-parent parent))))
+    result))
 
+
+(defun elixir--treesit-backward-up-list ()
+  "Find parent expression."
+  (lambda (node _parent _bol &rest _)
+    ;; this should check all kinds of lists, not just (call (do_block))
+    (let* ((block-parent (elixir--treesit-find-parent-node "do_block" node))
+           (indent-parent (elixir--treesit-find-parent-node "call" block-parent)))
+      (save-excursion
+        (goto-char (treesit-node-start indent-parent))
+        (back-to-indentation)
+        (point)))))
+
+;; TODOs
+
+;; * opening a list should indent
+
+;; we can'tuse parent-bol for non-lists, because the
+;; parent is the do block which might be indented
+;; so we have to find the outside (call)
 (defvar elixir--treesit-indent-rules
   (let ((offset elixir-indent-level))
     `((elixir
+       ;; no-node can be a bit more comprehensive
        (no-node (elixir--treesit-backward-up-list) ,offset)
+       ;; ((parent-is "source") first-sibling 0)
+
+       ((node-is "end") (elixir--treesit-backward-up-list) 0)
+       ((node-is "]") parent-bol 0)
        ((node-is "}") parent-bol 0)
-       ((node-is ")") parent-bol 0)
-       ((node-is "]") parent-bol 0)
-       ((node-is ">") parent-bol 0)
-       ((node-is "]") parent-bol 0)
-       ((node-is "|>") parent-bol 0)
-       ((node-is "|") parent-bol 0)
-       ((node-is "end") parent-bol 0)
+       ((node-is ")") (elixir--treesit-backward-up-list) 0)
+       ((node-is ".") first-sibling ,offset)
+
        ((node-is "else_block") parent-bol 0)
        ((node-is "stab_clause") parent-bol ,offset)
        ((node-is "rescue_block") parent-bol 0)
-       ((node-is ".") parent-bol ,offset)
-       ((parent-is "body") parent-bol ,offset)
-       ((parent-is "sigil") parent-bol 0)
-       ((parent-is "string") parent-bol 0)
-       ((parent-is "tuple") parent-bol ,offset)
-       ((parent-is "do_block") parent-bol ,offset)
-       ((parent-is "else_block") parent-bol ,offset)
-       ((parent-is "stab_clause") parent-bol ,offset)
-       ((parent-is "arguments") parent-bol ,offset)
+
+
+       ((parent-is "do_block") (elixir--treesit-backward-up-list) ,offset)
+       ((parent-is "binary_operator") parent-bol 0)
        ((parent-is "list") parent-bol ,offset)
+       ((parent-is "tuple") parent-bol ,offset)
        ((parent-is "keywords") first-sibling 0)
-       ((parent-is "binary_operator") parent ,offset)
+       ((parent-is "string") parent-bol 0)
+       ((parent-is "sigil") parent-bol 0)
+       ((parent-is "body") parent-bol ,offset)
+
+       ;; this needs to consider the call target perhaps?
+       ;;does not work for list comprehensions for example
+       ((parent-is "arguments") (elixir--treesit-backward-up-list) ,offset)
+
+       ((parent-is "pair") first-sibling ,offset)
+
+       ;; ((node-is "|") parent-bol 0)
+
+       ;; ((parent-is "body") parent-bol ,offset)
+       ;; ((parent-is "sigil") parent-bol 0)
+       ;; ((parent-is "string") parent-bol 0)
        ))))
 
 (defun elixir--treesit-current-defun (&optional include-type)
