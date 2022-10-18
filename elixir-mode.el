@@ -594,30 +594,27 @@ and movement functions."
 
   ;; (setq-local syntax-propertize-function elixir-syntax-propertize-function)
 
-  (if (and elixir-use-tree-sitter
-           (treesit-can-enable-p))
-      (progn
-        (treesit-parser-create 'elixir)
+  (cond ((and elixir-use-tree-sitter
+              (treesit-can-enable-p)
+              (treesit-language-available-p 'elixir))
+         (progn
+           (unless font-lock-defaults
+             (setq font-lock-defaults '(nil t)))
 
-        ;; (setq-local font-lock-keywords-only t) ; does not seem to work
-        ;; so using no defaults for now
-        (setq-local font-lock-defaults '(nil t))
+           (message "foo")
+           (setq-local treesit-simple-indent-rules elixir--treesit-indent-rules)
+           (setq-local indent-line-function #'treesit-indent)
 
-        (setq-local treesit-font-lock-feature-list '((basic) (moderate) (elaborate)))
-        (setq-local treesit-font-lock-settings elixir--treesit-font-lock-settings)
-        (treesit-font-lock-enable)
+           (setq-local beginning-of-defun-function #'elixir--treesit-beginning-of-defun)
+           (setq-local end-of-defun-function #'elixir--treesit-end-of-defun)
 
-
-        (setq-local treesit-simple-indent-rules elixir--treesit-indent-rules)
-        (setq-local indent-line-function #'treesit-indent)
-
-        (setq-local beginning-of-defun-function #'elixir--treesit-beginning-of-defun)
-        (setq-local end-of-defun-function #'elixir--treesit-end-of-defun)
-
-        (setq-local forward-sexp-function #'elixir-forward-sexp)
-
-        (setq-local imenu-create-index-function #'elixir--imenu-treesit-create-index)
-        (add-hook 'which-func-functions #'elixir--treesit-current-defun nil t))))
+           (setq-local imenu-create-index-function #'elixir--imenu-treesit-create-index)
+           (setq-local forward-sexp-function #'elixir-forward-sexp)
+           (setq-local treesit-font-lock-feature-list '((basic) (moderate) (elaborate)))
+           (setq-local treesit-font-lock-settings elixir--treesit-font-lock-settings)
+           (treesit-font-lock-enable)))
+        (t
+         (message "Tree sitter for Elixir isn't available"))))
 
 
 ;;;###autoload
