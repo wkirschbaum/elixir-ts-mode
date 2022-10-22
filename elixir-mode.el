@@ -394,21 +394,6 @@ and movement functions."
        ((parent-is "binary_operator") parent ,offset)
        ))))
 
-;; (defun elixir--treesit-current-defun (&optional include-type)
-;;   "Find current Elixir function. Optional argument INCLUDE-TYPE indicates to include the type of the defun."
-;;   (let ((node (treesit-node-at (point)))
-;;         (name-list ()))
-;;     (cl-loop while node
-;;              if (pcase (treesit-node-type node)
-;;                   ("call" (elixir--treesit-defun node)))
-;;              do (push (elixir--treesit-defun node) name-list)
-;;              do (setq node (treesit-node-parent node))
-;;              finally return (concat (if include-type
-;;                                         (format "%s " (treesit-node-type node))
-;;                                       "")
-;;                                     (string-join name-list ".")))))
-
-
 (defun elixir--imenu-item-parent-label (type name)
   (cond
    ((equal type "defmodule") "Module")
@@ -448,9 +433,8 @@ and movement functions."
 (defvar elixir-query)
 (setq elixir-query "(call target: (identifier) (arguments [(alias) @name (identifier) @name]))")
 
-(defun elixir--treesit-query-defun ()
-  "Elixir treesit function query."
-  `(call
+(defvar elixir--treesit-query-defun
+  (let ((query `((call
      target: (identifier) @type
      (arguments
       [
@@ -462,16 +446,21 @@ and movement functions."
         operator: "when")
        ])
      (:match ,elixir--definition-keywords-re @type)
-     )
-  )
+     ))))
+    (when (treesit-query-validate 'elixir query)
+      (treesit-query-compile 'elixir query))))
+
+
+(defun elixir--treesit-defun-view ()
+  "Get the module name from the NODE if exists."
+  (let ((node (elixir--treesit-largest-node-at-point))
+        (query elixir--treesit-query-defun))
+    (when (treesit-compiled-query-p query)
+      (message "%s"  (treesit-query-capture node query)))))
 
 (defun elixir--treesit-defun (node)
   "Get the module name from the NODE if exists."
-  (let ((name
-         (format
-          "(%s)"
-          (treesit-query-expand (elixir--treesit-query-defun)))))
-    (treesit-query-capture node name)))
+  (treesit-query-capture node elixir--treesit-query-defun))
 
 (defun elixir--treesit-defun-name (&optional node)
   "Get the module name from the NODE if exists."

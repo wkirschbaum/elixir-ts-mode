@@ -1,5 +1,3 @@
-
-
 defmodule Foo do
 
 
@@ -9,8 +7,10 @@ defmodule Foo do
 
   def last(one) do
 
-    fn foo ->
+    def at(1), do: "no"
 
+    def another(foo) do
+      foo
     end
 
   end
