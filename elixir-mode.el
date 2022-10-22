@@ -394,29 +394,31 @@ and movement functions."
        ((parent-is "binary_operator") parent ,offset)
        ))))
 
-(defun elixir--treesit-current-defun (&optional include-type)
-  "Find current Elixir function. Optional argument INCLUDE-TYPE indicates to include the type of the defun."
-  (let ((node (treesit-node-at (point)))
-        (name-list ()))
-    (cl-loop while node
-             if (pcase (treesit-node-type node)
-                  ("call" (elixir--imenu-node-type node)))
-             do (push (elixir--imenu-node-name node) name-list)
-             do (setq node (treesit-node-parent node))
-             finally return (concat (if include-type
-                                        (format "%s " (treesit-node-type node))
-                                      "")
-                                    (string-join name-list ".")))))
+;; (defun elixir--treesit-current-defun (&optional include-type)
+;;   "Find current Elixir function. Optional argument INCLUDE-TYPE indicates to include the type of the defun."
+;;   (let ((node (treesit-node-at (point)))
+;;         (name-list ()))
+;;     (cl-loop while node
+;;              if (pcase (treesit-node-type node)
+;;                   ("call" (elixir--treesit-defun node)))
+;;              do (push (elixir--treesit-defun node) name-list)
+;;              do (setq node (treesit-node-parent node))
+;;              finally return (concat (if include-type
+;;                                         (format "%s " (treesit-node-type node))
+;;                                       "")
+;;                                     (string-join name-list ".")))))
 
 
-(defun elixir--imenu-item-parent-label (type _name)
-  (format "%s" type))
+(defun elixir--imenu-item-parent-label (type name)
+  (cond
+   ((equal type "defmodule") "Module")
+   (t "")))
 
 (defun elixir--imenu-item-label (type name)
   (format "%s %s" type name))
 
 (defun elixir--imenu-jump-label (_type name)
-  (format "%s %s" name))
+  (format "%s" name))
 
 (defun elixir--imenu-treesit-create-index (&optional node)
   "Return tree Imenu alist for the current Elixir buffer or NODE tree."
@@ -430,8 +432,8 @@ and movement functions."
   (let* ((ts-node (car node))
          (children (cdr node))
          (subtrees (mapcan #'elixir--imenu-treesit-create-index-from-tree children))
-         (type (when ts-node (elixir--imenu-node-type ts-node)))
-         (name (when type (elixir--imenu-node-name ts-node type)))
+         (type (elixir--treesit-defun-type ts-node))
+         (name (when type (elixir--treesit-defun-name ts-node)))
          (marker (when ts-node
                    (set-marker (make-marker)
                                (treesit-node-start ts-node)))))
@@ -446,99 +448,43 @@ and movement functions."
 (defvar elixir-query)
 (setq elixir-query "(call target: (identifier) (arguments [(alias) @name (identifier) @name]))")
 
-;; (setq elixir-query "(call target: (identifier) @type (arguments [(alias) @name (identifier) @name]) (.match? @type \"^(def|defmodule)$\")")
-
-(defun elixir-treesit-up-sexp ()
-  (interactive)
-  (let ((largest-node (elixir--treesit-largest-node-at-point)))
-    (goto-char (treesit-node-start (treesit-node-parent largest-node)))))
-
-(defun elixir-treesit-next-sibling ()
-  (interactive)
-  (let* ((largest-node (elixir--treesit-largest-node-at-point))
-         (parent (when largest-node (treesit-node-parent largest-node)))
-         (index (when parent (treesit-node-index parent))))
-    (message "%s" index)
-    (goto-char
-     (if largest-node
-         (treesit-node-end largest-node)
-       (treesit-node-end largest-node)))))
-
-(defun elixir-treesit-prev-sibling ()
-  (interactive)
-  (let ((largest-node (elixir--treesit-largest-node-at-point)))
-    (goto-char
-     (treesit-node-start
-      (let ((prev-node (treesit-node-prev-sibling
-                        largest-node t)))
-        (if prev-node prev-node largest-node))))))
-
-(defun elixir-treesit-show-largest-node ()
-  (interactive)
-  (message
-   "%s %s"
-   (treesit-node-type (elixir--treesit-largest-node-at-point))
-   (treesit-node-text (elixir--treesit-largest-node-at-point)))
+(defun elixir--treesit-query-defun ()
+  "Elixir treesit function query."
+  `(call
+     target: (identifier) @type
+     (arguments
+      [
+       (alias) @name
+       (identifier) @name
+       (call target: (identifier) @name)
+       (binary_operator
+        left: (call target: (identifier) @name)
+        operator: "when")
+       ])
+     (:match ,elixir--definition-keywords-re @type)
+     )
   )
 
-(alist-get 'ignore '((ignore . "ignore") (name . "name")))
+(defun elixir--treesit-defun (node)
+  "Get the module name from the NODE if exists."
+  (let ((name
+         (format
+          "(%s)"
+          (treesit-query-expand (elixir--treesit-query-defun)))))
+    (treesit-query-capture node name)))
 
-
-(defun elixir--treesit-query-module ()
-  "Elixir treesit function query."
-  `(call
-    target: (identifier) @type
-    (arguments (alias) @name)
-    (:match ,elixir--definition-keywords-re @type)))
-
-(defun elixir--treesit-query-function ()
-  "Elixir treesit function query."
-  `(call
-    target: (identifier) @type
-    (arguments
-     [
-      (identifier) @name
-      (call target: (identifier) @name)
-      (binary_operator
-       left: (call target: (identifier) @name)
-       operator: "when")
-      ])
-    (:match ,elixir--definition-keywords-re @type)))
-
-(defun elixir--treesit-defun-module (&optional node)
+(defun elixir--treesit-defun-name (&optional node)
   "Get the module name from the NODE if exists."
   (let* ((node (or node (elixir--treesit-largest-node-at-point)))
-         (module
-          (format
-           "(%s)"
-           (treesit-query-expand (elixir--treesit-query-module))))
-         (capture (treesit-query-capture node module))
-         (name (when capture (treesit-node-text (alist-get 'name capture))))
-         (type (when capture (treesit-node-text (alist-get 'type capture)))))
-    `(,name ,type)))
+        (name-node (alist-get 'name (elixir--treesit-defun node))))
+    (when name-node (treesit-node-text name-node))))
 
-(defun elixir--treesit-defun-function (&optional node)
+(defun elixir--treesit-defun-type (&optional node)
   "Get the module name from the NODE if exists."
   (let* ((node (or node (elixir--treesit-largest-node-at-point)))
-         (function
-          (format
-           "(%s)"
-           (treesit-query-expand (elixir--treesit-query-function))))
-         (capture (treesit-query-capture node function))
-         (name (when capture (treesit-node-text (alist-get 'name capture))))
-         (type (when capture (treesit-node-text (alist-get 'type capture)))))
-    `(,name ,type)))
+        (name-node (alist-get 'type (elixir--treesit-defun node))))
+    (when name-node (treesit-node-text name-node))))
 
-(defun elixir--treesit-module-name (&optional node)
-  "Get the module name from the NODE if exists."
-  (let ((node (or node (elixir--treesit-largest-node-at-point))))
-    (let ((module
-           (alist-get
-            'name
-            (treesit-query-capture
-             node
-             (format "(%s)" (treesit-query-expand (elixir--treesit-query-module)))))))
-      (when module (treesit-node-text module)))))
 
 (defun elixir--treesit-largest-node-at-point ()
   (let* ((node-at-point (treesit-node-at (point)))
@@ -553,21 +499,6 @@ and movement functions."
     (if (null largest-node)
         (treesit-node-at (point))
       largest-node)))
-
-(defun elixir--imenu-node-name (node &optional type)
-  ""
-  (pcase (or type (elixir--imenu-node-type node))
-    ((or 'def 'defp) (treesit-node-text
-                      (treesit-search-subtree
-                       (treesit-search-subtree node "arguments") "identifier")))
-    ((or 'test 'describe) (treesit-node-text
-                           (treesit-search-subtree node "string")))
-    ('module (treesit-node-text
-              (treesit-search-subtree node "alias")))))
-
-(defun elixir--imenu-node-type (node)
-  "Elixir imenu NODE type."
-  (or (elixir--treesit-module-name node) (elixir--treesit-function-name node)))
 
 (defun elixir-backward-sexp (&optional arg)
   "Move backwards across expressions.  With ARG, do it that many times.  Negative arg -N means move forwards N times."
