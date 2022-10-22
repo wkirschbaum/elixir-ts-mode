@@ -1,7 +1,7 @@
 defmodule Foo do
 
   defmodule Zar do
-    def zoo() do
+    def zoo(one) when one == "one" do
       "bar"
     end
 

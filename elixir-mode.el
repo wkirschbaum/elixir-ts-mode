@@ -435,11 +435,11 @@ and movement functions."
       [
        (alias) @name
        (identifier) @name
-       (call target: (identifier) @name)
+       (call target: (identifier)) @name
        (binary_operator
-        left: (call target: (identifier) @name)
+        left: (call target: (identifier)) @name
         operator: "when")
-       ]) @name.full
+       ])
      (:match ,elixir--definition-keywords-re @type)
      ))))
     (when (treesit-query-validate 'elixir query)
@@ -460,7 +460,7 @@ and movement functions."
 (defun elixir--treesit-defun-name (&optional node)
   "Get the module name from the NODE if exists."
   (let* ((node (or node (elixir--treesit-largest-node-at-point)))
-        (name-node (alist-get 'name.full (elixir--treesit-defun node))))
+        (name-node (alist-get 'name (elixir--treesit-defun node))))
     (when name-node (treesit-node-text name-node))))
 
 (defun elixir--treesit-defun-type (&optional node)
