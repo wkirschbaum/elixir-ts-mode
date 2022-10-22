@@ -394,16 +394,14 @@ and movement functions."
        ((parent-is "binary_operator") parent ,offset)
        ))))
 
-(defun elixir--imenu-item-parent-label (type name)
-  (cond
-   ((equal type "defmodule") "Module")
-   (t "")))
+(defun elixir--imenu-item-parent-label (_type name)
+  (format "%s" name))
 
 (defun elixir--imenu-item-label (type name)
   (format "%s %s" type name))
 
-(defun elixir--imenu-jump-label (_type name)
-  (format "%s" name))
+(defun elixir--imenu-jump-label (_type _name)
+  (format "..."))
 
 (defun elixir--imenu-treesit-create-index (&optional node)
   "Return tree Imenu alist for the current Elixir buffer or NODE tree."
@@ -430,9 +428,6 @@ and movement functions."
           (t (let ((label (funcall 'elixir--imenu-item-label type name)))
                (list (cons label marker)))))))
 
-(defvar elixir-query)
-(setq elixir-query "(call target: (identifier) (arguments [(alias) @name (identifier) @name]))")
-
 (defvar elixir--treesit-query-defun
   (let ((query `((call
      target: (identifier) @type
@@ -444,7 +439,7 @@ and movement functions."
        (binary_operator
         left: (call target: (identifier) @name)
         operator: "when")
-       ])
+       ]) @name.full
      (:match ,elixir--definition-keywords-re @type)
      ))))
     (when (treesit-query-validate 'elixir query)
@@ -465,7 +460,7 @@ and movement functions."
 (defun elixir--treesit-defun-name (&optional node)
   "Get the module name from the NODE if exists."
   (let* ((node (or node (elixir--treesit-largest-node-at-point)))
-        (name-node (alist-get 'name (elixir--treesit-defun node))))
+        (name-node (alist-get 'name.full (elixir--treesit-defun node))))
     (when name-node (treesit-node-text name-node))))
 
 (defun elixir--treesit-defun-type (&optional node)

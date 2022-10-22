@@ -1,17 +1,18 @@
 defmodule Foo do
 
+  defmodule Zar do
+    def zoo() do
+      "bar"
+    end
 
-  def bar() do
+  end
+
+
+  def bar(one, two) do
     "bar"
   end
 
   def last(one) do
-
-    def at(1), do: "no"
-
-    def another(foo) do
-      foo
-    end
 
   end
 
@@ -20,13 +21,15 @@ defmodule Foo do
   end
 
   def foo(one, two) do
-    "foo"
+    def bar(one, two) do
+      "bar"
+    end
   end
-end
 
-defmacro Bar do
+  defmacro Bar do
 
-  def bar() do
+    def bar() do
 
+    end
   end
 end
