@@ -27,39 +27,6 @@ and movement functions."
   :type 'boolean
   :version "29.1")
 
-;; TODO: This goes into infinite loop at eob and does not
-;; handle multi-line def's
-(defun elixir--treesit-beginning-of-defun (&optional arg)
-  (let ((arg (or arg 1)))
-    (if (> arg 0)
-        ;; Go backward.
-        (while (and (> arg 0)
-                    (progn
-                      (treesit-search-forward-goto "call" 'start nil t t)
-                      (back-to-indentation)))
-          (setq arg (1- arg)))
-      ;; Go forward.
-      (while (and (< arg 0)
-                  (treesit-search-forward-goto "call" 'end nil nil t))
-        (setq arg (1+ arg))))))
-
-;; TODO: This goes into infinite loop at eob and does not
-;; handle multi-line def's
-(defun elixir--treesit-end-of-defun (&optional arg)
-  (let ((arg (or arg 1)))
-    (if (< arg 0)
-        ;; Go backward.
-        (while (and (< arg 0)
-                    (treesit-search-forward-goto "call" 'end nil t t))
-          (setq arg (1+ arg)))
-      ;; Go forward.
-      (while (and (> arg 0)
-                  (progn
-                      (treesit-search-forward-goto "call" 'start nil nil t)
-                      (back-to-indentation)))
-        (setq arg (1- arg))))))
-
-
 ;; Custom faces match highlights.scm as close as possible
 ;; to help with updates
 
@@ -196,11 +163,11 @@ and movement functions."
 
 (defconst elixir--reserved-keywords
   '("when" "and" "or" "not" "in"
-   "not in" "fn" "do" "end" "catch" "rescue" "after" "else"))
+    "not in" "fn" "do" "end" "catch" "rescue" "after" "else"))
 
 (defconst elixir--reserved-keywords
   '("when" "and" "or" "not" "in"
-   "not in" "fn" "do" "end" "catch" "rescue" "after" "else"))
+    "not in" "fn" "do" "end" "catch" "rescue" "after" "else"))
 
 (defconst elixir--reserved-keywords-re
   (concat "^" (regexp-opt elixir--reserved-keywords) "$"))
@@ -213,9 +180,25 @@ and movement functions."
 (defvar elixir--treesit-font-lock-settings
   (treesit-font-lock-rules
    :language 'elixir
-   :feature 'basic
+   :feature 'minimal
    `(
      (comment) @elixir-font-comment-face
+
+     ;; (string
+     ;;  [
+     ;;   quoted_end: _ @elixir-font-string-face
+     ;;   quoted_start: _ @elixir-font-string-face
+     ;;  (quoted_content) @elixir-font-string-face
+     ;;  (interpolation
+     ;;   "#{"
+     ;;   @elixir-font-string-escape-face
+     ;;   "}" @elixir-font-string-escape-face)
+     ;;  ])
+
+
+     [(string) (charlist)] @font-lock-string-face
+     (interpolation) @default ; color everything in substitution white
+     (interpolation ["#{" "}"] @font-lock-constant-face)
 
      ,elixir--reserved-keywords-vector @elixir-font-keyword-face
 
@@ -230,7 +213,7 @@ and movement functions."
                 ;; a more specific font which takes precedence
                 (arguments
                  [
-                  (string) @elixir-font-comment-doc-face
+                  ;; (string) @elixir-font-comment-doc-face
                   (charlist) @elixir-font-comment-doc-face
                   (sigil) @elixir-font-comment-doc-face
                   (boolean) @elixir-font-comment-doc-face
@@ -308,26 +291,27 @@ and movement functions."
      ["," ";"] @elixir-font-punctuation-delimiter-face
      ["(" ")" "[" "]" "{" "}" "<<" ">>"] @elixir-font-punctuation-bracket-face
 
-     (charlist
-      [
-       quoted_end: _ @elixir-font-string-face
-       quoted_start: _ @elixir-font-string-face
-      (quoted_content) @elixir-font-string-face
-      (interpolation
-       "#{"
-       @elixir-font-string-escape-face
-       "}" @elixir-font-string-escape-face)
-      ])
-     (string
-      [
-       quoted_end: _ @elixir-font-string-face
-       quoted_start: _ @elixir-font-string-face
-      (quoted_content) @elixir-font-string-face
-      (interpolation
-       "#{"
-       @elixir-font-string-escape-face
-       "}" @elixir-font-string-escape-face)
-      ]))
+     ;; (charlist
+     ;;  [
+     ;;   quoted_end: _ @elixir-font-string-face
+     ;;   quoted_start: _ @elixir-font-string-face
+     ;;  (quoted_content) @elixir-font-string-face
+     ;;  (interpolation
+     ;;   "#{"
+     ;;   @elixir-font-string-escape-face
+     ;;   "}" @elixir-font-string-escape-face)
+     ;;  ])
+     ;; (string
+     ;;  [
+     ;;   quoted_end: _ @elixir-font-string-face
+     ;;   quoted_start: _ @elixir-font-string-face
+     ;;  (quoted_content) @elixir-font-string-face
+     ;;  (interpolation
+     ;;   "#{"
+     ;;   @elixir-font-string-escape-face
+     ;;   "}" @elixir-font-string-escape-face)
+     ;;  ])
+     )
    :language 'elixir
    :feature 'moderate
    :override t
@@ -341,14 +325,14 @@ and movement functions."
       quoted_start: _ @elixir-font-string-face
       quoted_end: _ @elixir-font-string-face
       (:match "^[sS]$" @elixir-font-sigil-name-face)) @elixir-font-string-face
-      (sigil
+     (sigil
       (sigil_name) @elixir-font-sigil-name-face
       quoted_start: _ @elixir-font-string-regex-face
       quoted_end: _ @elixir-font-string-regex-face
       (:match "^[rR]$" @elixir-font-sigil-name-face)) @elixir-font-string-regex-face
      )
    :language 'elixir
-   :feature 'elaborate
+   :feature 'full
    :override t
    `((escape_sequence) @elixir-font-string-escape-face)
    )
@@ -371,74 +355,43 @@ and movement functions."
         (setq node (treesit-node-parent node))))
     result))
 
-(defun elixir--treesit-find-parent-node (type &optional node)
-  "Find parent node of TYPE. Start at point or use NODE if specified."
-  (let* ((node (or node (treesit-node-at (point))))
-        (parent (treesit-node-parent node))
-        (result nil))
-    (while (and parent (not result))
-      (if (equal (treesit-node-type parent) type)
-          (setq result parent)
-        (setq parent (treesit-node-parent parent))))
-    result))
-
-
 (defun elixir--treesit-backward-up-list ()
-  "Find parent expression."
   (lambda (node _parent _bol &rest _)
-    ;; this should check all kinds of lists, not just (call (do_block))
-    (let* ((block-parent (elixir--treesit-find-parent-node "do_block" node))
-           (indent-parent (elixir--treesit-find-parent-node "call" block-parent)))
-      (save-excursion
-        (goto-char (treesit-node-start indent-parent))
-        (back-to-indentation)
-        (point)))))
+    (let ((parent (elixir--treesit-find-parent-do-block node)))
+      (if parent
+          (save-excursion
+            (goto-char (treesit-node-start parent))
+            (back-to-indentation)
+            (point))
+        nil))))
 
-;; TODOs
-
-;; * opening a list should indent
-
-;; we can'tuse parent-bol for non-lists, because the
-;; parent is the do block which might be indented
-;; so we have to find the outside (call)
 (defvar elixir--treesit-indent-rules
   (let ((offset elixir-indent-level))
     `((elixir
-       ;; no-node can be a bit more comprehensive
        (no-node (elixir--treesit-backward-up-list) ,offset)
-       ;; ((parent-is "source") first-sibling 0)
-
-       ((node-is "end") (elixir--treesit-backward-up-list) 0)
-       ((node-is "]") parent-bol 0)
        ((node-is "}") parent-bol 0)
-       ((node-is ")") (elixir--treesit-backward-up-list) 0)
-       ((node-is ".") first-sibling ,offset)
-
+       ((node-is ")") parent-bol 0)
+       ((node-is "]") parent-bol 0)
+       ((node-is ">") parent-bol 0)
+       ((node-is "]") parent-bol 0)
+       ((node-is "|>") parent-bol 0)
+       ((node-is "|") parent-bol 0)
+       ((node-is "end") parent-bol 0)
        ((node-is "else_block") parent-bol 0)
        ((node-is "stab_clause") parent-bol ,offset)
        ((node-is "rescue_block") parent-bol 0)
-
-
-       ((parent-is "do_block") (elixir--treesit-backward-up-list) ,offset)
-       ((parent-is "binary_operator") parent-bol 0)
-       ((parent-is "list") parent-bol ,offset)
-       ((parent-is "tuple") parent-bol ,offset)
-       ((parent-is "keywords") first-sibling 0)
-       ((parent-is "string") parent-bol 0)
-       ((parent-is "sigil") parent-bol 0)
+       ((node-is ".") parent-bol ,offset)
        ((parent-is "body") parent-bol ,offset)
-
-       ;; this needs to consider the call target perhaps?
-       ;;does not work for list comprehensions for example
-       ((parent-is "arguments") (elixir--treesit-backward-up-list) ,offset)
-
-       ((parent-is "pair") first-sibling ,offset)
-
-       ;; ((node-is "|") parent-bol 0)
-
-       ;; ((parent-is "body") parent-bol ,offset)
-       ;; ((parent-is "sigil") parent-bol 0)
-       ;; ((parent-is "string") parent-bol 0)
+       ((parent-is "sigil") parent-bol 0)
+       ((parent-is "string") parent-bol 0)
+       ((parent-is "tuple") parent-bol ,offset)
+       ((parent-is "do_block") parent-bol ,offset)
+       ((parent-is "else_block") parent-bol ,offset)
+       ((parent-is "stab_clause") parent-bol ,offset)
+       ((parent-is "arguments") parent-bol ,offset)
+       ((parent-is "list") parent-bol ,offset)
+       ((parent-is "keywords") first-sibling 0)
+       ((parent-is "binary_operator") parent ,offset)
        ))))
 
 (defun elixir--treesit-current-defun (&optional include-type)
@@ -456,18 +409,18 @@ and movement functions."
                                     (string-join name-list ".")))))
 
 
-(defun elixir--imenu-item-parent-label (_type name)
-  (format "%s" name))
+(defun elixir--imenu-item-parent-label (type _name)
+  (format "%s" type))
 
 (defun elixir--imenu-item-label (type name)
   (format "%s %s" type name))
 
-(defun elixir--imenu-jump-label (_type _name)
-  (format "..."))
+(defun elixir--imenu-jump-label (_type name)
+  (format "%s %s" name))
 
 (defun elixir--imenu-treesit-create-index (&optional node)
-  "Return tree Imenu alist for the current Elixir buffer."
-  (let* ((node (or node (treesit-buffer-root-node)))
+  "Return tree Imenu alist for the current Elixir buffer or NODE tree."
+  (let* ((node (or node (treesit-buffer-root-node 'elixir)))
          (tree (treesit-induce-sparse-tree
                 node
                 (rx (seq bol (or "call") eol)))))
@@ -507,9 +460,9 @@ and movement functions."
          (index (when parent (treesit-node-index parent))))
     (message "%s" index)
     (goto-char
-       (if largest-node
-           (treesit-node-end largest-node)
-         (treesit-node-end largest-node)))))
+     (if largest-node
+         (treesit-node-end largest-node)
+       (treesit-node-end largest-node)))))
 
 (defun elixir-treesit-prev-sibling ()
   (interactive)
@@ -528,6 +481,65 @@ and movement functions."
    (treesit-node-text (elixir--treesit-largest-node-at-point)))
   )
 
+(alist-get 'ignore '((ignore . "ignore") (name . "name")))
+
+
+(defun elixir--treesit-query-module ()
+  "Elixir treesit function query."
+  `(call
+    target: (identifier) @type
+    (arguments (alias) @name)
+    (:match ,elixir--definition-keywords-re @type)))
+
+(defun elixir--treesit-query-function ()
+  "Elixir treesit function query."
+  `(call
+    target: (identifier) @type
+    (arguments
+     [
+      (identifier) @name
+      (call target: (identifier) @name)
+      (binary_operator
+       left: (call target: (identifier) @name)
+       operator: "when")
+      ])
+    (:match ,elixir--definition-keywords-re @type)))
+
+(defun elixir--treesit-defun-module (&optional node)
+  "Get the module name from the NODE if exists."
+  (let* ((node (or node (elixir--treesit-largest-node-at-point)))
+         (module
+          (format
+           "(%s)"
+           (treesit-query-expand (elixir--treesit-query-module))))
+         (capture (treesit-query-capture node module))
+         (name (when capture (treesit-node-text (alist-get 'name capture))))
+         (type (when capture (treesit-node-text (alist-get 'type capture)))))
+    `(,name ,type)))
+
+(defun elixir--treesit-defun-function (&optional node)
+  "Get the module name from the NODE if exists."
+  (let* ((node (or node (elixir--treesit-largest-node-at-point)))
+         (function
+          (format
+           "(%s)"
+           (treesit-query-expand (elixir--treesit-query-function))))
+         (capture (treesit-query-capture node function))
+         (name (when capture (treesit-node-text (alist-get 'name capture))))
+         (type (when capture (treesit-node-text (alist-get 'type capture)))))
+    `(,name ,type)))
+
+(defun elixir--treesit-module-name (&optional node)
+  "Get the module name from the NODE if exists."
+  (let ((node (or node (elixir--treesit-largest-node-at-point))))
+    (let ((module
+           (alist-get
+            'name
+            (treesit-query-capture
+             node
+             (format "(%s)" (treesit-query-expand (elixir--treesit-query-module)))))))
+      (when module (treesit-node-text module)))))
+
 (defun elixir--treesit-largest-node-at-point ()
   (let* ((node-at-point (treesit-node-at (point)))
          (node-list
@@ -544,27 +556,18 @@ and movement functions."
 
 (defun elixir--imenu-node-name (node &optional type)
   ""
-  ;; (let ((query "(call target: (identifier) @type (arguments [(alias) @name (identifier) @name]))"))
-  ;;   ;; (message "%s"  (treesit-query-capture node query)))
-  ;; (message "%s %s" (treesit-node-index node) (treesit-node-type node)))
-
   (pcase (or type (elixir--imenu-node-type node))
     ((or 'def 'defp) (treesit-node-text
-           (treesit-search-subtree
-            (treesit-search-subtree node "arguments") "identifier")))
+                      (treesit-search-subtree
+                       (treesit-search-subtree node "arguments") "identifier")))
     ((or 'test 'describe) (treesit-node-text
-            (treesit-search-subtree node "string")))
+                           (treesit-search-subtree node "string")))
     ('module (treesit-node-text
               (treesit-search-subtree node "alias")))))
 
 (defun elixir--imenu-node-type (node)
-  ""
-  (pcase (treesit-node-text (treesit-search-subtree node "identifier"))
-    ("def" 'def)
-    ("defp" 'defp)
-    ("test" 'test)
-    ("describe" 'describe)
-    ("defmodule" 'module)))
+  "Elixir imenu NODE type."
+  (or (elixir--treesit-module-name node) (elixir--treesit-function-name node)))
 
 (defun elixir-backward-sexp (&optional arg)
   "Move backwards across expressions.  With ARG, do it that many times.  Negative arg -N means move forwards N times."
@@ -598,6 +601,27 @@ and movement functions."
      (treesit-node-parent (elixir--treesit-largest-node-at-point))
      "call"))))
 
+(defun elixir--treesit-beginning-of-defun (&optional arg)
+  "Tree-sitter `beginning-of-defun' function.
+ARG is the same as in `beginning-of-defun."
+  (let ((arg (or arg 1)))
+    (if (> arg 0)
+        ;; Go backward.
+        (while (and (> arg 0)
+                    (treesit-search-forward-goto
+                     (rx (or "call")) 'start nil t))
+          (setq arg (1- arg)))
+      ;; Go forward.
+      (while (and (< arg 0)
+                  (treesit-search-forward-goto
+                   (rx (or "call")) 'start))
+        (setq arg (1+ arg))))))
+
+(defun elixir--treesit-end-of-defun (&optional arg)
+  "Tree-sitter `end-of-defun' function.
+ARG is the same as in `end-of-defun."
+  (treesit-search-forward-goto (rx (or "call")) 'end))
+
 (defun elixir-forward-sexp (&optional arg)
   "Move forward across expressions.  With ARG, do it that many times.  Negative arg -N means move backward N times."
   (interactive "^p")
@@ -613,39 +637,99 @@ and movement functions."
          (let ((prev-node (treesit-node-prev-sibling largest-node)))
            (if prev-node (treesit-node-start prev-node) (point))))))))
 
+(defvar elixir-mode-syntax-table
+  (let ((table (make-syntax-table)))
+
+    ;; Note that ?_ might be better as class "_", but either seems to
+    ;; work:
+    (modify-syntax-entry ?| "." table)
+    (modify-syntax-entry ?- "." table)
+    (modify-syntax-entry ?+ "." table)
+    (modify-syntax-entry ?* "." table)
+    (modify-syntax-entry ?/ "." table)
+    (modify-syntax-entry ?< "." table)
+    (modify-syntax-entry ?> "." table)
+    (modify-syntax-entry ?_ "_" table)
+    (modify-syntax-entry ?? "w" table)
+    (modify-syntax-entry ?~ "w" table)
+    (modify-syntax-entry ?! "_" table)
+    (modify-syntax-entry ?' "\"'" table)
+    (modify-syntax-entry ?\" "\"\"" table)
+    (modify-syntax-entry ?# "<" table)
+    (modify-syntax-entry ?\n ">" table)
+    (modify-syntax-entry ?\( "()" table)
+    (modify-syntax-entry ?\) ")(" table)
+    (modify-syntax-entry ?\{ "(}" table)
+    (modify-syntax-entry ?\} "){" table)
+    (modify-syntax-entry ?\[ "(]" table)
+    (modify-syntax-entry ?\] ")[" table)
+    (modify-syntax-entry ?: "_" table)
+    (modify-syntax-entry ?@ "_" table)
+    table)
+  "Elixir mode syntax table.")
+
+
 ;;;###autoload
 (define-derived-mode elixir-mode prog-mode "Elixir"
+  :group 'elixir
+
+  ;; Treesit-mode.
+  (setq-local treesit-mode-supported t)
+  (setq-local treesit-required-languages '(elixir))
+  (setq-local treesit-simple-indent-rules elixir--treesit-indent-rules)
+  (setq-local treesit-font-lock-settings elixir--treesit-font-lock-settings)
+  (setq-local treesit-font-lock-feature-list '((minimal) (moderate) (full)))
+
+  ;; (setq-local treesit-defun-type-regexp (rx (or "call")))
+  (setq-local beginning-of-defun-function 'elixir--treesit-beginning-of-defun)
+  (setq-local end-of-defun-function 'elixir--treesit-end-of-defun)
+
+
+  ;; Navigation
+
+  (setq-local treesit-imenu-function #'elixir--imenu-treesit-create-index)
+
+  (cond
+   ((treesit-ready-p '(elixir))
+    (treesit-mode))
+   (t
+    (message "Tree-sitter for Elixir isn't available")))
+
+  ;; Comments
   (setq-local comment-start "# ")
   (setq-local comment-start-skip "#+\\s-*")
   (setq-local comment-end "")
 
   ;; TODO: check what impact parse-sexps have
-  (setq-local parse-sexp-lookup-properties t)
-  (setq-local parse-sexp-ignore-comments t)
+  ;; (setq-local parse-sexp-lookup-properties t)
+  ;; (setq-local parse-sexp-ignore-comments t)
 
   ;; (setq-local syntax-propertize-function elixir-syntax-propertize-function)
 
-  (cond ((and elixir-use-tree-sitter
-              (treesit-can-enable-p)
-              (treesit-language-available-p 'elixir))
-         (progn
-           (unless font-lock-defaults
-             (setq font-lock-defaults '(nil t)))
+  ;; (if (and elixir-use-tree-sitter
+  ;;          (treesit-can-enable-p))
+  ;;     (progn
+  ;;       ;; (treesit-parser-create 'elixir)
 
-           (message "foo")
-           (setq-local treesit-simple-indent-rules elixir--treesit-indent-rules)
-           (setq-local indent-line-function #'treesit-indent)
+  ;;       (setq-local font-lock-keywords-only t) ; does not seem to work
+  ;;       ;; so using no defaults for now
+  ;;       ;; (setq-local font-lock-defaults '(nil t))
 
-           (setq-local beginning-of-defun-function #'elixir--treesit-beginning-of-defun)
-           (setq-local end-of-defun-function #'elixir--treesit-end-of-defun)
+  ;;       (setq-local treesit-font-lock-feature-list '((minimal) (moderate) (full)))
+  ;;       (setq-local treesit-font-lock-settings elixir--treesit-font-lock-settings)
+  ;;       (treesit-font-lock-enable)
 
-           (setq-local imenu-create-index-function #'elixir--imenu-treesit-create-index)
-           (setq-local forward-sexp-function #'elixir-forward-sexp)
-           (setq-local treesit-font-lock-feature-list '((basic) (moderate) (elaborate)))
-           (setq-local treesit-font-lock-settings elixir--treesit-font-lock-settings)
-           (treesit-font-lock-enable)))
-        (t
-         (message "Tree sitter for Elixir isn't available"))))
+
+  ;;       (setq-local treesit-simple-indent-rules elixir--treesit-indent-rules)
+  ;;       (setq-local indent-line-function #'treesit-indent)
+
+  ;;       (setq-local beginning-of-defun-function #'elixir--treesit-beginning-of-defun)
+  ;;       (setq-local end-of-defun-function #'elixir--treesit-end-of-defun)
+
+  ;;       (setq-local forward-sexp-function #'elixir-forward-sexp)
+
+  ;;       (setq-local imenu-create-index-function #'elixir--imenu-treesit-create-index)
+  )
 
 
 ;;;###autoload
@@ -657,5 +741,8 @@ and movement functions."
 
 (provide 'elixir-mode)
 ;;; elixir-custom-mode.el ends here
+
+
+
 
 
