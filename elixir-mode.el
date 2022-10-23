@@ -137,6 +137,18 @@
 (defconst elixir--definition-keywords-re
   (concat "^" (regexp-opt elixir--definition-keywords) "$"))
 
+(defconst elixir--definition-module
+  '("defmodule" "defprotocol"))
+
+(defconst elixir--definition-module-re
+  (concat "^" (regexp-opt elixir--definition-module) "$"))
+
+(defconst elixir--definition-function
+  '("def" "defp" "defdelegate" "defguard" "defguardp" "defmacro" "defmacrop" "defn" "defnp"))
+
+(defconst elixir--definition-function-re
+  (concat "^" (regexp-opt elixir--definition-function) "$"))
+
 (defconst elixir--kernel-keywords
   '("alias" "case" "cond" "else" "for" "if" "import" "quote" "raise" "receive" "require" "reraise" "super" "throw" "try" "unless" "unquote" "unquote_splicing" "use" "with"))
 
@@ -344,7 +356,8 @@
 
 (defun elixir--treesit-backward-up-list ()
   (lambda (node _parent _bol &rest _)
-    (let ((parent (elixir--treesit-find-parent-do-block node)))
+    (let* ((block (elixir--treesit-find-parent-do-block node))
+           (parent (when block (treesit-node-parent block))))
       (if parent
           (save-excursion
             (goto-char (treesit-node-start parent))
@@ -360,10 +373,10 @@
        ((node-is ")") parent-bol 0)
        ((node-is "]") parent-bol 0)
        ((node-is ">") parent-bol 0)
-       ((node-is "]") parent-bol 0)
        ((node-is "|>") parent-bol 0)
        ((node-is "|") parent-bol 0)
-       ((node-is "end") parent-bol 0)
+       ((node-is "do_block") parent-bol 0)
+       ((node-is "end") (elixir--treesit-backward-up-list) 0)
        ((node-is "else_block") parent-bol 0)
        ((node-is "stab_clause") parent-bol ,offset)
        ((node-is "rescue_block") parent-bol 0)
@@ -372,7 +385,7 @@
        ((parent-is "sigil") parent-bol 0)
        ((parent-is "string") parent-bol 0)
        ((parent-is "tuple") parent-bol ,offset)
-       ((parent-is "do_block") parent-bol ,offset)
+       ((parent-is "do_block") (elixir--treesit-backward-up-list) ,offset)
        ((parent-is "else_block") parent-bol ,offset)
        ((parent-is "stab_clause") parent-bol ,offset)
        ((parent-is "arguments") parent-bol ,offset)
@@ -415,6 +428,25 @@
           (t (let ((label (funcall 'elixir--imenu-item-label type name)))
                (list (cons label marker)))))))
 
+(defvar elixir--treesit-query-module-or-function
+  (let ((query `((call
+                  target: (identifier) @ignore
+                  (arguments (alias) @name)
+                  (:match ,elixir--definition-module-re @ignore))
+
+                 (call
+                  target: (identifier) @ignore
+                  (arguments
+                   [
+                    (identifier) @name
+                    (call target: (identifier) @name)
+                    (binary_operator
+                     left: (call target: (identifier) @name)
+                     operator: "when")
+                    ])
+                  (:match ,elixir--definition-function-re @ignore)))))
+    (treesit-query-compile 'elixir query)))
+
 (defvar elixir--treesit-query-defun
   (let ((query `((call
      target: (identifier) @type
@@ -432,16 +464,15 @@
     (treesit-query-compile 'elixir query)))
 
 
-(defun elixir--treesit-defun-view ()
-  "Get the module name from the NODE if exists."
-  (let ((node (elixir--treesit-largest-node-at-point))
-        (query elixir--treesit-query-defun))
-    (when (treesit-compiled-query-p query)
-      (message "%s"  (treesit-query-capture node query)))))
 
 (defun elixir--treesit-defun (node)
   "Get the module name from the NODE if exists."
   (treesit-query-capture node elixir--treesit-query-defun))
+
+(defun elixir--treesit-module-or-function (node)
+  "Get the module name from the NODE if exists."
+  (treesit-query-capture node elixir--treesit-query-module-or-function))
+
 
 (defun elixir--treesit-defun-name (&optional node)
   "Get the module name from the NODE if exists."
@@ -469,11 +500,6 @@
     (if (null largest-node)
         (treesit-node-at (point))
       largest-node)))
-
-(defun elixir-backward-sexp (&optional arg)
-  "Move backwards across expressions.  With ARG, do it that many times.  Negative arg -N means move forwards N times."
-  (interactive "^p")
-  (elixir-forward-sexp (- arg)))
 
 (defun elixir--treesit-real-parent (&optional node)
   (let ((child (or node (treesit-node-at (point)))))
@@ -508,6 +534,10 @@
    (treesit-node-start
     (treesit-node-parent (elixir--treesit-largest-node-at-point)))))
 
+(defun elixir--treesit-defun-p (node)
+  "Check if NODE is a defun."
+  (elixir--treesit-defun node))
+
 (defun elixir--treesit-beginning-of-defun (&optional arg)
   "Tree-sitter `beginning-of-defun' function.
 ARG is the same as in `beginning-of-defun."
@@ -516,20 +546,20 @@ ARG is the same as in `beginning-of-defun."
         ;; Go backward.
         (while (and (> arg 0)
                     (treesit-search-forward-goto
-                     (rx (or "call")) 'start nil t))
+                     #'elixir--treesit-defun-p 'start nil t))
           (setq arg (1- arg)))
       ;; Go forward.
       (while (and (< arg 0)
                   (treesit-search-forward-goto
-                   (rx (or "call")) 'start))
+                   #'elixir--treesit-defun-p 'start))
         (setq arg (1+ arg))))))
 
 (defun elixir--treesit-end-of-defun (&optional arg)
   "Tree-sitter `end-of-defun' function.
 ARG is the same as in `end-of-defun."
-  (treesit-search-forward-goto (rx (or "call")) 'end))
+  (elixir--treesit-beginning-of-defun (- (or arg 1))))
 
-(defun elixir-forward-sexp (&optional arg)
+(defun elixir--treesit-forward-sexp (&optional arg)
   "Move forward across expressions.  With ARG, do it that many times.  Negative arg -N means move backward N times."
   (interactive "^p")
   (if (> arg 0)
@@ -598,7 +628,7 @@ ARG is the same as in `end-of-defun."
   ;; (setq-local treesit-defun-type-regexp (rx (or "call")))
   (setq-local beginning-of-defun-function 'elixir--treesit-beginning-of-defun)
   (setq-local end-of-defun-function 'elixir--treesit-end-of-defun)
-  ;; (setq-local forward-sexp-function 'elixir--treesit-forward-sexp)
+  (setq-local forward-sexp-function 'elixir--treesit-forward-sexp)
 
   ;; Navigation
 
