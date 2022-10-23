@@ -1,35 +1,21 @@
 defmodule Foo do
-
-  defmodule Zar do
-    def zoo(one) when one == "one" do
-      "bar"
-    end
-
-  end
-
-
-  def bar(one, two) do
-    "bar"
-  end
-
-  def last(one) do
-
-  end
-
-  def bar(one, two) do
-    "bar"
+  @moduledoc """
+  foobar
+  bar foo
+  """
+  def one() do
+    "one"
   end
 
   def foo(one, two) do
-    def bar(one, two) do
-      "bar"
-    end
+    
   end
 
-  defmacro Bar do
+  def far(bar, zar) do
+    ""
+  end
 
-    def bar() do
-
-    end
+  def two(one, two) do
+    "#{one} #{two}"
   end
 end

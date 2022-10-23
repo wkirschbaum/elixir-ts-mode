@@ -3,8 +3,10 @@
 ;; Examples of AST
 ;;https://github.com/elixir-lang/tree-sitter-elixir/blob/main/test/corpus/integration/function_definition.txt
 
-(require 'cl-lib)
 (require 'treesit)
+
+(eval-when-compile
+  (require 'cl-lib))
 
 (ignore-errors
   (unload-feature 'elixir-mode))
@@ -19,13 +21,6 @@
   "Indentation of Elixir statements."
   :type 'integer
   :safe 'integerp)
-
-(defcustom elixir-use-tree-sitter t
-  "If non-nil, `elixir-mode' tries to use tree-sitter.
-Currently `elixir-mode' uses tree-sitter for font-locking, imenu,
-and movement functions."
-  :type 'boolean
-  :version "29.1")
 
 ;; Custom faces match highlights.scm as close as possible
 ;; to help with updates
@@ -153,7 +148,6 @@ and movement functions."
 
 (defconst elixir--builtin-keywords-re
   (concat "^" (regexp-opt elixir--builtin-keywords) "$"))
-
 
 (defconst elixir--doc-keywords
   '("moduledoc" "typedoc" "doc"))
@@ -291,16 +285,17 @@ and movement functions."
      ["," ";"] @elixir-font-punctuation-delimiter-face
      ["(" ")" "[" "]" "{" "}" "<<" ">>"] @elixir-font-punctuation-bracket-face
 
-     ;; (charlist
-     ;;  [
-     ;;   quoted_end: _ @elixir-font-string-face
-     ;;   quoted_start: _ @elixir-font-string-face
-     ;;  (quoted_content) @elixir-font-string-face
-     ;;  (interpolation
-     ;;   "#{"
-     ;;   @elixir-font-string-escape-face
-     ;;   "}" @elixir-font-string-escape-face)
-     ;;  ])
+     (charlist
+      [
+       quoted_end: _ @elixir-font-string-face
+       quoted_start: _ @elixir-font-string-face
+      (quoted_content) @elixir-font-string-face
+      (interpolation
+       "#{"
+       @elixir-font-string-escape-face
+       "}" @elixir-font-string-escape-face)
+      ])
+
      ;; (string
      ;;  [
      ;;   quoted_end: _ @elixir-font-string-face
@@ -337,14 +332,6 @@ and movement functions."
    `((escape_sequence) @elixir-font-string-escape-face)
    )
   "Tree-sitter font-lock settings.")
-
-(defun elixir--treesit-capture-defun ()
-  (interactive)
-  (message
-   "%s"
-   (treesit-query-capture
-    (treesit-buffer-root-node)
-    "(call target: (identifier) @ident)")))
 
 (defun elixir--treesit-find-parent-do-block (&optional node)
   (let ((node (or node (treesit-node-at (point))))
@@ -442,8 +429,7 @@ and movement functions."
        ])
      (:match ,elixir--definition-keywords-re @type)
      ))))
-    (when (treesit-query-validate 'elixir query)
-      (treesit-query-compile 'elixir query))))
+    (treesit-query-compile 'elixir query)))
 
 
 (defun elixir--treesit-defun-view ()
@@ -516,6 +502,12 @@ and movement functions."
      (treesit-node-parent (elixir--treesit-largest-node-at-point))
      "call"))))
 
+(defun elixir--treesit-goto-parent ()
+  (interactive)
+  (goto-char
+   (treesit-node-start
+    (treesit-node-parent (elixir--treesit-largest-node-at-point)))))
+
 (defun elixir--treesit-beginning-of-defun (&optional arg)
   "Tree-sitter `beginning-of-defun' function.
 ARG is the same as in `beginning-of-defun."
@@ -554,9 +546,6 @@ ARG is the same as in `end-of-defun."
 
 (defvar elixir-mode-syntax-table
   (let ((table (make-syntax-table)))
-
-    ;; Note that ?_ might be better as class "_", but either seems to
-    ;; work:
     (modify-syntax-entry ?| "." table)
     (modify-syntax-entry ?- "." table)
     (modify-syntax-entry ?+ "." table)
@@ -568,8 +557,8 @@ ARG is the same as in `end-of-defun."
     (modify-syntax-entry ?? "w" table)
     (modify-syntax-entry ?~ "w" table)
     (modify-syntax-entry ?! "_" table)
-    (modify-syntax-entry ?' "\"'" table)
-    (modify-syntax-entry ?\" "\"\"" table)
+    (modify-syntax-entry ?' "\"" table)
+    (modify-syntax-entry ?\" "\"" table)
     (modify-syntax-entry ?# "<" table)
     (modify-syntax-entry ?\n ">" table)
     (modify-syntax-entry ?\( "()" table)
@@ -578,8 +567,8 @@ ARG is the same as in `end-of-defun."
     (modify-syntax-entry ?\} "){" table)
     (modify-syntax-entry ?\[ "(]" table)
     (modify-syntax-entry ?\] ")[" table)
-    (modify-syntax-entry ?: "_" table)
-    (modify-syntax-entry ?@ "_" table)
+    (modify-syntax-entry ?: "'" table)
+    (modify-syntax-entry ?@ "'" table)
     table)
   "Elixir mode syntax table.")
 
@@ -587,6 +576,17 @@ ARG is the same as in `end-of-defun."
 ;;;###autoload
 (define-derived-mode elixir-mode prog-mode "Elixir"
   :group 'elixir
+  :syntax-table elixir-mode-syntax-table
+  "Major mode for editing Elixir code.
+
+\\{elixir-mode-map}"
+
+  (setq-local font-lock-keywords-only t)
+
+  ;; Comments
+  (setq-local comment-start "# ")
+  (setq-local comment-start-skip "#+\\s-*")
+  (setq-local comment-end "")
 
   ;; Treesit-mode.
   (setq-local treesit-mode-supported t)
@@ -598,7 +598,7 @@ ARG is the same as in `end-of-defun."
   ;; (setq-local treesit-defun-type-regexp (rx (or "call")))
   (setq-local beginning-of-defun-function 'elixir--treesit-beginning-of-defun)
   (setq-local end-of-defun-function 'elixir--treesit-end-of-defun)
-
+  ;; (setq-local forward-sexp-function 'elixir--treesit-forward-sexp)
 
   ;; Navigation
 
@@ -606,46 +606,12 @@ ARG is the same as in `end-of-defun."
 
   (cond
    ((treesit-ready-p '(elixir))
-    (treesit-mode))
+    (treesit-mode)
+    (treesit-font-lock-enable)
+    (message "Elixir treesit loaded"))
    (t
     (message "Tree-sitter for Elixir isn't available")))
-
-  ;; Comments
-  (setq-local comment-start "# ")
-  (setq-local comment-start-skip "#+\\s-*")
-  (setq-local comment-end "")
-
-  ;; TODO: check what impact parse-sexps have
-  ;; (setq-local parse-sexp-lookup-properties t)
-  ;; (setq-local parse-sexp-ignore-comments t)
-
-  ;; (setq-local syntax-propertize-function elixir-syntax-propertize-function)
-
-  ;; (if (and elixir-use-tree-sitter
-  ;;          (treesit-can-enable-p))
-  ;;     (progn
-  ;;       ;; (treesit-parser-create 'elixir)
-
-  ;;       (setq-local font-lock-keywords-only t) ; does not seem to work
-  ;;       ;; so using no defaults for now
-  ;;       ;; (setq-local font-lock-defaults '(nil t))
-
-  ;;       (setq-local treesit-font-lock-feature-list '((minimal) (moderate) (full)))
-  ;;       (setq-local treesit-font-lock-settings elixir--treesit-font-lock-settings)
-  ;;       (treesit-font-lock-enable)
-
-
-  ;;       (setq-local treesit-simple-indent-rules elixir--treesit-indent-rules)
-  ;;       (setq-local indent-line-function #'treesit-indent)
-
-  ;;       (setq-local beginning-of-defun-function #'elixir--treesit-beginning-of-defun)
-  ;;       (setq-local end-of-defun-function #'elixir--treesit-end-of-defun)
-
-  ;;       (setq-local forward-sexp-function #'elixir-forward-sexp)
-
-  ;;       (setq-local imenu-create-index-function #'elixir--imenu-treesit-create-index)
   )
-
 
 ;;;###autoload
 (progn
