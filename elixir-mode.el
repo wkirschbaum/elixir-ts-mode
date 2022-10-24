@@ -1,7 +1,13 @@
 ;;; elixir-mode.el --- Elixir support for Emacs -*- lexical-binding: t -*-
 
-;; Examples of AST
-;;https://github.com/elixir-lang/tree-sitter-elixir/blob/main/test/corpus/integration/function_definition.txt
+;;; Examples of AST
+;;; https://github.com/elixir-lang/tree-sitter-elixir/blob/main/test/corpus/integration/function_definition.txt
+
+;;; Commentary:
+
+;;; This is meant to be merged into the elixir-editors/emacs-elixir repository
+
+;;; Code:
 
 (require 'treesit)
 
@@ -651,9 +657,5 @@ ARG is the same as in `end-of-defun."
   (add-to-list 'auto-mode-alist '("mix\\.lock" . elixir-mode)))
 
 (provide 'elixir-mode)
-;;; elixir-custom-mode.el ends here
-
-
-
-
+;;; elixir-mode.el ends here
 
