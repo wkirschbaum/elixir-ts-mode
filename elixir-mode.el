@@ -219,14 +219,13 @@
        (quoted_content) @elixir-font-string-face
        (interpolation
         "#{" @elixir-font-string-escape-face "}" @elixir-font-string-escape-face
-        ) @default
+        )
        ])
-
-
      )
 
    :language 'elixir
    :feature 'keyword
+   ;; :override `prepend
    `(,elixir--reserved-keywords-vector @elixir-font-keyword-face
      ;; these are operators, should we mark them as keywords?
      (binary_operator
