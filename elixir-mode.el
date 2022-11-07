@@ -233,7 +233,8 @@
       (:match ,elixir--reserved-keywords-re @elixir-font-keyword-face)))
 
    :language 'elixir
-   :feature 'unary-operator
+   :feature 'doc
+   :override t
    `((unary_operator
       operator: "@" @elixir-font-comment-doc-attribute-face
       operand: (call
@@ -245,7 +246,7 @@
                 ;; a more specific font which takes precedence
                 (arguments
                  [
-                  ;; (string) @elixir-font-comment-doc-face
+                  (string) @elixir-font-comment-doc-face
                   (charlist) @elixir-font-comment-doc-face
                   (sigil) @elixir-font-comment-doc-face
                   (boolean) @elixir-font-comment-doc-face
@@ -255,9 +256,12 @@
       operator: "@" @elixir-font-comment-doc-attribute-face
       operand: (call
                 target: (identifier) @elixir-font-comment-doc-identifier-face)
-      (:match ,elixir--doc-keywords-re @elixir-font-comment-doc-identifier-face))
+      (:match ,elixir--doc-keywords-re @elixir-font-comment-doc-identifier-face)))
 
-     (unary_operator operator: "@" @elixir-font-attribute-face
+
+   :language 'elixir
+   :feature 'unary-operator
+   `((unary_operator operator: "@" @elixir-font-attribute-face
                      operand: [
                                (identifier)  @elixir-font-attribute-face
                                (call target: (identifier)  @elixir-font-attribute-face)
@@ -662,7 +666,7 @@ ARG is the same as in `end-of-defun."
   (setq-local treesit-font-lock-settings elixir--treesit-font-lock-settings)
   (setq-local treesit-font-lock-feature-list
               '(( comment string )
-                ( keyword unary-operator operator)
+                ( keyword unary-operator operator doc)
                 ( call constant )
                 ( sigil string-escape)
                 ( string-interpolation )))
