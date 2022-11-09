@@ -71,9 +71,10 @@
 (defvar heex--treesit-indent-rules
   (let ((offset heex-indent-level))
     `((heex
-       ((parent-is "component") parent-bol ,offset)
-       ((parent-is "slot") parent-bol ,offset)
        ((node-is "end_tag") parent-bol 0)
+       ((parent-is "slot") parent-bol ,offset)
+       ((node-is "end_component") parent-bol 0)
+       ((parent-is "component") parent-bol ,offset)
        ((parent-is "tag") parent-bol ,offset)
        ))))
 
@@ -138,6 +139,9 @@
               '(( doctype comment )
                 ( bracket tag attribute keyword string )
                 ( component )))
+
+  (setq-local treesit-defun-type-regexp
+              (rx bol (or "start_component" "start_tag") eol))
 
   (cond
    ((treesit-ready-p nil 'heex)
