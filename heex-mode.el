@@ -26,7 +26,7 @@
   "For use with @keyword tag.")
 
 (defface heex-font-constant-face
-  '((t (:inherit font-lock-comment-face)))
+  '((t (:inherit font-lock-doc-face)))
   "For use with @keyword tag.")
 
 (defface heex-font-comment-face
@@ -70,8 +70,11 @@
 
 (defvar heex--treesit-indent-rules
   (let ((offset heex-indent-level))
-    `((elixir
-       ((node-is ">") parent-bol 0)
+    `((heex
+       ((parent-is "component") parent-bol ,offset)
+       ((parent-is "slot") parent-bol ,offset)
+       ((node-is "end_tag") parent-bol 0)
+       ((parent-is "tag") parent-bol ,offset)
        ))))
 
 (defvar heex--treesit-font-lock-settings
