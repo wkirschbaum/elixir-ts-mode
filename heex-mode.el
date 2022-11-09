@@ -118,43 +118,25 @@
       ]))
   "Tree-sitter font-lock settings.")
 
+;; TODO push/pop opening/closing tags to match sexp and stop when negative
 (defun heex--forward-sexp (&optional arg)
   "Heex forward sexp with ARG."
   (let ((arg (or arg 1))
         (node (treesit-node-at (point))))
     (if (> arg 0)
-        ;; Go backward.
-        (while (and (> arg 0) (heex--treesit-forward-sexp))
+        ;; Go forward.
+        (while (and
+                (> arg 0)
+                (treesit-search-forward-goto
+                 node
+                 (rx (or "end_tag" "end_component")) nil nil nil))
           (setq arg (1- arg)))
-      ;; Go forward.
-      (while (and (< arg 0) (heex--treesit-backward-sexp))
+      ;; Go backward.
+      (while (and (< arg 0)
+                  (treesit-search-forward-goto
+                   node
+                   (rx (or "start_tag" "start_component")) t t nil))
         (setq arg (1+ arg))))))
-
-(defun heex--treesit-backward-sexp ()
-  "Heex forward sexp."
-  (let* ((final-node nil)
-         (node (treesit-node-at (point)))
-         (parent-node (cl-loop while (and node (not final-node))
-             do (setq node (treesit-node-parent node))
-             if (or (equal (treesit-node-type node) "component")
-                    (equal (treesit-node-type node) "tag"))
-             do (setq final-node node)
-             finally return node)))
-    (when parent-node
-      (goto-char (treesit-node-start (treesit-node-prev-sibling parent-node))))))
-
-(defun heex--treesit-forward-sexp ()
-  "Elixir forward sexp."
-  (let* ((final-node nil)
-         (node (treesit-node-at (point)))
-         (parent-node (cl-loop while (and node (not final-node))
-             do (setq node (treesit-node-parent node))
-             if (or (equal (treesit-node-type node) "component")
-                    (equal (treesit-node-type node) "tag"))
-             do (setq final-node node)
-             finally return node)))
-    (when parent-node
-      (goto-char (treesit-node-end parent-node)))))
 
 ;;;###autoload
 (define-derived-mode heex-mode prog-mode "Heex"
