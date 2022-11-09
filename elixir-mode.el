@@ -652,8 +652,6 @@ ARG is the same as in `end-of-defun."
 
 \\{elixir-mode-map}"
 
-  (setq-local font-lock-keywords-only t)
-
   ;; Comments
   (setq-local comment-start "# ")
   (setq-local comment-start-skip "#+\\s-*")
