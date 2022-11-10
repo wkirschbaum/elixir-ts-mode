@@ -122,6 +122,34 @@
       ]))
   "Tree-sitter font-lock settings.")
 
+(defun heex--treesit-largest-node-at-point ()
+  "Find the largest node at point."
+  (save-excursion
+    (forward-comment (point-max))
+    (let ((node-list
+           (cl-loop for node = (treesit-node-at (point))
+                    then (treesit-node-parent node)
+                    while node
+                    if (eq (treesit-node-start node)
+                           (point))
+                    collect node)))
+      (car (last node-list)))))
+
+(defun heex--treesit-backward-sexp ()
+  "Forward sexp for Heex using treesit."
+  (let* ((largest-node (heex--treesit-largest-node-at-point))
+         (sibling (treesit-node-prev-sibling largest-node)))
+    (when sibling
+      (goto-char (treesit-node-start sibling)))))
+
+(defun heex--treesit-forward-sexp ()
+  "Forward sexp for Heex using treesit."
+  (let* ((largest-node (heex--treesit-largest-node-at-point))
+         (sibling (treesit-node-next-sibling largest-node)))
+    (when sibling
+      (goto-char (treesit-node-start sibling))
+      (forward-comment (- (point-max))))))
+
 ;; TODO push/pop opening/closing tags to match sexp and stop when negative
 (defun heex--forward-sexp (&optional arg)
   "Heex forward sexp with ARG."
@@ -131,15 +159,11 @@
         ;; Go forward.
         (while (and
                 (> arg 0)
-                (treesit-search-forward-goto
-                 node
-                 (rx (or "end_tag" "end_component")) nil nil nil))
+                (heex--treesit-forward-sexp))
           (setq arg (1- arg)))
       ;; Go backward.
       (while (and (< arg 0)
-                  (treesit-search-forward-goto
-                   node
-                   (rx (or "start_tag" "start_component")) t t nil))
+                  (heex--treesit-backward-sexp))
         (setq arg (1+ arg))))))
 
 ;;;###autoload
