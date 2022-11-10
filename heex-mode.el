@@ -137,14 +137,18 @@
 
 (defun heex--treesit-backward-sexp ()
   "Forward sexp for Heex using treesit."
-  (let* ((node (treesit-search-forward
-                (treesit-node-at (point))
-                (rx (or "end_tag" "end_component" "end_slot"))
-                t))
-         (sibling (if (> (treesit-node-end node) (pos-bol))
-                      (treesit-node-prev-sibling node))))
-    (when sibling
-      (goto-char (treesit-node-start sibling)))))
+  (let* ((node (save-excursion
+                 (forward-comment (- (point-max)))
+                 (let ((prev-node
+                        (treesit-search-forward
+                         (treesit-node-at (point))
+                         (rx (or "end_tag" "end_component" "end_slot"))
+                         t)))
+                   (if (> (treesit-node-end prev-node) (pos-bol))
+                       (treesit-node-prev-sibling prev-node))
+                   ))))
+    (when node
+      (goto-char (treesit-node-start node)))))
 
 (defun heex--treesit-forward-sexp ()
   "Forward sexp for Heex using treesit."
