@@ -67,7 +67,10 @@
 (defconst heex--brackets-vector
   (apply #'vector heex--brackets))
 
-
+;; There seems to be no parent directive block
+;; so we ignore it for until we learn how heex treesit
+;; represents directive blocks
+;; https://github.com/phoenixframework/tree-sitter-heex/issues/28
 (defvar heex--treesit-indent-rules
   (let ((offset heex-indent-level))
     `((heex
