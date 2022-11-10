@@ -72,9 +72,10 @@
   (let ((offset heex-indent-level))
     `((heex
        ((node-is "end_tag") parent-bol 0)
-       ((parent-is "slot") parent-bol ,offset)
        ((node-is "end_component") parent-bol 0)
+       ((node-is "end_slot") parent-bol 0)
        ((parent-is "component") parent-bol ,offset)
+       ((parent-is "slot") parent-bol ,offset)
        ((parent-is "tag") parent-bol ,offset)
        ))))
 
