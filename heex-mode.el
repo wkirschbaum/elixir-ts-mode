@@ -122,18 +122,20 @@
       ]))
   "Tree-sitter font-lock settings.")
 
-(defun heex--treesit-largest-node-at-point ()
-  "Find the largest node at point."
+(defun heex--treesit-largest-node-at-point (&optional node)
+  "Find the largest node at point or from specified NODE."
   (save-excursion
     (forward-comment (point-max))
     (let ((node-list
-           (cl-loop for node = (treesit-node-at (point))
+           (cl-loop for node = (or node (treesit-node-at (point)))
                     then (treesit-node-parent node)
                     while (and node (not (equal (treesit-node-type node) "fragment")))
                     if (eq (treesit-node-start node)
                            (point))
                     collect node)))
       (car (last node-list)))))
+
+;; (goto-char (treesit-node-start (treesit-search-forward (treesit-node-at (point)) (rx (or "end_tag" "end_component" "end_slot")) t)))
 
 (defun heex--treesit-backward-sexp ()
   "Forward sexp for Heex using treesit."
@@ -145,7 +147,8 @@
                          (rx (or "end_tag" "end_component" "end_slot"))
                          t)))
                    (if (> (treesit-node-end prev-node) (pos-bol))
-                       (treesit-node-prev-sibling prev-node))
+                       (treesit-node-prev-sibling
+                        prev-node))
                    ))))
     (when node
       (goto-char (treesit-node-start node)))))
@@ -155,9 +158,11 @@
 
   (let* ((node (heex--treesit-largest-node-at-point))
          (sibling (treesit-node-next-sibling node)))
-    (when sibling
-      (goto-char (treesit-node-start sibling))
-      (forward-comment (- (point-max))))))
+    (if sibling
+        (progn
+        (goto-char (treesit-node-start sibling))
+        (forward-comment (- (point-max))))
+      (when node (goto-char (treesit-node-end node))))))
 
 ;; TODO push/pop opening/closing tags to match sexp and stop when negative
 (defun heex--forward-sexp (&optional arg)
