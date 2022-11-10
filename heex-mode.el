@@ -129,7 +129,7 @@
     (let ((node-list
            (cl-loop for node = (treesit-node-at (point))
                     then (treesit-node-parent node)
-                    while node
+                    while (and node (not (equal (treesit-node-type node) "fragment")))
                     if (eq (treesit-node-start node)
                            (point))
                     collect node)))
@@ -137,15 +137,20 @@
 
 (defun heex--treesit-backward-sexp ()
   "Forward sexp for Heex using treesit."
-  (let* ((largest-node (heex--treesit-largest-node-at-point))
-         (sibling (treesit-node-prev-sibling largest-node)))
+  (let* ((node (treesit-search-forward
+                (treesit-node-at (point))
+                (rx (or "end_tag" "end_component" "end_slot"))
+                t))
+         (sibling (if (> (treesit-node-end node) (pos-bol))
+                      (treesit-node-prev-sibling node))))
     (when sibling
       (goto-char (treesit-node-start sibling)))))
 
 (defun heex--treesit-forward-sexp ()
   "Forward sexp for Heex using treesit."
-  (let* ((largest-node (heex--treesit-largest-node-at-point))
-         (sibling (treesit-node-next-sibling largest-node)))
+
+  (let* ((node (heex--treesit-largest-node-at-point))
+         (sibling (treesit-node-next-sibling node)))
     (when sibling
       (goto-char (treesit-node-start sibling))
       (forward-comment (- (point-max))))))
