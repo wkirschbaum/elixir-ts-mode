@@ -156,7 +156,10 @@
         (progn
           (goto-char (treesit-node-start sibling))
           (forward-comment (- (point-max))))
-      (when node (goto-char (treesit-node-end node))))))
+      (when node
+        (pcase (treesit-node-type node)
+          ((or "end_tag" "end_component" "end_slot") nil)
+          (_ (goto-char (treesit-node-end node))))))))
 
 (defun heex--forward-sexp (&optional arg)
   "Heex forward sexp with ARG."
