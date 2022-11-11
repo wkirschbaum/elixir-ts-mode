@@ -135,36 +135,29 @@
                     collect node)))
       (car (last node-list)))))
 
-;; (goto-char (treesit-node-start (treesit-search-forward (treesit-node-at (point)) (rx (or "end_tag" "end_component" "end_slot")) t)))
-
 (defun heex--treesit-backward-sexp ()
   "Forward sexp for Heex using treesit."
-  (let* ((node (save-excursion
-                 (forward-comment (- (point-max)))
-                 (let ((prev-node
-                        (treesit-search-forward
-                         (treesit-node-at (point))
-                         (rx (or "end_tag" "end_component" "end_slot"))
-                         t)))
-                   (if (> (treesit-node-end prev-node) (pos-bol))
-                       (treesit-node-prev-sibling
-                        prev-node))
-                   ))))
-    (when node
-      (goto-char (treesit-node-start node)))))
+  (let ((node
+         (save-excursion
+           (forward-comment (- (point-max)))
+           (let ((bol (pos-bol))
+                 (end-node (treesit-search-forward-goto
+                            (treesit-node-at (point))
+                            (rx (or "end_tag" "end_component" "end_slot")) t t)))
+             (if (and end-node (> (treesit-node-end end-node) bol))
+                 (treesit-node-start (treesit-node-parent end-node)))))))
+    (when node (goto-char node))))
 
 (defun heex--treesit-forward-sexp ()
   "Forward sexp for Heex using treesit."
-
   (let* ((node (heex--treesit-largest-node-at-point))
          (sibling (treesit-node-next-sibling node)))
     (if sibling
         (progn
-        (goto-char (treesit-node-start sibling))
-        (forward-comment (- (point-max))))
+          (goto-char (treesit-node-start sibling))
+          (forward-comment (- (point-max))))
       (when node (goto-char (treesit-node-end node))))))
 
-;; TODO push/pop opening/closing tags to match sexp and stop when negative
 (defun heex--forward-sexp (&optional arg)
   "Heex forward sexp with ARG."
   (let ((arg (or arg 1))
