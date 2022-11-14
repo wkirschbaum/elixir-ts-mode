@@ -126,14 +126,11 @@
   "Find the largest node at point or from specified NODE."
   (save-excursion
     (forward-comment (point-max))
-    (let ((node-list
-           (cl-loop for node = (or node (treesit-node-at (point)))
-                    then (treesit-node-parent node)
-                    while (and node (not (equal (treesit-node-type node) "fragment")))
-                    if (eq (treesit-node-start node)
-                           (point))
-                    collect node)))
-      (car (last node-list)))))
+    (treesit-parent-while
+     (or node (treesit-node-at (point)))
+     (lambda (n)
+       (and (eq (treesit-node-start n) (point))
+            (not (equal (treesit-node-type n) "fragment")))))))
 
 (defun heex--treesit-backward-sexp ()
   "Forward sexp for Heex using treesit."
