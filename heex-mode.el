@@ -181,6 +181,17 @@
                   (heex--treesit-backward-sexp))
         (setq arg (1+ arg))))))
 
+(defun heex--comment-region (beg end &optional arg)
+  (save-excursion
+    (goto-char beg)
+    (insert (concat comment-start " "))
+    (goto-char end)
+    (goto-char (pos-eol))
+    (forward-comment (- (point-max)))
+    (insert (concat " " comment-end))
+    ))
+
+
 ;;;###autoload
 (define-derived-mode heex-mode prog-mode "Heex"
   :group 'heex
@@ -189,9 +200,10 @@
 \\{elixir-mode-map}"
 
   ;; Comments
-  (setq-local comment-start "<!-- ")
-  (setq-local comment-start-skip "<!--\\s-*")
-  (setq-local comment-end " -->")
+  (setq-local comment-end "-->")
+  ;; (setq-local comment-start-skip "<!--\\s-*")
+  (setq-local comment-region-function 'heex--comment-region)
+  (setq-local comment-start "<!--")
 
   ;; Treesit-mode.
   (setq-local treesit-mode-supported t)
