@@ -1,3 +1,11 @@
+;;; heex-mode.el --- major mode for editing heex templates -*- coding: utf-8; lexical-binding: t; -*-
+
+;; Author: Wilhelm H Kirschbaum
+
+;;; Commentary:
+
+;; Code:
+
 (require 'treesit)
 
 (eval-when-compile
@@ -213,4 +221,5 @@
   (add-to-list 'auto-mode-alist '("\\.[hl]?eex\\'" . heex-mode)))
 
 (provide 'heex-mode)
-;;; elixir-mode.el ends here
+
+;;; heex-mode.el ends here
