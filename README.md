@@ -13,7 +13,7 @@ which-function-mode and navigation.
 ```elisp
     (add-to-list 'treesit-extra-load-path "[cloned directory]/tree-sitter-module/dist/")
     
-    (load "[cloned wkirschbaum/elixir-mode]/test-treesitter/elixir-mode.el")
+    (load "[cloned wkirschbaum/elixir-mode]/elixir-mode.el")
     (load "[cloned wkirschbaum/elixir-mode]/heex-mode.el")
 ```
 
