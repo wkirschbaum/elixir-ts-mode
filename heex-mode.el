@@ -201,7 +201,6 @@
 
   ;; Comments
   (setq-local comment-end "-->")
-  ;; (setq-local comment-start-skip "<!--\\s-*")
   (setq-local comment-region-function 'heex--comment-region)
   (setq-local comment-start "<!--")
 
