@@ -220,7 +220,7 @@
   (setq-local forward-sexp-function 'heex--forward-sexp)
 
   (cond
-   ((treesit-ready-p nil 'heex)
+   ((treesit-ready-p 'heex)
     (treesit-major-mode-setup))
 
    (t

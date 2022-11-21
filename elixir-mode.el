@@ -679,7 +679,7 @@ ARG is the same as in `end-of-defun."
   (setq-local treesit-imenu-function #'elixir--imenu-treesit-create-index)
 
   (cond
-   ((treesit-ready-p nil 'elixir)
+   ((treesit-ready-p 'elixir)
     (treesit-major-mode-setup))
 
    (t
