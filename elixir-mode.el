@@ -644,6 +644,17 @@ ARG is the same as in `end-of-defun."
   "Elixir mode syntax table.")
 
 
+(defvar elixir--treesit-range-rules
+  (treesit-range-rules
+   :embed 'heex
+   :host 'elixir
+   '((sigil
+      (sigil_name) @name
+      (quoted_content) @cap
+      (:match "^H$" @name))
+     )))
+
+
 ;;;###autoload
 (define-derived-mode elixir-mode prog-mode "Elixir"
   :group 'elixir
@@ -680,7 +691,10 @@ ARG is the same as in `end-of-defun."
 
   (cond
    ((treesit-ready-p 'elixir)
-    (treesit-major-mode-setup))
+    (progn (if (treesit-ready-p 'heex)
+               (setq-local treesit-range-settings
+                           elixir--treesit-range-rules))
+           (treesit-major-mode-setup)))
 
    (t
     (message "Tree-sitter for Elixir isn't available")))

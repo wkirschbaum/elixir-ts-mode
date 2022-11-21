@@ -127,8 +127,17 @@
       (module) @heex-font-module-face
       (function) @heex-font-function-face
       "." @heex-font-delimeter-face
-      ]))
+      ])
+   )
   "Tree-sitter font-lock settings.")
+
+(defvar heex--treesit-range-rules
+  (treesit-range-rules
+   :embed 'elixir
+   :host 'heex
+   '((directive (partial_expression_value) @cap)
+     (directive (expression_value) @cap)
+     (expression (expression_value) @cap))))
 
 (defun heex--treesit-largest-node-at-point (&optional node)
   "Find the largest node at point or from specified NODE."
@@ -213,7 +222,6 @@
               '(( doctype comment )
                 ( bracket tag attribute keyword string )
                 ( component )))
-
   (setq-local treesit-defun-type-regexp
               (rx bol (or "start_component" "start_tag") eol))
 
@@ -221,7 +229,10 @@
 
   (cond
    ((treesit-ready-p 'heex)
-    (treesit-major-mode-setup))
+    (progn (if (treesit-ready-p 'elixir)
+               (setq-local treesit-range-settings
+                           heex--treesit-range-rules))
+           (treesit-major-mode-setup)))
 
    (t
     (message "Tree-sitter for Heex isn't available")))
