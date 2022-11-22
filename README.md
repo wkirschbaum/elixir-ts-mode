@@ -1,4 +1,4 @@
-# Experimental Elixir Major Mode with Treesitter
+# Experimental Elixir and Heex Major Modes using Treesitter
 
 Using treesitter for font-lock, indentation, imenu,
 which-function-mode and navigation.
