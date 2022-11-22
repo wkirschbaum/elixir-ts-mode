@@ -4,6 +4,18 @@
 
 ;;; Commentary:
 
+;; This mode will only work with treesit and with tree-sitter-heex loaded.  This is
+;; a much simpler version compared to something like web-mode and does not have
+;; nearly the same scale of features.
+;;
+;; web-mode needed some significant changes to have a cleaner integration with
+;; heex templates or embedded heex templates.
+;;
+;; Known issues:
+;;
+;; Directives is not the parent of the content, so indentation and navigation
+;; won't properly work with directives.
+
 ;; Code:
 
 (require 'treesit)
@@ -246,8 +258,9 @@
   (cond
    ((treesit-ready-p 'heex)
     (progn (if (treesit-ready-p 'elixir)
-               (setq-local treesit-range-settings
-                           heex--treesit-range-rules))
+               ;; (setq-local treesit-range-settings
+               ;;             heex--treesit-range-rules)
+             )
            (treesit-major-mode-setup)))
 
    (t
