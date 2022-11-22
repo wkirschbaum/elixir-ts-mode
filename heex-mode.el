@@ -200,6 +200,22 @@
     (insert (concat " " comment-end))
     ))
 
+(defun heex--find-previous-tag ()
+  (treesit-node-text (treesit-node-child (treesit-node-child (treesit-parent-until (treesit-node-at (point)) (lambda (n) (member (treesit-node-type n) '("tag" "slot" "component")))) 0) 1)))
+
+
+(defun heex--on-post-command ()
+  "Run post command."
+  (when (and (eq (char-before (point)) ?/)
+             (member this-command '(self-insert-command))
+             (eq (char-before (1- (point))) ?<)
+             )
+    (let ((point (point))
+          (tag (heex--find-previous-tag)))
+      (when tag
+        (insert (concat tag ">"))
+        (goto-char (- point 2))))))
+
 
 ;;;###autoload
 (define-derived-mode heex-mode prog-mode "Heex"
@@ -236,6 +252,8 @@
 
    (t
     (message "Tree-sitter for Heex isn't available")))
+
+  ;; (add-hook 'post-command-hook #'heex--on-post-command nil t)
   )
 
 ;;;###autoload
