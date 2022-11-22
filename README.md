@@ -5,7 +5,7 @@ which-function-mode and navigation.
 
 ## Install
 
-- Checkout the emacs `feature/tree-sitter` branch. 
+- Ensure you are using the latest emacs `master` branch. 
 - Checkout https://github.com/casouri/tree-sitter-module
 - Run `[cloned casouri/tree-sitter-module]/tree-sitter-module/batch.sh`
 - Add the following to your emacs config
