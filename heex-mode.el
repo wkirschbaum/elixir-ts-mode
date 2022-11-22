@@ -260,8 +260,7 @@
     (progn (if (treesit-ready-p 'elixir)
                ;; (setq-local treesit-range-settings
                ;;             heex--treesit-range-rules)
-             )
-           (treesit-major-mode-setup)))
+           (treesit-major-mode-setup))))
 
    (t
     (message "Tree-sitter for Heex isn't available")))

@@ -692,9 +692,9 @@ ARG is the same as in `end-of-defun."
   (cond
    ((treesit-ready-p 'elixir)
     (progn (if (treesit-ready-p 'heex)
-               (setq-local treesit-range-settings
-                           elixir--treesit-range-rules))
-           (treesit-major-mode-setup)))
+               ;; (setq-local treesit-range-settings
+               ;;             elixir--treesit-range-rules)
+           (treesit-major-mode-setup))))
 
    (t
     (message "Tree-sitter for Elixir isn't available")))
