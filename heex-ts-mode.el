@@ -1,16 +1,12 @@
-;;; heex-ts-mode.el --- major mode for editing heex templates -*- coding: utf-8; lexical-binding: t; -*-
+;;; heex-ts-mode.el --- tree-sitter support for Heex templates -*- coding: utf-8; lexical-binding: t; -*-
 
-;; Author: Wilhelm H Kirschbaum
+;; Author      : Wilhelm H Kirschbaum
+;; Maintainer  : Wilhelm H Kirschbaum
+;; Created     : November 2022
+;; Keywords    : heex elixir languages tree-sitter
 
 ;;; Commentary:
 
-;; This mode will only work with treesit and with tree-sitter-heex loaded.  This is
-;; a much simpler version compared to something like web-mode and does not have
-;; nearly the same scale of features.
-;;
-;; web-mode needed some significant changes to have a cleaner integration with
-;; heex templates or embedded heex templates.
-;;
 ;; Known issues:
 ;;
 ;; Directives is not the parent of the content, so indentation and navigation
@@ -229,17 +225,34 @@
 ;;;###autoload
 (define-derived-mode heex-ts-mode prog-mode "Heex"
   :group 'heex
-  "Major mode for editing Heex code.
+  "Major mode for editing Heex code."
 
-\\{elixir-mode-map}"
+  (unless (treesit-ready-p 'heex)
+    (error "Tree-sitter for Heex isn't available"))
 
-  ;; Comments
+  (treesit-parser-create 'heex)
+
+  ;; Comments.
+  (setq-local comment-start "<!--")
   (setq-local comment-end "-->")
   (setq-local comment-region-function 'heex--comment-region)
-  (setq-local comment-start "<!--")
 
-  ;; Treesit-mode.
+  ;; Electric.
+  (setq-local electric-indent-chars
+              (append ">" electric-indent-chars))
+
+  ;; Navigation.
+  (setq-local treesit-defun-type-regexp
+              (rx bol (or "start_component" "start_tag") eol))
+
+  ;; Treesit.
   (setq-local treesit-mode-supported t)
+
+  ;; not sure if the treesit-comment-.. works
+  ;; but in the documentation to set a regex
+  ;; (setq-local treesit-comment-start "<!--")
+  ;; (setq-local treesit-comment-end "-->")
+
   (setq-local treesit-required-languages '(heex))
   (setq-local treesit-simple-indent-rules heex--treesit-indent-rules)
   (setq-local treesit-font-lock-settings heex--treesit-font-lock-settings)
@@ -247,23 +260,10 @@
               '(( doctype comment )
                 ( bracket tag attribute keyword string )
                 ( component )))
-  (setq-local treesit-defun-type-regexp
-              (rx bol (or "start_component" "start_tag") eol))
 
   (setq-local forward-sexp-function 'heex--forward-sexp)
 
-  (cond
-   ((treesit-ready-p 'heex)
-    (progn (if (treesit-ready-p 'elixir)
-               ;; (setq-local treesit-range-settings
-               ;;             heex--treesit-range-rules)
-           (treesit-major-mode-setup))))
-
-   (t
-    (message "Tree-sitter for Heex isn't available")))
-
-  ;; (add-hook 'post-command-hook #'heex--on-post-command nil t)
-  )
+  (treesit-major-mode-setup))
 
 ;;;###autoload
 (progn
