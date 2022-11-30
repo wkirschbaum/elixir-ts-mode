@@ -1,4 +1,4 @@
-;;; heex-mode.el --- major mode for editing heex templates -*- coding: utf-8; lexical-binding: t; -*-
+;;; heex-ts-mode.el --- major mode for editing heex templates -*- coding: utf-8; lexical-binding: t; -*-
 
 ;; Author: Wilhelm H Kirschbaum
 
@@ -19,12 +19,9 @@
 ;; Code:
 
 (require 'treesit)
-
 (eval-when-compile
+  (require 'rx)
   (require 'cl-lib))
-
-(ignore-errors
-  (unload-feature 'heex-mode))
 
 (defgroup heex nil
   "Major mode for editing Heex code."
@@ -230,7 +227,7 @@
 
 
 ;;;###autoload
-(define-derived-mode heex-mode prog-mode "Heex"
+(define-derived-mode heex-ts-mode prog-mode "Heex"
   :group 'heex
   "Major mode for editing Heex code.
 
@@ -270,8 +267,8 @@
 
 ;;;###autoload
 (progn
-  (add-to-list 'auto-mode-alist '("\\.[hl]?eex\\'" . heex-mode)))
+  (add-to-list 'auto-mode-alist '("\\.[hl]?eex\\'" . heex-ts-mode)))
 
-(provide 'heex-mode)
+(provide 'heex-ts-mode)
 
-;;; heex-mode.el ends here
+;;; heex-ts-mode.el ends here

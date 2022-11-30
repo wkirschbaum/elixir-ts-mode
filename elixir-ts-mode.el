@@ -1,4 +1,4 @@
-;;; elixir-mode.el --- Elixir support for Emacs -*- lexical-binding: t -*-
+;;; elixir-ts-mode.el --- Elixir support for Emacs -*- lexical-binding: t -*-
 
 ;;; Examples of AST
 ;;; https://github.com/elixir-lang/tree-sitter-elixir/blob/main/test/corpus/integration/function_definition.txt
@@ -12,10 +12,8 @@
 (require 'treesit)
 
 (eval-when-compile
+  (require 'rx)
   (require 'cl-lib))
-
-(ignore-errors
-  (unload-feature 'elixir-mode))
 
 (defgroup elixir nil
   "Major mode for editing Elixir code."
@@ -615,7 +613,7 @@ ARG is the same as in `end-of-defun."
 ;;          (let ((prev-node (treesit-node-prev-sibling largest-node)))
 ;;            (if prev-node (treesit-node-start prev-node) (point))))))))
 
-(defvar elixir-mode-syntax-table
+(defvar elixir-ts-mode-syntax-table
   (let ((table (make-syntax-table)))
     (modify-syntax-entry ?| "." table)
     (modify-syntax-entry ?- "." table)
@@ -656,12 +654,12 @@ ARG is the same as in `end-of-defun."
 
 
 ;;;###autoload
-(define-derived-mode elixir-mode prog-mode "Elixir"
+(define-derived-mode elixir-ts-mode prog-mode "Elixir"
   :group 'elixir
-  :syntax-table elixir-mode-syntax-table
+  :syntax-table elixir-ts-mode-syntax-table
   "Major mode for editing Elixir code.
 
-\\{elixir-mode-map}"
+\\{elixir-ts-mode-map}"
 
   ;; Comments
   (setq-local comment-start "# ")
@@ -702,11 +700,11 @@ ARG is the same as in `end-of-defun."
 
 ;;;###autoload
 (progn
-  (add-to-list 'auto-mode-alist '("\\.elixir\\'" . elixir-mode))
-  (add-to-list 'auto-mode-alist '("\\.ex\\'" . elixir-mode))
-  (add-to-list 'auto-mode-alist '("\\.exs\\'" . elixir-mode))
-  (add-to-list 'auto-mode-alist '("mix\\.lock" . elixir-mode)))
+  (add-to-list 'auto-mode-alist '("\\.elixir\\'" . elixir-ts-mode))
+  (add-to-list 'auto-mode-alist '("\\.ex\\'" . elixir-ts-mode))
+  (add-to-list 'auto-mode-alist '("\\.exs\\'" . elixir-ts-mode))
+  (add-to-list 'auto-mode-alist '("mix\\.lock" . elixir-ts-mode)))
 
-(provide 'elixir-mode)
-;;; elixir-mode.el ends here
+(provide 'elixir-ts-mode)
+;;; elixir-ts-mode.el ends here
 
