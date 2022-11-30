@@ -203,9 +203,29 @@
     (insert (concat " " comment-end))
     ))
 
-(defun heex--find-previous-tag ()
-  (treesit-node-text (treesit-node-child (treesit-node-child (treesit-parent-until (treesit-node-at (point)) (lambda (n) (member (treesit-node-type n) '("tag" "slot" "component")))) 0) 1)))
-
+;; try to find the error tag, then either look at the previous sibling
+;; or the first child to see if we can find the start tag
+;; when around a existing tag we have to go up one more parent
+(defun heex--find-start-tag ()
+  (let* ((error-tag (treesit-node-parent (treesit-node-at (point))))
+         (prev-sibling (treesit-node-prev-sibling error-tag))
+         (first-child (treesit-node-child error-tag 0))
+         (first-parent-child
+          (treesit-node-child
+           (treesit-node-parent error-tag) 0))
+         (start-tag
+          (cond
+           ((string-match-p
+             (rx (or "start_tag" "start_component" "start_slot"))
+             (or (treesit-node-type first-child) "")) first-child)
+           ((string-match-p
+             (rx (or "start_tag" "start_component" "start_slot"))
+             (or (treesit-node-type first-parent-child) "")) first-parent-child)
+           ((string-match-p
+             (rx (or "start_tag" "start_component" "start_slot"))
+             (or (treesit-node-type prev-sibling) "")) prev-sibling))))
+    (when start-tag
+      (treesit-node-text (treesit-node-child start-tag 0 t)))))
 
 (defun heex--on-post-command ()
   "Run post command."
@@ -214,11 +234,10 @@
              (eq (char-before (1- (point))) ?<)
              )
     (let ((point (point))
-          (tag (heex--find-previous-tag)))
+          (tag (heex--find-start-tag)))
       (when tag
         (insert (concat tag ">"))
         (goto-char (- point 2))))))
-
 
 ;;;###autoload
 (define-derived-mode heex-ts-mode prog-mode "Heex"
@@ -245,6 +264,9 @@
 
   ;; Treesit.
   (setq-local treesit-mode-supported t)
+
+  ;; Tag completion
+  ;; (add-hook 'post-command-hook #'heex--on-post-command nil t)
 
   ;; not sure if the treesit-comment-.. works
   ;; but in the documentation to set a regex
