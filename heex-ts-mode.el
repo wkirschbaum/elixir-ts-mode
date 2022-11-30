@@ -15,9 +15,7 @@
 ;; Code:
 
 (require 'treesit)
-(eval-when-compile
-  (require 'rx)
-  (require 'cl-lib))
+(eval-when-compile (require 'rx))
 
 (defgroup heex nil
   "Major mode for editing Heex code."

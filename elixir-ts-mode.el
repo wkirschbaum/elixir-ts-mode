@@ -1,16 +1,15 @@
-;;; elixir-ts-mode.el --- Elixir support for Emacs -*- lexical-binding: t -*-
+;;; heex-ts-mode.el --- tree-sitter support for Elixir -*- coding: utf-8; lexical-binding: t; -*-
 
-;;; Examples of AST
-;;; https://github.com/elixir-lang/tree-sitter-elixir/blob/main/test/corpus/integration/function_definition.txt
+;; Author      : Wilhelm H Kirschbaum
+;; Maintainer  : Wilhelm H Kirschbaum
+;; Created     : November 2022
+;; Keywords    : elixir languages tree-sitter
 
 ;;; Commentary:
 
-;;; This is meant to be merged into the elixir-editors/emacs-elixir repository
-
-;;; Code:
+;; Code:
 
 (require 'treesit)
-
 (eval-when-compile
   (require 'rx)
   (require 'cl-lib))
@@ -661,6 +660,11 @@ ARG is the same as in `end-of-defun."
 
 \\{elixir-ts-mode-map}"
 
+  (unless (treesit-ready-p 'elixir)
+    (error "Tree-sitter for Elixir isn't available"))
+
+  (treesit-parser-create 'elixir)
+
   ;; Comments
   (setq-local comment-start "# ")
   (setq-local comment-start-skip "#+\\s-*")
@@ -687,16 +691,7 @@ ARG is the same as in `end-of-defun."
 
   (setq-local treesit-imenu-function #'elixir--imenu-treesit-create-index)
 
-  (cond
-   ((treesit-ready-p 'elixir)
-    (progn (if (treesit-ready-p 'heex)
-               ;; (setq-local treesit-range-settings
-               ;;             elixir--treesit-range-rules)
-           (treesit-major-mode-setup))))
-
-   (t
-    (message "Tree-sitter for Elixir isn't available")))
-  )
+  (treesit-major-mode-setup))
 
 ;;;###autoload
 (progn
