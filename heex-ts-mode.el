@@ -9,8 +9,8 @@
 
 ;; Known issues:
 ;;
-;; Directives is not the parent of the content, so indentation and navigation
-;; won't properly work with directives.
+;; Directive blocks are not represented in treesit-sitter-heex which makes it
+;; tricky to implement indentation, so it does not work properly at the moment.
 
 ;; Code:
 
