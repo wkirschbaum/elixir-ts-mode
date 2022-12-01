@@ -11,6 +11,7 @@
 ;;
 ;; Directive blocks are not represented in treesit-sitter-heex which makes it
 ;; tricky to implement indentation, so it does not work properly at the moment.
+;; https://github.com/phoenixframework/tree-sitter-heex/issues/28
 
 ;; Code:
 
