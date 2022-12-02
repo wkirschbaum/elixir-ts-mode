@@ -9,6 +9,9 @@
 
 ;; Code:
 
+
+(unload-feature 'elixir-ts-mode)
+
 (require 'treesit)
 (eval-when-compile
   (require 'rx)
@@ -224,10 +227,10 @@
    :feature 'keyword
    ;; :override `prepend
    `(,elixir--reserved-keywords-vector @elixir-font-keyword-face
-     ;; these are operators, should we mark them as keywords?
-     (binary_operator
-      operator: _ @elixir-font-keyword-face
-      (:match ,elixir--reserved-keywords-re @elixir-font-keyword-face)))
+                                       ;; these are operators, should we mark them as keywords?
+                                       (binary_operator
+                                        operator: _ @elixir-font-keyword-face
+                                        (:match ,elixir--reserved-keywords-re @elixir-font-keyword-face)))
 
    :language 'elixir
    :feature 'doc
@@ -372,33 +375,59 @@
             (point))
         nil))))
 
+;; introducing custom queries like this makes things slow
+;; so perhaps should be optional somehow
+(defvar elixir--anonymous-function-end
+  (treesit-query-compile 'elixir '((anonymous_function "end" @end))))
+
+(defvar elixir--operator-parent
+  (treesit-query-compile 'elixir '((binary_operator operator: _ @val))))
+
 (defvar elixir--treesit-indent-rules
   (let ((offset elixir-indent-level))
     `((elixir
-       (no-node (elixir--treesit-backward-up-list) ,offset)
-       ((node-is "}") parent-bol 0)
-       ((node-is ")") parent-bol 0)
-       ((node-is "]") parent-bol 0)
-       ((node-is ">") parent-bol 0)
+       ;; (no-node (elixir--treesit-backward-up-list) ,offset)
+       ((parent-is "source") parent-bol 0)
+       ;; ensure we don't indent docs by setting no-indent on quoted_content
+
+       ((parent-is "quoted_content") no-indent 0)
        ((node-is "|>") parent-bol 0)
        ((node-is "|") parent-bol 0)
-       ((node-is "do_block") parent-bol 0)
-       ((node-is "end") (elixir--treesit-backward-up-list) 0)
-       ((node-is "else_block") parent-bol 0)
+       ((node-is "}") parent-bol 0)
+       ((node-is ")") grand-parent 0)
+       ((node-is "]") parent-bol 0)
+
+       ((query ,elixir--operator-parent) grand-parent 0)
+       ((node-is "when") parent 0)
+
+       ((node-is "else_block") grand-parent-bol 0)
+       ((node-is "catch_block") grand-parent-bol 0)
        ((node-is "stab_clause") parent-bol ,offset)
-       ((node-is "rescue_block") parent-bol 0)
-       ((node-is ".") parent-bol ,offset)
-       ((parent-is "body") parent-bol ,offset)
-       ((parent-is "sigil") parent-bol 0)
-       ((parent-is "string") parent-bol 0)
-       ((parent-is "tuple") parent-bol ,offset)
-       ((parent-is "do_block") (elixir--treesit-backward-up-list) ,offset)
-       ((parent-is "else_block") parent-bol ,offset)
-       ((parent-is "stab_clause") parent-bol ,offset)
-       ((parent-is "arguments") parent-bol ,offset)
-       ((parent-is "list") parent-bol ,offset)
-       ((parent-is "keywords") first-sibling 0)
+
+       ((node-is "binary_operator") grand-parent ,offset)
        ((parent-is "binary_operator") parent ,offset)
+
+       ;; ((parent-is "arguments") grand-parent ,offset)
+       ((parent-is "arguments") grand-parent ,offset)
+       ((parent-is "body") parent-bol ,offset)
+
+       ((parent-is "list") parent-bol ,offset)
+       ((parent-is "tuple") parent-bol ,offset)
+       ((parent-is "pair") parent ,offset)
+       ((parent-is "map") parent-bol ,offset)
+       ((parent-is "keywords") parent-bol 0)
+
+       ;; this query function is slow
+       ((query ,elixir--anonymous-function-end) parent-bol 0)
+
+       ((node-is "end") grand-parent-bol 0)
+
+       ((parent-is "do_block") grand-parent ,offset)
+
+       ((parent-is "anonymous_function") grand-parent-bol ,offset)
+       ((parent-is "else_block") parent ,offset)
+       ((parent-is "rescue_block") parent ,offset)
+       ((parent-is "catch_block") parent ,offset)
        ))))
 
 (defun elixir--imenu-item-parent-label (_type name)
@@ -456,18 +485,18 @@
 
 (defvar elixir--treesit-query-defun
   (let ((query `((call
-     target: (identifier) @type
-     (arguments
-      [
-       (alias) @name
-       (identifier) @name
-       (call target: (identifier)) @name
-       (binary_operator
-        left: (call target: (identifier)) @name
-        operator: "when")
-       ])
-     (:match ,elixir--definition-keywords-re @type)
-     ))))
+                  target: (identifier) @type
+                  (arguments
+                   [
+                    (alias) @name
+                    (identifier) @name
+                    (call target: (identifier)) @name
+                    (binary_operator
+                     left: (call target: (identifier)) @name
+                     operator: "when")
+                    ])
+                  (:match ,elixir--definition-keywords-re @type)
+                  ))))
     (treesit-query-compile 'elixir query)))
 
 
@@ -484,13 +513,13 @@
 (defun elixir--treesit-defun-name (&optional node)
   "Get the module name from the NODE if exists."
   (let* ((node (or node (elixir--treesit-largest-node-at-point)))
-        (name-node (alist-get 'name (elixir--treesit-defun node))))
+         (name-node (alist-get 'name (elixir--treesit-defun node))))
     (when name-node (treesit-node-text name-node))))
 
 (defun elixir--treesit-defun-type (&optional node)
   "Get the module name from the NODE if exists."
   (let* ((node (or node (elixir--treesit-largest-node-at-point)))
-        (name-node (alist-get 'type (elixir--treesit-defun node))))
+         (name-node (alist-get 'type (elixir--treesit-defun node))))
     (when name-node (treesit-node-text name-node))))
 
 
