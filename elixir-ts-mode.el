@@ -404,33 +404,45 @@
        ((node-is ")") grand-parent 0)
        ((node-is "]") parent-bol 0)
 
-       ((query ,elixir--operator-parent) grand-parent 0)
-       ((node-is "when") parent 0)
-
        ((node-is "else_block") grand-parent-bol 0)
        ((node-is "catch_block") grand-parent-bol 0)
        ((node-is "stab_clause") parent-bol ,offset)
 
        ((parent-is "stab_clause") parent-bol ,offset)
 
+       ((query ,elixir--operator-parent) grand-parent 0)
+       ((node-is "when") parent 0)
+
        ((parent-is "binary_operator") parent ,offset)
 
-       ((query ,elixir--first-argument) grand-parent ,offset)
+       ((parent-is "keywords") grand-parent-bol ,offset)
+       ((node-is "keywords") parent-bol ,offset)
+
+       ;; Below handles
+       ;;      raise ArgumentError,
+       ;;           "foo"
+       ;; But there seems to some inconsistencies with the formatting
+       ;; so sticking with the more basic more performant
+       ;; `((parent-is "arguments") grand-parent ,offset)` for now
+
+       ((query ,elixir--first-argument)
+        (lambda (_n parent &rest _)
+          (treesit-node-start (treesit-node-parent parent)))
+        ,offset)
        ((query ,elixir--rest-argument)
         (lambda (_n parent &rest _)
           (treesit-node-start
            (treesit-node-child parent 0 t))) 0)
 
+       ((parent-is "arguments") grand-parent ,offset)
 
-       ((parent-is "body") parent-bol ,offset)
+       ((parent-is "body") grand-parent-bol ,offset)
 
        ((parent-is "list") parent-bol ,offset)
        ((parent-is "tuple") parent-bol ,offset)
        ((parent-is "pair") parent ,offset)
        ((parent-is "map") parent-bol ,offset)
-       ((parent-is "keywords") parent-bol 0)
 
-       ;; this query function is slow
        ((query ,elixir--anonymous-function-end) parent-bol 0)
 
        ((node-is "end") grand-parent-bol 0)
