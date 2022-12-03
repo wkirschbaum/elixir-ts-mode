@@ -10,7 +10,8 @@
 ;; Code:
 
 
-(unload-feature 'elixir-ts-mode)
+(ignore-errors
+  (unload-feature 'elixir-ts-mode))
 
 (require 'treesit)
 (eval-when-compile
@@ -383,6 +384,12 @@
 (defvar elixir--operator-parent
   (treesit-query-compile 'elixir '((binary_operator operator: _ @val))))
 
+(defvar elixir--first-argument
+  (treesit-query-compile 'elixir "(arguments . (_) @first-child)"))
+
+(defvar elixir--rest-argument
+  (treesit-query-compile 'elixir '((arguments (_) @child))))
+
 (defvar elixir--treesit-indent-rules
   (let ((offset elixir-indent-level))
     `((elixir
@@ -404,11 +411,18 @@
        ((node-is "catch_block") grand-parent-bol 0)
        ((node-is "stab_clause") parent-bol ,offset)
 
-       ((node-is "binary_operator") grand-parent ,offset)
-       ((parent-is "binary_operator") parent ,offset)
+       ((parent-is "stab_clause") parent-bol ,offset)
 
-       ;; ((parent-is "arguments") grand-parent ,offset)
-       ((parent-is "arguments") grand-parent ,offset)
+       ((node-is "binary_operator") parent-bol ,offset)
+       ;; ((parent-is "binary_operator") parent ,offset)
+
+       ((query ,elixir--first-argument) grand-parent ,offset)
+       ((query ,elixir--rest-argument)
+        (lambda (_n parent &rest _)
+          (treesit-node-start
+           (treesit-node-child parent 0 t))) 0)
+
+
        ((parent-is "body") parent-bol ,offset)
 
        ((parent-is "list") parent-bol ,offset)
