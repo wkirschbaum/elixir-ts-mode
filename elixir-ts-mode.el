@@ -413,8 +413,7 @@
 
        ((parent-is "stab_clause") parent-bol ,offset)
 
-       ((node-is "binary_operator") parent-bol ,offset)
-       ;; ((parent-is "binary_operator") parent ,offset)
+       ((parent-is "binary_operator") parent ,offset)
 
        ((query ,elixir--first-argument) grand-parent ,offset)
        ((query ,elixir--rest-argument)
