@@ -7,8 +7,12 @@
 
 ;;; Commentary:
 
-;; Code:
+;; Custom queries for indentation is currently very slow, it might
+;; be worth while to compromise "accurate" indentation to gain some
+;; performance. The initial intention is to match the mix formatter,
+;; as with smaller files the performance impact is not too notice-able
 
+;; Code:
 
 (ignore-errors
   (unload-feature 'elixir-ts-mode))
@@ -376,8 +380,10 @@
 (defvar elixir--first-argument
   (treesit-query-compile 'elixir "(arguments . (_) @first-child) (tuple . (_) @first-child)"))
 
-(defvar elixir--binary-operator-special
-  (treesit-query-compile 'elixir '((binary_operator operator: "<>") @val)))
+;; (defvar elixir--binary-operator-special
+;;   (treesit-query-compile
+;;    'elixir
+;;    '((binary_operator right: (binary_operator operator: "<>")) @val)))
 
 (defun elixir--indent-parent-bol-p (parent)
   (save-excursion
@@ -390,7 +396,18 @@
     `((elixir
        ((parent-is "source") parent-bol 0)
        ;; ensure we don't indent docs by setting no-indent on quoted_content
-       ((parent-is "quoted_content") no-indent 0)
+       ((parent-is "string") parent-bol 0)
+       ((parent-is "quoted_content")
+        (lambda (_n parent bol &rest _)
+          (message "quoted content")
+          (save-excursion
+            (back-to-indentation)
+            (if (bolp)
+                (progn
+                  (goto-char (treesit-node-start parent))
+                  (back-to-indentation)
+                  (point))
+              (point)))) 0)
        (no-node parent-bol ,offset)
        ((node-is "|>") parent-bol 0)
        ((node-is "|") parent-bol 0)
@@ -736,7 +753,7 @@ ARG is the same as in `end-of-defun."
 
     ;; Electric.
   (setq-local electric-indent-chars
-              (append "]" ")" "}" "end" electric-indent-chars))
+              (append "]" ")" "}" "\"" "end" electric-indent-chars))
 
   ;; Treesit-mode.
   (setq-local treesit-mode-supported t)
