@@ -391,6 +391,12 @@
     (back-to-indentation)
     (and (eq (char-after) ?|) (eq (char-after (1+ (point))) ?>))))
 
+(defun elixir--treesit-anchor-grand-parent-bol (_n parent &rest _)
+  (save-excursion
+    (goto-char (treesit-node-start (treesit-node-parent parent)))
+    (back-to-indentation)
+    (point)))
+
 (defvar elixir--treesit-indent-rules
   (let ((offset elixir-indent-level))
     `((elixir
@@ -424,9 +430,9 @@
         0)
        ((node-is "]") parent-bol 0)
 
-       ((node-is "else_block") grand-parent-bol 0)
-       ((node-is "catch_block") grand-parent-bol 0)
-       ((node-is "rescue_block") grand-parent-bol 0)
+       ((node-is "else_block") elixir--treesit-anchor-grand-parent-bol 0)
+       ((node-is "catch_block") elixir--treesit-anchor-grand-parent-bol 0)
+       ((node-is "rescue_block") elixir--treesit-anchor-grand-parent-bol 0)
        ((node-is "stab_clause") parent-bol ,offset)
 
        ((query ,elixir--operator-parent) grand-parent 0)
@@ -471,11 +477,11 @@
 
         ((query ,elixir--anonymous-function-end) parent-bol 0)
 
-        ((node-is "end") grand-parent-bol 0)
+        ((node-is "end") elixir--treesit-anchor-grand-parent-bol 0)
 
         ((parent-is "do_block") grand-parent ,offset)
 
-        ((parent-is "anonymous_function") grand-parent-bol ,offset)
+        ((parent-is "anonymous_function") elixir--treesit-anchor-grand-parent-bol ,offset)
         ((parent-is "else_block") parent ,offset)
         ((parent-is "rescue_block") parent ,offset)
         ((parent-is "catch_block") parent ,offset)
