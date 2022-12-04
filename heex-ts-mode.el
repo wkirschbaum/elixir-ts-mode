@@ -19,9 +19,6 @@
 (require 'treesit)
 (eval-when-compile (require 'rx))
 
-(ignore-errors
-  (unload-feature 'heex-ts-mode))
-
 (defgroup heex nil
   "Major mode for editing Heex code."
   :tag "Heex"
@@ -93,6 +90,7 @@
        ((node-is "end_tag") parent-bol 0)
        ((node-is "end_component") parent-bol 0)
        ((node-is "end_slot") parent-bol 0)
+       ((node-is ">") parent-bol 0)
        ((parent-is "component") parent-bol ,offset)
        ((parent-is "slot") parent-bol ,offset)
        ((parent-is "tag") parent-bol ,offset)
@@ -157,47 +155,8 @@
        (and (eq (treesit-node-start n) (point))
             (not (equal (treesit-node-type n) "fragment")))))))
 
-(defun heex--treesit-backward-sexp ()
-  "Forward sexp for Heex using treesit."
-  (let ((node
-         (save-excursion
-           (forward-comment (- (point-max)))
-           (let ((bol (pos-bol))
-                 (end-node (treesit-search-forward-goto
-                            (treesit-node-at (point))
-                            (rx (or "self_closing_tag" "end_tag" "end_component" "end_slot")) t t)))
-             (if (and end-node (> (treesit-node-end end-node) bol))
-                 (treesit-node-start (treesit-node-parent end-node)))))))
-    (when node (goto-char node))))
-
-(defun heex--treesit-forward-sexp ()
-  "Forward sexp for Heex using treesit."
-  (let* ((node (heex--treesit-largest-node-at-point))
-         (sibling (treesit-node-next-sibling node)))
-    (if sibling
-        (progn
-          (goto-char (treesit-node-start sibling))
-          (forward-comment (- (point-max))))
-      (when node
-        (pcase (treesit-node-type node)
-          ((or "end_tag" "end_component" "end_slot") nil)
-          (_ (goto-char (treesit-node-end node))))))))
-
-(defun heex--forward-sexp (&optional arg)
-  "Heex forward sexp with ARG."
-  (let ((arg (or arg 1))
-        (node (treesit-node-at (point))))
-    (if (> arg 0)
-        ;; Go forward.
-        (while (and
-                (> arg 0)
-                (heex--treesit-forward-sexp))
-          (setq arg (1- arg)))
-      ;; Go backward.
-      (while (and (< arg 0)
-                  (heex--treesit-backward-sexp))
-        (setq arg (1+ arg))))))
-
+;; This is still very naive and might be easy pickings to
+;; improve
 (defun heex--comment-region (beg end &optional arg)
   (save-excursion
     (goto-char beg)
@@ -208,45 +167,19 @@
     (insert (concat " " comment-end))
     ))
 
-;; try to find the error tag, then either look at the previous sibling
-;; or the first child to see if we can find the start tag
-;; when around a existing tag we have to go up one more parent
-(defun heex--find-start-tag ()
-  (let* ((error-tag (treesit-node-parent (treesit-node-at (point))))
-         (prev-sibling (treesit-node-prev-sibling error-tag))
-         (first-child (treesit-node-child error-tag 0))
-         (first-parent-child
-          (treesit-node-child
-           (treesit-node-parent error-tag) 0))
-         (start-tag
-          (cond
-           ((string-match-p
-             (rx (or "start_tag" "start_component" "start_slot"))
-             (or (treesit-node-type first-child) "")) first-child)
-           ((string-match-p
-             (rx (or "start_tag" "start_component" "start_slot"))
-             (or (treesit-node-type first-parent-child) "")) first-parent-child)
-           ((string-match-p
-             (rx (or "start_tag" "start_component" "start_slot"))
-             (or (treesit-node-type prev-sibling) "")) prev-sibling))))
-    (when start-tag
-      (treesit-node-text (treesit-node-child start-tag 0 t)))))
-
-(defun heex--on-post-command ()
-  "Run post command."
-  (when (and (eq (char-before (point)) ?/)
-             (member this-command '(self-insert-command))
-             (eq (char-before (1- (point))) ?<)
-             )
-    (let ((point (point))
-          (tag (heex--find-start-tag)))
-      (when tag
-        (insert (concat tag ">"))
-        (goto-char (- point 2))))))
+(defvar heex-ts-mode-syntax-table
+  (let ((table (make-syntax-table)))
+    (modify-syntax-entry ?\{ "(}" table)
+    (modify-syntax-entry ?\} "){" table)
+    (modify-syntax-entry ?< "(>" table)
+    (modify-syntax-entry ?> ")<" table)
+    table)
+  "Heex mode syntax table.")
 
 ;;;###autoload
 (define-derived-mode heex-ts-mode prog-mode "Heex"
   :group 'heex
+  :syntax-table heex-ts-mode-syntax-table
   "Major mode for editing Heex code."
 
   (unless (treesit-ready-p 'heex)
@@ -265,18 +198,10 @@
 
   ;; Navigation.
   (setq-local treesit-defun-type-regexp
-              (rx bol (or "start_component" "start_tag") eol))
+              (rx bol (or "component" "tag" "slot") eol))
 
   ;; Treesit.
   (setq-local treesit-mode-supported t)
-
-  ;; Tag completion
-  ;; (add-hook 'post-command-hook #'heex--on-post-command nil t)
-
-  ;; not sure if the treesit-comment-.. works
-  ;; but in the documentation to set a regex
-  ;; (setq-local treesit-comment-start "<!--")
-  ;; (setq-local treesit-comment-end "-->")
 
   (setq-local treesit-required-languages '(heex))
   (setq-local treesit-simple-indent-rules heex--treesit-indent-rules)
@@ -285,8 +210,6 @@
               '(( doctype comment )
                 ( bracket tag attribute keyword string )
                 ( component )))
-
-  (setq-local forward-sexp-function 'heex--forward-sexp)
 
   (treesit-major-mode-setup))
 
