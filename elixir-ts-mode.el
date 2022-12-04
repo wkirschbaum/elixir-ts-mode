@@ -395,11 +395,10 @@
   (let ((offset elixir-indent-level))
     `((elixir
        ((parent-is "source") parent-bol 0)
-       ;; ensure we don't indent docs by setting no-indent on quoted_content
        ((parent-is "string") parent-bol 0)
+       ;; ensure we don't indent docs by setting no-indent on quoted_content
        ((parent-is "quoted_content")
         (lambda (_n parent bol &rest _)
-          (message "quoted content")
           (save-excursion
             (back-to-indentation)
             (if (bolp)
