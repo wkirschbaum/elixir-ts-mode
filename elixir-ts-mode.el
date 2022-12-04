@@ -365,17 +365,6 @@
         (setq node (treesit-node-parent node))))
     result))
 
-(defun elixir--treesit-backward-up-list ()
-  (lambda (node _parent _bol &rest _)
-    (let* ((block (elixir--treesit-find-parent-do-block node))
-           (parent (when block (treesit-node-parent block))))
-      (if parent
-          (save-excursion
-            (goto-char (treesit-node-start parent))
-            (back-to-indentation)
-            (point))
-        nil))))
-
 ;; introducing custom queries like this makes things slow
 ;; so perhaps should be optional somehow
 (defvar elixir--anonymous-function-end
@@ -385,75 +374,89 @@
   (treesit-query-compile 'elixir '((binary_operator operator: _ @val))))
 
 (defvar elixir--first-argument
-  (treesit-query-compile 'elixir "(arguments . (_) @first-child)"))
+  (treesit-query-compile 'elixir "(arguments . (_) @first-child) (tuple . (_) @first-child)"))
 
-(defvar elixir--rest-argument
-  (treesit-query-compile 'elixir '((arguments (_) @child))))
+(defun elixir--indent-parent-bol-p (parent)
+  (save-excursion
+    (goto-char (treesit-node-start parent))
+    (back-to-indentation)
+    (and (eq (char-after) ?|) (eq (char-after (1+ (point))) ?>))))
 
 (defvar elixir--treesit-indent-rules
   (let ((offset elixir-indent-level))
     `((elixir
-       ;; (no-node (elixir--treesit-backward-up-list) ,offset)
        ((parent-is "source") parent-bol 0)
+       (no-node parent-bol ,offset)
        ;; ensure we don't indent docs by setting no-indent on quoted_content
-
        ((parent-is "quoted_content") no-indent 0)
        ((node-is "|>") parent-bol 0)
        ((node-is "|") parent-bol 0)
        ((node-is "}") parent-bol 0)
-       ((node-is ")") grand-parent 0)
+       ((node-is ")") (lambda (_node parent &rest _)
+          (if (elixir--indent-parent-bol-p parent)
+              ;; parent-bol
+              (save-excursion
+                (goto-char (treesit-node-start parent))
+                (back-to-indentation)
+                (point))
+
+            ;; grant-parent
+            (treesit-node-start (treesit-node-parent parent))))
+        0)
        ((node-is "]") parent-bol 0)
 
        ((node-is "else_block") grand-parent-bol 0)
        ((node-is "catch_block") grand-parent-bol 0)
        ((node-is "stab_clause") parent-bol ,offset)
 
-       ((parent-is "stab_clause") parent-bol ,offset)
-
        ((query ,elixir--operator-parent) grand-parent 0)
        ((node-is "when") parent 0)
 
        ((parent-is "binary_operator") parent ,offset)
 
-       ((parent-is "keywords") grand-parent-bol ,offset)
        ((node-is "keywords") parent-bol ,offset)
 
-       ;; Below handles
-       ;;      raise ArgumentError,
-       ;;           "foo"
-       ;; But there seems to some inconsistencies with the formatting
-       ;; so sticking with the more basic more performant
-       ;; `((parent-is "arguments") grand-parent ,offset)` for now
+       ((parent-is "body") parent-bol ,offset)
 
        ((query ,elixir--first-argument)
-        (lambda (_n parent &rest _)
-          (treesit-node-start (treesit-node-parent parent)))
-        ,offset)
-       ((query ,elixir--rest-argument)
-        (lambda (_n parent &rest _)
+        (lambda (_node parent &rest _)
+          (if (elixir--indent-parent-bol-p parent)
+              ;; parent-bol
+              (save-excursion
+                (goto-char (treesit-node-start parent))
+                (back-to-indentation)
+                (point))
+
+            ;; grant-parent
+            (treesit-node-start (treesit-node-parent parent))))
+          ,offset)
+
+       ((parent-is "arguments")
+        (lambda (node parent &rest _)
+          ;; grand-parent
           (treesit-node-start
            (treesit-node-child parent 0 t))) 0)
 
-       ((parent-is "arguments") grand-parent ,offset)
+        ((node-is "pair") first-sibling 0)
+        ((parent-is "tuple") (lambda (_n parent &rest _)
+                               (treesit-node-start
+                                (treesit-node-child parent 0 t))) 0)
 
-       ((parent-is "body") grand-parent-bol ,offset)
+        ((parent-is "list") parent-bol ,offset)
+        ((parent-is "pair") parent ,offset)
+        ((parent-is "map") parent-bol ,offset)
 
-       ((parent-is "list") parent-bol ,offset)
-       ((parent-is "tuple") parent-bol ,offset)
-       ((parent-is "pair") parent ,offset)
-       ((parent-is "map") parent-bol ,offset)
+        ((query ,elixir--anonymous-function-end) parent-bol 0)
 
-       ((query ,elixir--anonymous-function-end) parent-bol 0)
+        ((node-is "end") grand-parent-bol 0)
 
-       ((node-is "end") grand-parent-bol 0)
+        ((parent-is "do_block") grand-parent ,offset)
 
-       ((parent-is "do_block") grand-parent ,offset)
-
-       ((parent-is "anonymous_function") grand-parent-bol ,offset)
-       ((parent-is "else_block") parent ,offset)
-       ((parent-is "rescue_block") parent ,offset)
-       ((parent-is "catch_block") parent ,offset)
-       ))))
+        ((parent-is "anonymous_function") grand-parent-bol ,offset)
+        ((parent-is "else_block") parent ,offset)
+        ((parent-is "rescue_block") parent ,offset)
+        ((parent-is "catch_block") parent ,offset)
+        ))))
 
 (defun elixir--imenu-item-parent-label (_type name)
   (format "%s" name))
@@ -723,6 +726,10 @@ ARG is the same as in `end-of-defun."
   (setq-local comment-start "# ")
   (setq-local comment-start-skip "#+\\s-*")
   (setq-local comment-end "")
+
+    ;; Electric.
+  (setq-local electric-indent-chars
+              (append "]" ")" "}" "end" electric-indent-chars))
 
   ;; Treesit-mode.
   (setq-local treesit-mode-supported t)
