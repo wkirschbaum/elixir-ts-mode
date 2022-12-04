@@ -2,6 +2,7 @@
 
 ;; Author      : Wilhelm H Kirschbaum
 ;; Maintainer  : Wilhelm H Kirschbaum
+;; Package-Requires: ((emacs "29"))
 ;; Created     : November 2022
 ;; Keywords    : elixir languages tree-sitter
 
