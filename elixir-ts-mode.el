@@ -17,8 +17,7 @@
 
 (require 'treesit)
 (eval-when-compile
-  (require 'rx)
-  (require 'cl-lib))
+  (require 'rx))
 
 (defgroup elixir nil
   "Major mode for editing Elixir code."
@@ -494,7 +493,6 @@
     (modify-syntax-entry ?@ "'" table)
     table)
   "Elixir mode syntax table.")
-
 
 (defvar elixir--treesit-range-rules
   (treesit-range-rules
