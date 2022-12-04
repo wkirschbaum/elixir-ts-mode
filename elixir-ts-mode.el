@@ -376,6 +376,9 @@
 (defvar elixir--first-argument
   (treesit-query-compile 'elixir "(arguments . (_) @first-child) (tuple . (_) @first-child)"))
 
+(defvar elixir--binary-operator-special
+  (treesit-query-compile 'elixir '((binary_operator operator: "<>") @val)))
+
 (defun elixir--indent-parent-bol-p (parent)
   (save-excursion
     (goto-char (treesit-node-start parent))
@@ -386,9 +389,9 @@
   (let ((offset elixir-indent-level))
     `((elixir
        ((parent-is "source") parent-bol 0)
-       (no-node parent-bol ,offset)
        ;; ensure we don't indent docs by setting no-indent on quoted_content
        ((parent-is "quoted_content") no-indent 0)
+       (no-node parent-bol ,offset)
        ((node-is "|>") parent-bol 0)
        ((node-is "|") parent-bol 0)
        ((node-is "}") parent-bol 0)
@@ -407,12 +410,11 @@
 
        ((node-is "else_block") grand-parent-bol 0)
        ((node-is "catch_block") grand-parent-bol 0)
+       ((node-is "rescue_block") grand-parent-bol 0)
        ((node-is "stab_clause") parent-bol ,offset)
 
        ((query ,elixir--operator-parent) grand-parent 0)
        ((node-is "when") parent 0)
-
-       ((parent-is "binary_operator") parent ,offset)
 
        ((node-is "keywords") parent-bol ,offset)
 
@@ -435,7 +437,12 @@
         (lambda (node parent &rest _)
           ;; grand-parent
           (treesit-node-start
-           (treesit-node-child parent 0 t))) 0)
+           (treesit-node-child parent 0 t)))
+        0)
+
+       ;; ((query ,elixir--binary-operator-special) parent 0)
+
+       ((parent-is "binary_operator") parent ,offset)
 
         ((node-is "pair") first-sibling 0)
         ((parent-is "tuple") (lambda (_n parent &rest _)
