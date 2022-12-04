@@ -15,9 +15,6 @@
 
 ;; Code:
 
-(ignore-errors
-  (unload-feature 'elixir-ts-mode))
-
 (require 'treesit)
 (eval-when-compile
   (require 'rx)
@@ -361,17 +358,6 @@
    )
   "Tree-sitter font-lock settings.")
 
-(defun elixir--treesit-find-parent-do-block (&optional node)
-  (let ((node (or node (treesit-node-at (point))))
-        (result nil))
-    (while (and node (not result))
-      (if (equal (treesit-node-type node) "do_block")
-          (setq result node)
-        (setq node (treesit-node-parent node))))
-    result))
-
-;; introducing custom queries like this makes things slow
-;; so perhaps should be optional somehow
 (defvar elixir--anonymous-function-end
   (treesit-query-compile 'elixir '((anonymous_function "end" @end))))
 
@@ -380,11 +366,6 @@
 
 (defvar elixir--first-argument
   (treesit-query-compile 'elixir "(arguments . (_) @first-child) (tuple . (_) @first-child)"))
-
-;; (defvar elixir--binary-operator-special
-;;   (treesit-query-compile
-;;    'elixir
-;;    '((binary_operator right: (binary_operator operator: "<>")) @val)))
 
 (defun elixir--indent-parent-bol-p (parent)
   (save-excursion
@@ -463,8 +444,6 @@
            (treesit-node-child parent 0 t)))
         0)
 
-       ;; ((query ,elixir--binary-operator-special) parent 0)
-
        ((parent-is "binary_operator") parent ,offset)
 
         ((node-is "pair") first-sibling 0)
@@ -487,217 +466,6 @@
         ((parent-is "rescue_block") parent ,offset)
         ((parent-is "catch_block") parent ,offset)
         ))))
-
-(defun elixir--imenu-item-parent-label (_type name)
-  (format "%s" name))
-
-(defun elixir--imenu-item-label (type name)
-  (format "%s %s" type name))
-
-(defun elixir--imenu-jump-label (_type _name)
-  (format "..."))
-
-(defun elixir--imenu-treesit-create-index (&optional node)
-  "Return tree Imenu alist for the current Elixir buffer or NODE tree."
-  (let* ((node (or node (treesit-buffer-root-node 'elixir)))
-         (tree (treesit-induce-sparse-tree
-                node
-                (rx (seq bol (or "call") eol)))))
-    (elixir--imenu-treesit-create-index-from-tree tree)))
-
-(defun elixir--imenu-treesit-create-index-from-tree (node)
-  (let* ((ts-node (car node))
-         (children (cdr node))
-         (subtrees (mapcan #'elixir--imenu-treesit-create-index-from-tree children))
-         (type (elixir--treesit-defun-type ts-node))
-         (name (when type (elixir--treesit-defun-name ts-node)))
-         (marker (when ts-node
-                   (set-marker (make-marker)
-                               (treesit-node-start ts-node)))))
-    (cond ((null ts-node) subtrees)
-          ((null type) subtrees)
-          (subtrees (let ((parent-label (funcall 'elixir--imenu-item-parent-label type name))
-                          (jump-label (funcall 'elixir--imenu-jump-label type name)))
-                      `((,parent-label ,(cons jump-label marker) ,@subtrees))))
-          (t (let ((label (funcall 'elixir--imenu-item-label type name)))
-               (list (cons label marker)))))))
-
-(defvar elixir--treesit-query-module-or-function
-  (let ((query `((call
-                  target: (identifier) @ignore
-                  (arguments (alias) @name)
-                  (:match ,elixir--definition-module-re @ignore))
-
-                 (call
-                  target: (identifier) @ignore
-                  (arguments
-                   [
-                    (identifier) @name
-                    (call target: (identifier) @name)
-                    (binary_operator
-                     left: (call target: (identifier) @name)
-                     operator: "when")
-                    ])
-                  (:match ,elixir--definition-function-re @ignore)))))
-    (treesit-query-compile 'elixir query)))
-
-(defvar elixir--treesit-query-defun
-  (let ((query `((call
-                  target: (identifier) @type
-                  (arguments
-                   [
-                    (alias) @name
-                    (identifier) @name
-                    (call target: (identifier)) @name
-                    (binary_operator
-                     left: (call target: (identifier)) @name
-                     operator: "when")
-                    ])
-                  (:match ,elixir--definition-keywords-re @type)
-                  ))))
-    (treesit-query-compile 'elixir query)))
-
-
-
-(defun elixir--treesit-defun (node)
-  "Get the module name from the NODE if exists."
-  (treesit-query-capture node elixir--treesit-query-defun))
-
-(defun elixir--treesit-module-or-function (node)
-  "Get the module name from the NODE if exists."
-  (treesit-query-capture node elixir--treesit-query-module-or-function))
-
-
-(defun elixir--treesit-defun-name (&optional node)
-  "Get the module name from the NODE if exists."
-  (let* ((node (or node (elixir--treesit-largest-node-at-point)))
-         (name-node (alist-get 'name (elixir--treesit-defun node))))
-    (when name-node (treesit-node-text name-node))))
-
-(defun elixir--treesit-defun-type (&optional node)
-  "Get the module name from the NODE if exists."
-  (let* ((node (or node (elixir--treesit-largest-node-at-point)))
-         (name-node (alist-get 'type (elixir--treesit-defun node))))
-    (when name-node (treesit-node-text name-node))))
-
-
-(defun elixir--forward-sexp ()
-  "Move forward over the sexp."
-  (goto-char
-   (treesit-node-end
-    (goto-char (treesit-node-end
-                (treesit-search-forward (treesit-node-at (point)) (rx (or "call"))))))))
-
-(defun elixir--treesit-forward-sexp ()
-  "Elixir forward sexp."
-  (cl-loop for cursor = (treesit-node-at (point))
-           then (treesit-search-forward cursor (rx (or "call")))
-           while cursor
-           do (goto-char (treesit-node-end cursor))))
-
-
-(defun elixir--treesit-largest-node-at-point ()
-  (let* ((node-at-point (treesit-node-at (point)))
-         (node-list
-          (cl-loop for node = node-at-point
-                   then (treesit-node-parent node)
-                   while node
-                   if (eq (treesit-node-start node)
-                          (point))
-                   collect node))
-         (largest-node (car (last node-list))))
-    (if (null largest-node)
-        (treesit-node-at (point))
-      largest-node)))
-
-(defun elixir--treesit-real-parent (&optional node)
-  (let ((child (or node (treesit-node-at (point)))))
-    (treesit-node-parent child)))
-
-(defun elixir-parent-goto (&optional arg)
-  (interactive "^P")
-  (if (> (or arg 1) 0)
-      (goto-char (treesit-node-start (elixir--treesit-real-parent)))
-    (goto-char (treesit-node-end (elixir--treesit-real-parent)))))
-
-(defun elixir-sibling-goto (&optional arg)
-  (interactive)
-  (message "%s" (treesit-node-index (elixir--treesit-largest-node-at-point)))
-  (forward-comment (+ (point-max)))
-  (let ((node (elixir--treesit-largest-node-at-point)))
-    (goto-char (treesit-node-end node)))
-  (forward-comment (+ (point-max))))
-
-(defun elixir-next-sibling ()
-  (interactive)
-  (forward-comment (point-max))
-  (goto-char
-   (treesit-node-end
-    (treesit-search-subtree
-     (treesit-node-parent (elixir--treesit-largest-node-at-point))
-     "call"))))
-
-(defun elixir--treesit-goto-parent ()
-  (interactive)
-  (goto-char
-   (treesit-node-start
-    (treesit-node-parent (elixir--treesit-largest-node-at-point)))))
-
-(defun elixir--treesit-defun-p (node)
-  "Check if NODE is a defun."
-  (elixir--treesit-defun node))
-
-
-(defun elixir--treesit-find-first-parent-defun (node)
-  "Return the top-level parent of NODE matching TYPE.
-TYPE is a regexp, this function matches TYPE with each parent's
-type."
-  (cl-loop for cursor = (treesit-node-parent node)
-           then (treesit-node-parent cursor)
-           while cursor
-           if (elixir--treesit-defun-p cursor)
-           do (setq node cursor)
-           finally return node))
-
-(defun elixir--treesit-beginning-of-defun (&optional arg)
-  "Tree-sitter `beginning-of-defun' function.
-ARG is the same as in `beginning-of-defun."
-  (let ((arg (or arg 1))
-        (node (treesit-node-at (point))))
-    (if (> arg 0)
-        ;; Go backward.
-        (while (and (> arg 0)
-                    (setq node (treesit-search-forward-goto
-                                node (rx (or "do_block")) t t)))
-          (setq node (elixir--treesit-find-first-parent-defun node))
-          (setq arg (1- arg)))
-      ;; Go forward.
-      (while (and (< arg 0)
-                  (setq node (treesit-search-forward-goto
-                              node (rx (or "call")) t t)))
-        (setq node (elixir--treesit-find-first-parent-defun node ))
-        (setq arg (1+ arg))))
-    (goto-char (treesit-node-start node))))
-
-(defun elixir--treesit-end-of-defun (&optional arg)
-  "Tree-sitter `end-of-defun' function.
-ARG is the same as in `end-of-defun."
-  (elixir--treesit-beginning-of-defun (- (or arg 1))))
-
-;; (defun elixir--treesit-forward-sexp (&optional arg)
-;;   "Move forward across expressions.  With ARG, do it that many times.  Negative arg -N means move backward N times."
-;;   (interactive "^p")
-;;   (if (> arg 0)
-;;       (progn
-;;         (forward-comment (point-max))
-;;         (let ((next (elixir--treesit-largest-node-at-point)))
-;;           (when next (goto-char (treesit-node-end next)))))
-;;     (progn
-;;       (forward-comment (point-max))
-;;       (let ((largest-node (elixir--treesit-largest-node-at-point)))
-;;         (goto-char
-;;          (let ((prev-node (treesit-node-prev-sibling largest-node)))
-;;            (if prev-node (treesit-node-start prev-node) (point))))))))
 
 (defvar elixir-ts-mode-syntax-table
   (let ((table (make-syntax-table)))
@@ -738,7 +506,6 @@ ARG is the same as in `end-of-defun."
       (:match "^H$" @name))
      )))
 
-
 ;;;###autoload
 (define-derived-mode elixir-ts-mode prog-mode "Elixir"
   :group 'elixir
@@ -774,9 +541,6 @@ ARG is the same as in `end-of-defun."
                 ( string-interpolation )))
 
   (setq-local treesit-defun-type-regexp (rx (or "do_block")))
-  (setq-local beginning-of-defun-function 'elixir--treesit-beginning-of-defun)
-  ;; (setq-local end-of-defun-function 'elixir--treesit-end-of-defun)
-  ;; (setq-local forward-sexp-function 'elixir--treesit-forward-sexp)
 
   ;; Navigation
 
