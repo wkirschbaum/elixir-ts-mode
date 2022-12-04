@@ -18,6 +18,9 @@
 (require 'treesit)
 (eval-when-compile (require 'rx))
 
+(ignore-errors
+  (unload-feature 'heex-ts-mode))
+
 (defgroup heex nil
   "Major mode for editing Heex code."
   :tag "Heex"
@@ -161,7 +164,7 @@
            (let ((bol (pos-bol))
                  (end-node (treesit-search-forward-goto
                             (treesit-node-at (point))
-                            (rx (or "end_tag" "end_component" "end_slot")) t t)))
+                            (rx (or "self_closing_tag" "end_tag" "end_component" "end_slot")) t t)))
              (if (and end-node (> (treesit-node-end end-node) bol))
                  (treesit-node-start (treesit-node-parent end-node)))))))
     (when node (goto-char node))))
