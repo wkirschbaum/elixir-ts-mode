@@ -19,6 +19,17 @@ which-function-mode and navigation.
     (load "[cloned wkirschbaum/elixir-mode]/heex-ts-mode.el")
 ```
 
+- If you want to treat `elixir-ts-mode` as `elixir-mode`, you can add the following to your emacs config
+
+```elisp
+    (define-derived-mode elixir-mode elixir-ts-mode "Elixir")
+
+    (add-to-list 'auto-mode-alist '("\\.elixir\\'" . elixir-mode))
+    (add-to-list 'auto-mode-alist '("\\.ex\\'" . elixir-mode))
+    (add-to-list 'auto-mode-alist '("\\.exs\\'" . elixir-mode))
+    (add-to-list 'auto-mode-alist '("mix\\.lock" . elixir-mode))
+```
+
 ## TODO
 
     [ ] Fix Begin/End defun
