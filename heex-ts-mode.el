@@ -19,7 +19,7 @@
 (require 'treesit)
 (eval-when-compile (require 'rx))
 
-(defcustom heex-ts-mode-indent-offset 2
+(defcustom heex-ts-mode--indent-offset 2
   "Indentation of Elixir statements."
   :version "29.1"
   :type 'integer
@@ -80,8 +80,8 @@
 ;; so we ignore it for until we learn how heex treesit
 ;; represents directive blocks
 ;; https://github.com/phoenixframework/tree-sitter-heex/issues/28
-(defvar heex-ts-mode--treesit-indent-rules
-  (let ((offset heex-indent-level))
+(defvar heex-ts-mode--indent-rules
+  (let ((offset heex-ts-mode--indent-offset))
     `((heex
        ((node-is "end_tag") parent-bol 0)
        ((node-is "end_component") parent-bol 0)
@@ -92,7 +92,7 @@
        ((parent-is "tag") parent-bol ,offset)
        ))))
 
-(defvar heex-ts-mode--treesit-font-lock-settings
+(defvar heex-ts-mode--font-lock-settings
   (treesit-font-lock-rules
    :language 'heex
    :feature 'doctype
@@ -133,13 +133,13 @@
    )
   "Tree-sitter font-lock settings.")
 
-(defvar heex-ts-mode--treesit-range-rules
-  (treesit-range-rules
-   :embed 'elixir
-   :host 'heex
-   '((directive (partial_expression_value) @cap)
-     (directive (expression_value) @cap)
-     (expression (expression_value) @cap))))
+;; (defvar heex-ts-mode--range-rules
+;;   (treesit-range-rules
+;;    :embed 'elixir
+;;    :host 'heex
+;;    '((directive (partial_expression_value) @cap)
+;;      (directive (expression_value) @cap)
+;;      (expression (expression_value) @cap))))
 
 (defun heex-ts-mode--treesit-largest-node-at-point (&optional node)
   "Find the largest node at point or from specified NODE."
@@ -203,8 +203,8 @@
   (setq-local treesit-mode-supported t)
 
   (setq-local treesit-required-languages '(heex))
-  (setq-local treesit-simple-indent-rules heex-ts-mode--treesit-indent-rules)
-  (setq-local treesit-font-lock-settings heex-ts-mode--treesit-font-lock-settings)
+  (setq-local treesit-simple-indent-rules heex-ts-mode--indent-rules)
+  (setq-local treesit-font-lock-settings heex-ts-mode--font-lock-settings)
   (setq-local treesit-font-lock-feature-list
               '(( doctype comment )
                 ( bracket tag attribute keyword string )

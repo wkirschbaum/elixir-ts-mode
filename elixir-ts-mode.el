@@ -16,6 +16,8 @@
 ;; Code:
 
 (require 'treesit)
+(require 'heex-ts-mode)
+
 (eval-when-compile (require 'rx))
 
 (defcustom elixir-ts-mode-indent-offset 2
@@ -343,7 +345,6 @@
                                        (binary_operator
                                         operator: _ @elixir-font-keyword-face
                                         (:match ,elixir-ts-mode--reserved-keywords-re @elixir-font-keyword-face)))
-
    :language 'elixir
    :feature 'doc
    :override t
@@ -369,7 +370,6 @@
       operand: (call
                 target: (identifier) @elixir-font-comment-doc-identifier-face)
       (:match ,elixir-ts-mode--doc-keywords-re @elixir-font-comment-doc-identifier-face)))
-
 
    :language 'elixir
    :feature 'unary-operator
@@ -443,28 +443,25 @@
    :language 'elixir
    :feature 'sigil
    :override t
-   `(
-     (sigil
+   `((sigil
       (sigil_name) @elixir-font-sigil-name-face
       quoted_start: _ @elixir-font-string-special-face
-      quoted_end: _ @elixir-font-string-special-face) @elixir-font-string-special-face
-     (sigil
-      (sigil_name) @elixir-font-sigil-name-face
-      quoted_start: _ @elixir-font-string-face
-      quoted_end: _ @elixir-font-string-face
-      (:match "^[sS]$" @elixir-font-sigil-name-face)) @elixir-font-string-face
-     (sigil
-      (sigil_name) @elixir-font-sigil-name-face
-      quoted_start: _ @elixir-font-string-regex-face
-      quoted_end: _ @elixir-font-string-regex-face
-      (:match "^[rR]$" @elixir-font-sigil-name-face)) @elixir-font-string-regex-face
-     )
+      quoted_end: _ @elixir-font-string-special-face ) @elixir-font-string-special-face
+      (sigil
+       (sigil_name) @elixir-font-sigil-name-face
+       quoted_start: _ @elixir-font-string-face
+       quoted_end: _ @elixir-font-string-face
+       (:match "^[sS]$" @elixir-font-sigil-name-face)) @elixir-font-string-face
+      (sigil
+       (sigil_name) @elixir-font-sigil-name-face
+       quoted_start: _ @elixir-font-string-regex-face
+       quoted_end: _ @elixir-font-string-regex-face
+       (:match "^[rR]$" @elixir-font-sigil-name-face)) @elixir-font-string-regex-face)
 
    :language 'elixir
    :feature 'string-escape
    :override t
-   `((escape_sequence) @elixir-font-string-escape-face)
-   )
+   `((escape_sequence) @elixir-font-string-escape-face))
   "Tree-sitter font-lock settings.")
 
 (defun elixir-ts-mode--indent-parent-bol-p (parent)
@@ -483,11 +480,20 @@
   (treesit-range-rules
    :embed 'heex
    :host 'elixir
-   '((sigil
-      (sigil_name) @name
-      (quoted_content) @cap
-      (:match "^H$" @name))
-     )))
+   '((sigil (sigil_name) (quoted_content)) @heex)))
+
+(defun elixir-ts-mode--treesit-language-at-point (point)
+  (let ((language-in-range
+         (cl-loop
+          for parser in (treesit-parser-list)
+          do (setq range
+                   (cl-loop
+                    for range in (treesit-parser-included-ranges parser)
+                    if (and (>= point (car range)) (<= point (cdr range)))
+                    return parser))
+          if range
+          return (treesit-parser-language parser))))
+    (if language-in-range language-in-range 'elixir)))
 
 ;;;###autoload
 (define-derived-mode elixir-ts-mode prog-mode "Elixir"
@@ -496,6 +502,7 @@
   :syntax-table elixir-ts-mode--syntax-table
 
   (when (treesit-ready-p 'elixir)
+    (treesit-parser-create 'heex)
     (treesit-parser-create 'elixir))
 
   ;; Comments
@@ -514,19 +521,45 @@
 
   ;; Font-lock
   (setq-local treesit-font-lock-settings elixir-ts-mode--font-lock-settings)
+
+  ;; Indent
+  (setq-local treesit-simple-indent-rules elixir-ts-mode--indent-rules)
+
+  ;; heex embedding
+  (setq-local treesit-language-at-point-function
+              'elixir-ts-mode--treesit-language-at-point)
+
+  (when (treesit-ready-p 'heex)
+    (setq-local treesit-range-settings elixir-ts-mode--treesit-range-rules)
+    (setq-local treesit-font-lock-settings
+                (append elixir-ts-mode--font-lock-settings
+                        (mapcar
+                         (lambda (rule)
+                           (list (nth 0 rule)
+                                 (nth 1 rule)
+                                 (intern (format "heex-%s" (nth 2 rule)))
+                                 ;; TODO: don't simply override
+                                 ;; Rather don't fontify H sigils in elixir
+                                 t))
+                         heex-ts-mode--font-lock-settings)))
+
+    (setq-local treesit-simple-indent-rules
+                (append elixir-ts-mode--indent-rules heex-ts-mode--indent-rules)))
+
+
   (setq-local treesit-font-lock-feature-list
-              '(( comment string )
-                ( keyword unary-operator operator doc)
-                ( call constant )
-                ( sigil string-escape)
-                ( string-interpolation )))
+              '(( comment string call constant keyword)
+                ( keyword unary-operator operator doc )
+                ( sigil string-escape string-interpolation)
+                ( heex-doctype heex-comment )
+                ( heex-bracket heex-tag heex-attribute heex-keyword heex-string )
+                ( heex-component )))
+
+  (setq-local treesit-font-lock-level 6)
 
   ;; Imenu
   ;; (setq-local treesit-imenu-function #'elixir-ts-mode--imenu-treesit-create-index)
 
-  ;; Indent
-  (setq-local indent-tabs-mode nil
-              treesit-simple-indent-rules elixir-ts-mode--indent-rules)
   ;; Navigation
   (setq-local treesit-defun-type-regexp (rx (or "do_block")))
 
