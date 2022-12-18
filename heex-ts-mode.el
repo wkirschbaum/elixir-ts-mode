@@ -19,16 +19,12 @@
 (require 'treesit)
 (eval-when-compile (require 'rx))
 
-(defgroup heex nil
-  "Major mode for editing Heex code."
-  :tag "Heex"
-  :prefix "heex-"
-  :group 'languages)
-
-(defcustom heex-indent-level 2
-  "Indentation of Heex statements."
+(defcustom heex-ts-mode-indent-offset 2
+  "Indentation of Elixir statements."
+  :version "29.1"
   :type 'integer
-  :safe 'integerp)
+  :safe 'integerp
+  :group 'heex)
 
 (defface heex-font-keyword-face
   '((t (:inherit font-lock-keyword-face)))
@@ -70,21 +66,21 @@
   '((t (:inherit font-lock-keyword-face)))
   "For use with @keyword tag.")
 
-(defconst heex--brackets
+(defconst heex-ts-mode--brackets
   '("%>" "--%>" "-->" "/>" "<!" "<!--" "<" "<%!--" "<%" "<%#"
     "<%%=" "<%=" "</" "</:" "<:" ">" "{" "}"))
 
-(defconst heex--brackets-re
-  (concat "^" (regexp-opt heex--brackets) "$"))
+(defconst heex-ts-mode--brackets-re
+  (concat "^" (regexp-opt heex-ts-mode--brackets) "$"))
 
-(defconst heex--brackets-vector
-  (apply #'vector heex--brackets))
+(defconst heex-ts-mode--brackets-vector
+  (apply #'vector heex-ts-mode--brackets))
 
 ;; There seems to be no parent directive block
 ;; so we ignore it for until we learn how heex treesit
 ;; represents directive blocks
 ;; https://github.com/phoenixframework/tree-sitter-heex/issues/28
-(defvar heex--treesit-indent-rules
+(defvar heex-ts-mode--treesit-indent-rules
   (let ((offset heex-indent-level))
     `((heex
        ((node-is "end_tag") parent-bol 0)
@@ -96,7 +92,7 @@
        ((parent-is "tag") parent-bol ,offset)
        ))))
 
-(defvar heex--treesit-font-lock-settings
+(defvar heex-ts-mode--treesit-font-lock-settings
   (treesit-font-lock-rules
    :language 'heex
    :feature 'doctype
@@ -108,7 +104,7 @@
 
    :language 'heex
    :feature 'bracket
-   `(,heex--brackets-vector @heex-font-bracket-face)
+   `(,heex-ts-mode--brackets-vector @heex-font-bracket-face)
 
    :language 'heex
    :feature 'tag
@@ -137,7 +133,7 @@
    )
   "Tree-sitter font-lock settings.")
 
-(defvar heex--treesit-range-rules
+(defvar heex-ts-mode--treesit-range-rules
   (treesit-range-rules
    :embed 'elixir
    :host 'heex
@@ -145,7 +141,7 @@
      (directive (expression_value) @cap)
      (expression (expression_value) @cap))))
 
-(defun heex--treesit-largest-node-at-point (&optional node)
+(defun heex-ts-mode--treesit-largest-node-at-point (&optional node)
   "Find the largest node at point or from specified NODE."
   (save-excursion
     (forward-comment (point-max))
@@ -157,7 +153,7 @@
 
 ;; This is still very naive and might be easy pickings to
 ;; improve
-(defun heex--comment-region (beg end &optional arg)
+(defun heex-ts-mode--comment-region (beg end &optional arg)
   (save-excursion
     (goto-char beg)
     (insert (concat comment-start " "))
@@ -167,7 +163,7 @@
     (insert (concat " " comment-end))
     ))
 
-(defvar heex-ts-mode-syntax-table
+(defvar heex-ts-mode--syntax-table
   (let ((table (make-syntax-table)))
     (modify-syntax-entry ?\{ "(}" table)
     (modify-syntax-entry ?\} "){" table)
@@ -178,19 +174,22 @@
 
 ;;;###autoload
 (define-derived-mode heex-ts-mode prog-mode "Heex"
+  "Major mode for editing Elixir, powered by tree-sitter."
   :group 'heex
-  :syntax-table heex-ts-mode-syntax-table
-  "Major mode for editing Heex code."
+  :syntax-table heex-ts-mode--syntax-table
 
-  (unless (treesit-ready-p 'heex)
-    (error "Tree-sitter for Heex isn't available"))
-
-  (treesit-parser-create 'heex)
+  (when (treesit-ready-p 'heex)
+    (treesit-parser-create 'heex))
 
   ;; Comments.
-  (setq-local comment-start "<!--")
+  (setq-local comment-start "<!-- ")
+  (setq-local comment-start-skip (rx (or "<!--")
+                                     (* (syntax whitespace))))
   (setq-local comment-end "-->")
-  (setq-local comment-region-function 'heex--comment-region)
+  (setq-local comment-end-skip (rx (* (syntax whitespace))
+                                   (group (or "-->"))))
+
+  (setq-local comment-region-function 'heex-ts-mode--comment-region)
 
   ;; Electric.
   (setq-local electric-indent-chars
@@ -204,8 +203,8 @@
   (setq-local treesit-mode-supported t)
 
   (setq-local treesit-required-languages '(heex))
-  (setq-local treesit-simple-indent-rules heex--treesit-indent-rules)
-  (setq-local treesit-font-lock-settings heex--treesit-font-lock-settings)
+  (setq-local treesit-simple-indent-rules heex-ts-mode--treesit-indent-rules)
+  (setq-local treesit-font-lock-settings heex-ts-mode--treesit-font-lock-settings)
   (setq-local treesit-font-lock-feature-list
               '(( doctype comment )
                 ( bracket tag attribute keyword string )

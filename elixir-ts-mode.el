@@ -500,9 +500,13 @@
 
   ;; Comments
   (setq-local comment-start "# ")
-  (setq-local comment-start-skip (rx "#" (* (syntax whitespace))))
+  (setq-local comment-start-skip
+              (rx "#" (* (syntax whitespace))))
+
   (setq-local comment-end "")
-  (setq-local comment-end-skip (rx "\n" (* (syntax whitespace))))
+  (setq-local comment-end-skip
+              (rx (* (syntax whitespace))
+                  (group (or (syntax comment-end) "\n"))))
 
     ;; Electric.
   (setq-local electric-indent-chars
