@@ -111,7 +111,7 @@
   "For use with @function tag.")
 
 (defface elixir-font-sigil-name-face
-  '((t (:inherit font-lock-string-face)))
+  '((t (:inherit font-lock-builtin-face)))
   "For use with @__name__ tag.")
 
 (defface elixir-font-variable-face
@@ -444,9 +444,10 @@
    :feature 'sigil
    :override t
    `((sigil
+      "~" @elixir-font-sigil-name-face
       (sigil_name) @elixir-font-sigil-name-face
       quoted_start: _ @elixir-font-string-special-face
-      quoted_end: _ @elixir-font-string-special-face ) @elixir-font-string-special-face
+      quoted_end: _ @elixir-font-string-special-face )
       (sigil
        (sigil_name) @elixir-font-sigil-name-face
        quoted_start: _ @elixir-font-string-face
@@ -540,7 +541,7 @@
                                  (intern (format "heex-%s" (nth 2 rule)))
                                  ;; TODO: don't simply override
                                  ;; Rather don't fontify H sigils in elixir
-                                 t))
+                                 (nth 3 rule)))
                          heex-ts-mode--font-lock-settings)))
 
     (setq-local treesit-simple-indent-rules
