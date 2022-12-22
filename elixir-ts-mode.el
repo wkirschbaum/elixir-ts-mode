@@ -494,7 +494,10 @@
                     return parser))
           if range
           return (treesit-parser-language parser))))
-    (if language-in-range language-in-range 'elixir)))
+    (if (null language-in-range)
+        (when-let ((parser (car (treesit-parser-list))))
+          (treesit-parser-language parser))
+      language-in-range)))
 
 ;;;###autoload
 (define-derived-mode elixir-ts-mode prog-mode "Elixir"
