@@ -95,35 +95,35 @@
 (defvar heex-ts-mode--font-lock-settings
   (treesit-font-lock-rules
    :language 'heex
-   :feature 'doctype
+   :feature 'heex-doctype
    '((doctype) @heex-font-constant-face)
 
    :language 'heex
-   :feature 'comment
+   :feature 'heex-comment
    '((comment) @heex-font-comment-face)
 
    :language 'heex
-   :feature 'bracket
+   :feature 'heex-bracket
    `(,heex-ts-mode--brackets-vector @heex-font-bracket-face)
 
    :language 'heex
-   :feature 'tag
+   :feature 'heex-tag
    `([(tag_name) (slot_name)] @heex-font-tag-face)
 
    :language 'heex
-   :feature 'attribute
+   :feature 'heex-attribute
    `((attribute_name) @heex-font-attribute-face)
 
    :language 'heex
-   :feature 'keyword
+   :feature 'heex-keyword
    `((special_attribute_name) @heex-font-keyword-face)
 
    :language 'heex
-   :feature 'string
+   :feature 'heex-string
    `([(attribute_value) (quoted_attribute_value)] @heex-font-string-face)
 
    :language 'heex
-   :feature 'component
+   :feature 'heex-component
    `([
       (component_name) @heex-font-tag-face
       (module) @heex-font-module-face
@@ -206,9 +206,9 @@
   (setq-local treesit-simple-indent-rules heex-ts-mode--indent-rules)
   (setq-local treesit-font-lock-settings heex-ts-mode--font-lock-settings)
   (setq-local treesit-font-lock-feature-list
-              '(( doctype comment )
-                ( bracket tag attribute keyword string )
-                ( component )))
+              '(( heex-doctype heex-comment )
+                ( heex-bracket heex-tag heex-attribute heex-keyword heex-string )
+                ( heex-component )))
 
   (treesit-major-mode-setup))
 

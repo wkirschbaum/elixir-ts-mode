@@ -307,16 +307,16 @@
 (defvar elixir-ts-mode--font-lock-settings
   (treesit-font-lock-rules
    :language 'elixir
-   :feature 'comment
+   :feature 'elixir-comment
    '((comment) @elixir-font-comment-face)
 
    :language 'elixir
-   :feature 'string
+   :feature 'elixir-string
    :override t
    '([(string) (charlist)] @font-lock-string-face)
 
    :language 'elixir
-   :feature 'string-interpolation
+   :feature 'elixir-string-interpolation
    :override t
    '((string
       [
@@ -339,7 +339,7 @@
      )
 
    :language 'elixir
-   :feature 'keyword
+   :feature 'elixir-keyword
    ;; :override `prepend
    `(,elixir-ts-mode--reserved-keywords-vector
      @elixir-font-keyword-face
@@ -349,7 +349,7 @@
       (:match ,elixir-ts-mode--reserved-keywords-re @elixir-font-keyword-face)))
 
    :language 'elixir
-   :feature 'doc
+   :feature 'elixir-doc
    :override t
    `((unary_operator
       operator: "@" @elixir-font-comment-doc-attribute-face
@@ -376,7 +376,7 @@
       (:match ,elixir-ts-mode--doc-keywords-re @elixir-font-comment-doc-identifier-face)))
 
    :language 'elixir
-   :feature 'unary-operator
+   :feature 'elixir-unary-operator
    `((unary_operator operator: "@" @elixir-font-attribute-face
                      operand: [
                                (identifier)  @elixir-font-attribute-face
@@ -390,7 +390,7 @@
      )
 
    :language 'elixir
-   :feature 'operator
+   :feature 'elixir-operator
    '((binary_operator operator: _ @elixir-font-operator-face)
      (dot operator: _ @elixir-font-operator-face)
      (stab_clause operator: _ @elixir-font-operator-face)
@@ -404,7 +404,7 @@
      [(keyword) (quoted_keyword)] @elixir-font-string-special-symbol-face)
 
    :language 'elixir
-   :feature 'call
+   :feature 'elixir-call
    `((call
       target: (identifier) @elixir-font-keyword-face
       (:match ,elixir-ts-mode--definition-keywords-re @elixir-font-keyword-face))
@@ -433,7 +433,7 @@
       (:match ,elixir-ts-mode--definition-keywords-re @elixir-font-keyword-face)))
 
    :language 'elixir
-   :feature 'constant
+   :feature 'elixir-constant
    `((binary_operator operator: "|>" right: (identifier) @elixir-font-function-face)
      ((identifier) @elixir-font-constant-builtin-face
       (:match ,elixir-ts-mode--builtin-keywords-re @elixir-font-constant-builtin-face))
@@ -445,7 +445,7 @@
      ["(" ")" "[" "]" "{" "}" "<<" ">>"] @elixir-font-punctuation-bracket-face)
 
    :language 'elixir
-   :feature 'sigil
+   :feature 'elixir-sigil
    :override t
    `((sigil
       "~" @elixir-font-sigil-name-face
@@ -464,7 +464,7 @@
       (:match "^[rR]$" @elixir-font-sigil-name-face)) @elixir-font-string-regex-face)
 
    :language 'elixir
-   :feature 'string-escape
+   :feature 'elixir-string-escape
    :override t
    `((escape_sequence) @elixir-font-string-escape-face))
   "Tree-sitter font-lock settings.")
@@ -541,24 +541,16 @@
     (setq-local treesit-range-settings elixir-ts-mode--treesit-range-rules)
     (setq-local treesit-font-lock-settings
                 (append elixir-ts-mode--font-lock-settings
-                        (mapcar
-                         (lambda (rule)
-                           (list (nth 0 rule)
-                                 (nth 1 rule)
-                                 (intern (format "heex-%s" (nth 2 rule)))
-                                 ;; TODO: don't simply override
-                                 ;; Rather don't fontify H sigils in elixir
-                                 (nth 3 rule)))
-                         heex-ts-mode--font-lock-settings)))
+                        heex-ts-mode--font-lock-settings))
 
     (setq-local treesit-simple-indent-rules
                 (append elixir-ts-mode--indent-rules heex-ts-mode--indent-rules)))
 
 
   (setq-local treesit-font-lock-feature-list
-              '(( comment string call constant keyword)
-                ( keyword unary-operator operator doc )
-                ( sigil string-escape string-interpolation)
+              '(( elixir-comment elixir-string elixir-call elixir-constant)
+                ( elixir-keyword elixir-unary-operator elixir-operator elixir-doc )
+                ( elixir-sigil elixir-string-escape elixir-string-interpolation)
                 ( heex-doctype heex-comment )
                 ( heex-bracket heex-tag heex-attribute heex-keyword heex-string )
                 ( heex-component )))
