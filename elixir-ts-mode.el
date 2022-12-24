@@ -246,15 +246,15 @@
        ((node-is "|") parent-bol 0)
        ((node-is "}") parent-bol 0)
        ((node-is ")") (lambda (_node parent &rest _)
-          (if (elixir-ts-mode--indent-parent-bol-p parent)
-              ;; parent-bol
-              (save-excursion
-                (goto-char (treesit-node-start parent))
-                (back-to-indentation)
-                (point))
+                        (if (elixir-ts-mode--indent-parent-bol-p parent)
+                            ;; parent-bol
+                            (save-excursion
+                              (goto-char (treesit-node-start parent))
+                              (back-to-indentation)
+                              (point))
 
-            ;; grant-parent
-            (treesit-node-start (treesit-node-parent parent))))
+                          ;; grant-parent
+                          (treesit-node-start (treesit-node-parent parent))))
         0)
        ((node-is "]") parent-bol 0)
        ((node-is "else_block") elixir-ts-mode--treesit-anchor-grand-parent-bol 0)
@@ -276,7 +276,7 @@
 
             ;; grant-parent
             (treesit-node-start (treesit-node-parent parent))))
-          ,offset)
+        ,offset)
        ((parent-is "arguments")
         (lambda (node parent &rest _)
           ;; grand-parent
@@ -284,22 +284,22 @@
            (treesit-node-child parent 0 t)))
         0)
        ((parent-is "binary_operator") parent ,offset)
-        ((node-is "pair") first-sibling 0)
-        ((parent-is "tuple") (lambda (_n parent &rest _)
-                               (treesit-node-start
-                                (treesit-node-child parent 0 t))) 0)
-        ((parent-is "list") parent-bol ,offset)
-        ((parent-is "pair") parent ,offset)
-        ((parent-is "map") parent-bol ,offset)
-        ((query ,elixir-ts-mode--anonymous-function-end) parent-bol 0)
-        ((node-is "end") elixir-ts-mode--treesit-anchor-grand-parent-bol 0)
-        ((parent-is "do_block") grand-parent ,offset)
-        ((parent-is "anonymous_function")
-         elixir-ts-mode--treesit-anchor-grand-parent-bol ,offset)
-        ((parent-is "else_block") parent ,offset)
-        ((parent-is "rescue_block") parent ,offset)
-        ((parent-is "catch_block") parent ,offset)
-        ))))
+       ((node-is "pair") first-sibling 0)
+       ((parent-is "tuple") (lambda (_n parent &rest _)
+                              (treesit-node-start
+                               (treesit-node-child parent 0 t))) 0)
+       ((parent-is "list") parent-bol ,offset)
+       ((parent-is "pair") parent ,offset)
+       ((parent-is "map") parent-bol ,offset)
+       ((query ,elixir-ts-mode--anonymous-function-end) parent-bol 0)
+       ((node-is "end") elixir-ts-mode--treesit-anchor-grand-parent-bol 0)
+       ((parent-is "do_block") grand-parent ,offset)
+       ((parent-is "anonymous_function")
+        elixir-ts-mode--treesit-anchor-grand-parent-bol ,offset)
+       ((parent-is "else_block") parent ,offset)
+       ((parent-is "rescue_block") parent ,offset)
+       ((parent-is "catch_block") parent ,offset)
+       ))))
 
 ;; reference:
 ;; https://github.com/elixir-lang/tree-sitter-elixir/blob/main/queries/highlights.scm
@@ -341,10 +341,10 @@
    :feature 'keyword
    ;; :override `prepend
    `(,elixir-ts-mode--reserved-keywords-vector @elixir-font-keyword-face
-                                       ;; these are operators, should we mark them as keywords?
-                                       (binary_operator
-                                        operator: _ @elixir-font-keyword-face
-                                        (:match ,elixir-ts-mode--reserved-keywords-re @elixir-font-keyword-face)))
+                                               ;; these are operators, should we mark them as keywords?
+                                               (binary_operator
+                                                operator: _ @elixir-font-keyword-face
+                                                (:match ,elixir-ts-mode--reserved-keywords-re @elixir-font-keyword-face)))
    :language 'elixir
    :feature 'doc
    :override t
@@ -448,16 +448,16 @@
       (sigil_name) @elixir-font-sigil-name-face
       quoted_start: _ @elixir-font-string-special-face
       quoted_end: _ @elixir-font-string-special-face )
-      (sigil
-       (sigil_name) @elixir-font-sigil-name-face
-       quoted_start: _ @elixir-font-string-face
-       quoted_end: _ @elixir-font-string-face
-       (:match "^[sS]$" @elixir-font-sigil-name-face)) @elixir-font-string-face
-      (sigil
-       (sigil_name) @elixir-font-sigil-name-face
-       quoted_start: _ @elixir-font-string-regex-face
-       quoted_end: _ @elixir-font-string-regex-face
-       (:match "^[rR]$" @elixir-font-sigil-name-face)) @elixir-font-string-regex-face)
+     (sigil
+      (sigil_name) @elixir-font-sigil-name-face
+      quoted_start: _ @elixir-font-string-face
+      quoted_end: _ @elixir-font-string-face
+      (:match "^[sS]$" @elixir-font-sigil-name-face)) @elixir-font-string-face
+     (sigil
+      (sigil_name) @elixir-font-sigil-name-face
+      quoted_start: _ @elixir-font-string-regex-face
+      quoted_end: _ @elixir-font-string-regex-face
+      (:match "^[rR]$" @elixir-font-sigil-name-face)) @elixir-font-string-regex-face)
 
    :language 'elixir
    :feature 'string-escape
@@ -519,7 +519,7 @@
               (rx (* (syntax whitespace))
                   (group (or (syntax comment-end) "\n"))))
 
-    ;; Electric.
+  ;; Electric.
   (setq-local electric-indent-chars
               (append "]" ")" "}" "\"" "end" electric-indent-chars))
 
