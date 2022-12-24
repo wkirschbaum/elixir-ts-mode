@@ -186,16 +186,22 @@
 (defconst elixir-ts-mode--reserved-keywords-vector
   (apply #'vector elixir-ts-mode--reserved-keywords))
 
-(defvar elixir-ts-mode--anonymous-function-end
+(defvar elixir-ts-mode--capture-anonymous-function-end
   (treesit-query-compile 'elixir '((anonymous_function "end" @end))))
 
-(defvar elixir-ts-mode--operator-parent
+(defvar elixir-ts-mode--capture-operator-parent
   (treesit-query-compile 'elixir '((binary_operator operator: _ @val))))
 
-(defvar elixir-ts-mode--first-argument
+(defvar elixir-ts-mode--capture-first-argument
   (treesit-query-compile
    'elixir
-   "(arguments . (_) @first-child) (tuple . (_) @first-child)"))
+   '((arguments :anchor (_) @first-child) (tuple :anchor (_) @first-child))))
+
+(defvar elixir-ts-mode--capture-definition
+  (treesit-query-compile
+   'elixir
+   `((call target: (identifier) @keyword
+           (:match ,elixir-ts-mode--definition-keywords-re @keyword)))))
 
 (defvar elixir-ts-mode--syntax-table
   (let ((table (make-syntax-table)))
@@ -470,19 +476,17 @@
    `((escape_sequence) @elixir-font-string-escape-face))
   "Tree-sitter font-lock settings.")
 
-(defun elixir-ts-mode--imenu-capture-definition (node)
-  (treesit-query-capture node elixir-ts-mode--capture-definition))
-
-(defun elixir-ts-mode--imenu-capture-module (node)
-  (treesit-query-capture node elixir-ts-mode--capture-module))
-
 (defun elixir-ts-mode--imenu ()
   "Return Imenu alist for the current buffer."
   (let* ((node (treesit-buffer-root-node))
          (call-tree (treesit-induce-sparse-tree
-                       node
-                       #'elixir-ts-mode--imenu-capture-definition)))
-         (elixir-ts-mode--imenu-1 call-tree)))
+                     node
+                     (lambda (node)
+                       (treesit-query-capture
+                        node
+                        elixir-ts-mode--capture-definition))
+                     )))
+    (elixir-ts-mode--imenu-1 call-tree)))
 
 (defun elixir-ts-mode--imenu-1 (node)
   "Helper for `elixir-ts-mode--imenu'.
