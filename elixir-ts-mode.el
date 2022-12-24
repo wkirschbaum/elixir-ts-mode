@@ -245,16 +245,17 @@
        ((node-is "|>") parent-bol 0)
        ((node-is "|") parent-bol 0)
        ((node-is "}") parent-bol 0)
-       ((node-is ")") (lambda (_node parent &rest _)
-                        (if (elixir-ts-mode--indent-parent-bol-p parent)
-                            ;; parent-bol
-                            (save-excursion
-                              (goto-char (treesit-node-start parent))
-                              (back-to-indentation)
-                              (point))
+       ((node-is ")")
+        (lambda (_node parent &rest _)
+          (if (elixir-ts-mode--indent-parent-bol-p parent)
+              ;; parent-bol
+              (save-excursion
+                (goto-char (treesit-node-start parent))
+                (back-to-indentation)
+                (point))
 
-                          ;; grant-parent
-                          (treesit-node-start (treesit-node-parent parent))))
+            ;; grant-parent
+            (treesit-node-start (treesit-node-parent parent))))
         0)
        ((node-is "]") parent-bol 0)
        ((node-is "else_block") elixir-ts-mode--treesit-anchor-grand-parent-bol 0)
@@ -340,11 +341,13 @@
    :language 'elixir
    :feature 'keyword
    ;; :override `prepend
-   `(,elixir-ts-mode--reserved-keywords-vector @elixir-font-keyword-face
-                                               ;; these are operators, should we mark them as keywords?
-                                               (binary_operator
-                                                operator: _ @elixir-font-keyword-face
-                                                (:match ,elixir-ts-mode--reserved-keywords-re @elixir-font-keyword-face)))
+   `(,elixir-ts-mode--reserved-keywords-vector
+     @elixir-font-keyword-face
+     ;; these are operators, should we mark them as keywords?
+     (binary_operator
+      operator: _ @elixir-font-keyword-face
+      (:match ,elixir-ts-mode--reserved-keywords-re @elixir-font-keyword-face)))
+
    :language 'elixir
    :feature 'doc
    :override t
@@ -364,7 +367,8 @@
                   (sigil) @elixir-font-comment-doc-face
                   (boolean) @elixir-font-comment-doc-face
                   ]))
-      (:match ,elixir-ts-mode--doc-keywords-re @elixir-font-comment-doc-identifier-face))
+      (:match ,elixir-ts-mode--doc-keywords-re
+              @elixir-font-comment-doc-identifier-face))
      (unary_operator
       operator: "@" @elixir-font-comment-doc-attribute-face
       operand: (call
