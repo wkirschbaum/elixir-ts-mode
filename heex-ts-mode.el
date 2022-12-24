@@ -141,17 +141,7 @@
 ;;      (directive (expression_value) @cap)
 ;;      (expression (expression_value) @cap))))
 
-(defun heex-ts-mode--treesit-largest-node-at-point (&optional node)
-  "Find the largest node at point or from specified NODE."
-  (save-excursion
-    (forward-comment (point-max))
-    (treesit-parent-while
-     (or node (treesit-node-at (point)))
-     (lambda (n)
-       (and (eq (treesit-node-start n) (point))
-            (not (equal (treesit-node-type n) "fragment")))))))
-
-;; This is still very naive and might be easy pickings to
+;; Comment region is still very naive and might be easy pickings to
 ;; improve
 (defun heex-ts-mode--comment-region (beg end &optional arg)
   (save-excursion

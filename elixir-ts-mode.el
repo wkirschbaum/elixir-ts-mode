@@ -111,7 +111,7 @@
   "For use with @function tag.")
 
 (defface elixir-font-sigil-name-face
-  '((t (:inherit font-lock-builtin-face)))
+  '((t (:inherit font-lock-string-face)))
   "For use with @__name__ tag.")
 
 (defface elixir-font-variable-face
@@ -229,7 +229,8 @@
   (let ((offset elixir-ts-mode-indent-offset))
     `((elixir
        ((parent-is "source") parent-bol 0)
-       ((parent-is "string") parent-bol 0)
+       ((parent-is "string") prev-line 0)
+       ((parent-is "\"\"\"") grand-parent 0)
        ;; ensure we don't indent docs by setting no-indent on quoted_content
        ((parent-is "quoted_content")
         (lambda (_n parent bol &rest _)
@@ -241,7 +242,6 @@
                   (back-to-indentation)
                   (point))
               (point)))) 0)
-       (no-node parent-bol ,offset)
        ((node-is "|>") parent-bol 0)
        ((node-is "|") parent-bol 0)
        ((node-is "}") parent-bol 0)
@@ -262,11 +262,11 @@
        ((node-is "catch_block") elixir-ts-mode--treesit-anchor-grand-parent-bol 0)
        ((node-is "rescue_block") elixir-ts-mode--treesit-anchor-grand-parent-bol 0)
        ((node-is "stab_clause") parent-bol ,offset)
-       ((query ,elixir-ts-mode--operator-parent) grand-parent 0)
+       ((query ,elixir-ts-mode--capture-operator-parent) grand-parent 0)
        ((node-is "when") parent 0)
        ((node-is "keywords") parent-bol ,offset)
        ((parent-is "body") parent-bol ,offset)
-       ((query ,elixir-ts-mode--first-argument)
+       ((query ,elixir-ts-mode--capture-first-argument)
         (lambda (_node parent &rest _)
           (if (elixir-ts-mode--indent-parent-bol-p parent)
               ;; parent-bol
@@ -292,7 +292,7 @@
        ((parent-is "list") parent-bol ,offset)
        ((parent-is "pair") parent ,offset)
        ((parent-is "map") parent-bol ,offset)
-       ((query ,elixir-ts-mode--anonymous-function-end) parent-bol 0)
+       ((query ,elixir-ts-mode--capture-anonymous-function-end) parent-bol 0)
        ((node-is "end") elixir-ts-mode--treesit-anchor-grand-parent-bol 0)
        ((parent-is "do_block") grand-parent ,offset)
        ((parent-is "anonymous_function")
@@ -448,11 +448,6 @@
    :feature 'elixir-sigil
    :override t
    `((sigil
-      "~" @elixir-font-sigil-name-face
-      (sigil_name) @elixir-font-sigil-name-face
-      quoted_start: _ @elixir-font-string-special-face
-      quoted_end: _ @elixir-font-string-special-face )
-     (sigil
       (sigil_name) @elixir-font-sigil-name-face
       quoted_start: _ @elixir-font-string-face
       quoted_end: _ @elixir-font-string-face
@@ -461,13 +456,56 @@
       (sigil_name) @elixir-font-sigil-name-face
       quoted_start: _ @elixir-font-string-regex-face
       quoted_end: _ @elixir-font-string-regex-face
-      (:match "^[rR]$" @elixir-font-sigil-name-face)) @elixir-font-string-regex-face)
+      (:match "^[rR]$" @elixir-font-sigil-name-face)) @elixir-font-string-regex-face
+     (sigil
+      "~" @elixir-font-string-special-face
+      (sigil_name) @elixir-font-sigil-name-face
+      quoted_start: _ @elixir-font-string-special-face
+      quoted_end: _ @elixir-font-string-special-face
+      (:match "^H$" @elixir-font-sigil-name-face)))
 
    :language 'elixir
    :feature 'elixir-string-escape
    :override t
    `((escape_sequence) @elixir-font-string-escape-face))
   "Tree-sitter font-lock settings.")
+
+(defun elixir-ts-mode--imenu-capture-definition (node)
+  (treesit-query-capture node elixir-ts-mode--capture-definition))
+
+(defun elixir-ts-mode--imenu-capture-module (node)
+  (treesit-query-capture node elixir-ts-mode--capture-module))
+
+(defun elixir-ts-mode--imenu ()
+  "Return Imenu alist for the current buffer."
+  (let* ((node (treesit-buffer-root-node))
+         (call-tree (treesit-induce-sparse-tree
+                       node
+                       #'elixir-ts-mode--imenu-capture-definition)))
+         (elixir-ts-mode--imenu-1 call-tree)))
+
+(defun elixir-ts-mode--imenu-1 (node)
+  "Helper for `elixir-ts-mode--imenu'.
+Find string representation for NODE and set marker, then recurse
+the subtrees."
+  (let* ((ts-node (car node))
+         (children (cdr node))
+         (subtrees (mapcan #'elixir-ts-mode--imenu-1
+                           children))
+         (name (when ts-node
+                 (pcase (treesit-node-type ts-node)
+                   ("call"
+                    (treesit-node-text
+                     (treesit-node-child ts-node 1) t)))))
+         (marker (when ts-node
+                   (set-marker (make-marker)
+                               (treesit-node-start ts-node)))))
+    (cond
+     ((or (null ts-node) (null name)) subtrees)
+     (subtrees
+      `((,name ,(cons name marker) ,@subtrees)))
+     (t
+      `((,name . ,marker))))))
 
 (defun elixir-ts-mode--indent-parent-bol-p (parent)
   (save-excursion
@@ -485,7 +523,7 @@
   (treesit-range-rules
    :embed 'heex
    :host 'elixir
-   '((sigil (sigil_name) (quoted_content)) @heex)))
+   '((sigil (sigil_name) @name (:match "^[H]$" @name) (quoted_content) @heex))))
 
 (defun elixir-ts-mode--treesit-language-at-point (point)
   (let ((language-in-range
@@ -546,7 +584,6 @@
     (setq-local treesit-simple-indent-rules
                 (append elixir-ts-mode--indent-rules heex-ts-mode--indent-rules)))
 
-
   (setq-local treesit-font-lock-feature-list
               '(( elixir-comment elixir-string elixir-call elixir-constant)
                 ( elixir-keyword elixir-unary-operator elixir-operator elixir-doc )
@@ -558,7 +595,8 @@
   (setq-local treesit-font-lock-level 6)
 
   ;; Imenu
-  ;; (setq-local treesit-imenu-function #'elixir-ts-mode--imenu-treesit-create-index)
+  (setq-local imenu-create-index-function #'elixir-ts-mode--imenu)
+  (setq-local which-func-functions nil)
 
   ;; Navigation
   (setq-local treesit-defun-type-regexp (rx (or "do_block")))
