@@ -10,11 +10,11 @@ on:
 
 jobs:
   test:
-    name: "test emacs ${matrix.emacs_version}"
+    name: "test emacs ${{matrix.emacs_version}}"
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        emacs_version: ['29', 'snapshot']
+        emacs_version: ['snapshot']
 
     steps:
       - name: Setup Emacs
