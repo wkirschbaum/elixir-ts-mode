@@ -235,7 +235,8 @@
   (let ((offset elixir-ts-mode-indent-offset))
     `((elixir
        ((parent-is "source") parent-bol 0)
-       ((parent-is "string") prev-line 0)
+       ((parent-is "string") parent-bol 0)
+       ;; TODO looking at grand-parent does not work for moduledocs in enum.ex
        ((parent-is "\"\"\"") grand-parent 0)
        ;; ensure we don't indent docs by setting no-indent on quoted_content
        ((parent-is "quoted_content")
