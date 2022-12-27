@@ -22,5 +22,4 @@ which-function-mode and navigation.
 ## TODO
 
     [ ] Fix Begin/End defun
-    [ ] Improve imenu
     [ ] Improve forward-sexp
