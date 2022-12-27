@@ -487,9 +487,10 @@
          (call-tree (treesit-induce-sparse-tree
                      node
                      (lambda (node)
-                       (treesit-query-capture
+                       (treesit-available-p
+                        (treesit-query-capture
                         node
-                        elixir-ts-mode--capture-definition))
+                        elixir-ts-mode--capture-definition)))
                      )))
     (elixir-ts-mode--imenu-1 call-tree)))
 
@@ -548,7 +549,8 @@ the subtrees."
       language-in-range)))
 
 (defun elixir-ts-mode--capture-defun (node)
-  (treesit-query-capture node elixir-ts-mode--capture-definition))
+  (treesit-available-p
+   (treesit-query-capture node elixir-ts-mode--capture-definition)))
 
 (defun elixir-ts-mode--defun-name (node)
   (pcase (treesit-node-type node)
@@ -573,8 +575,7 @@ the subtrees."
   :group 'elixir
   :syntax-table elixir-ts-mode--syntax-table
 
-  (when (and (treesit-available-p)
-             (treesit-ready-p 'elixir)
+  (when (and (treesit-ready-p 'elixir)
              (treesit-ready-p 'heex))
 
     (treesit-parser-create 'heex)
