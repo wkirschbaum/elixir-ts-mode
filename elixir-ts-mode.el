@@ -20,15 +20,6 @@
 
 (eval-when-compile (require 'rx))
 
-(declare-function treesit-parser-create "treesit.c")
-(declare-function treesit-induce-sparse-tree "treesit.c")
-(declare-function treesit-node-child "treesit.c")
-(declare-function treesit-node-child-by-field-name "treesit.c")
-(declare-function treesit-node-start "treesit.c")
-(declare-function treesit-node-parent "treesit.c")
-(declare-function treesit-node-type "treesit.c")
-(declare-function treesit-query-compile "treesit.c")
-
 (defcustom elixir-ts-mode-indent-offset 2
   "Indentation of Elixir statements."
   :version "29.1"
