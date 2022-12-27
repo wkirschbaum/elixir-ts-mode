@@ -497,10 +497,7 @@ the subtrees."
          (subtrees (mapcan #'elixir-ts-mode--imenu-1
                            children))
          (name (when ts-node
-                 (pcase (treesit-node-type ts-node)
-                   ("call"
-                    (treesit-node-text
-                     (treesit-node-child ts-node 1) t)))))
+                 (elixir-ts-mode--defun-name ts-node)))
          (marker (when ts-node
                    (set-marker (make-marker)
                                (treesit-node-start ts-node)))))
@@ -545,67 +542,89 @@ the subtrees."
           (treesit-parser-language parser))
       language-in-range)))
 
+(defun elixir-ts-mode--capture-defun (node)
+  (treesit-query-capture node elixir-ts-mode--capture-definition))
+
+(defun elixir-ts-mode--defun-name (node)
+  (pcase (treesit-node-type node)
+    ("call" (let ((node-child
+                   (treesit-node-child (treesit-node-child node 1) 0)))
+              (pcase (treesit-node-type node-child)
+                ("alias" (treesit-node-text node-child t))
+                ("call" (treesit-node-text
+                         (treesit-node-child-by-field-name node-child "target") t))
+                ("binary_operator"
+                 (treesit-node-text
+                  (treesit-node-child-by-field-name
+                   (treesit-node-child-by-field-name node-child "left") "target") t))
+                ("identifier"
+                 (treesit-node-text node-child t))
+                (_ nil))))
+    (_ nil)))
+
 ;;;###autoload
 (define-derived-mode elixir-ts-mode prog-mode "Elixir"
   "Major mode for editing Elixir, powered by tree-sitter."
   :group 'elixir
   :syntax-table elixir-ts-mode--syntax-table
 
-  (when (treesit-ready-p 'elixir)
+  (when (and (treesit-ready-p 'elixir) (treesit-ready-p 'heex))
     (treesit-parser-create 'heex)
-    (treesit-parser-create 'elixir))
+    (treesit-parser-create 'elixir)
 
-  ;; Comments
-  (setq-local comment-start "# ")
-  (setq-local comment-start-skip
-              (rx "#" (* (syntax whitespace))))
+    ;; Comments
+    (setq-local comment-start "# ")
+    (setq-local comment-start-skip
+                (rx "#" (* (syntax whitespace))))
 
-  (setq-local comment-end "")
-  (setq-local comment-end-skip
-              (rx (* (syntax whitespace))
-                  (group (or (syntax comment-end) "\n"))))
+    (setq-local comment-end "")
+    (setq-local comment-end-skip
+                (rx (* (syntax whitespace))
+                    (group (or (syntax comment-end) "\n"))))
 
-  ;; Electric.
-  (setq-local electric-indent-chars
-              (append "]" ")" "}" "\"" "end" electric-indent-chars))
+    ;; Electric.
+    (setq-local electric-indent-chars
+                (append "]" ")" "}" "\"" "end" ">" electric-indent-chars))
 
-  ;; Font-lock
-  (setq-local treesit-font-lock-settings elixir-ts-mode--font-lock-settings)
+    ;; Font-lock
+    (setq-local treesit-font-lock-settings elixir-ts-mode--font-lock-settings)
 
-  ;; Indent
-  (setq-local treesit-simple-indent-rules elixir-ts-mode--indent-rules)
+    ;; Indent
+    (setq-local treesit-simple-indent-rules elixir-ts-mode--indent-rules)
 
-  ;; heex embedding
-  (setq-local treesit-language-at-point-function
-              'elixir-ts-mode--treesit-language-at-point)
+    ;; heex embedding
+    (setq-local treesit-language-at-point-function
+                'elixir-ts-mode--treesit-language-at-point)
 
-  (when (treesit-ready-p 'heex)
-    (setq-local treesit-range-settings elixir-ts-mode--treesit-range-rules)
-    (setq-local treesit-font-lock-settings
-                (append elixir-ts-mode--font-lock-settings
-                        heex-ts-mode--font-lock-settings))
+    (when (treesit-ready-p 'heex)
+      (setq-local treesit-range-settings elixir-ts-mode--treesit-range-rules)
+      (setq-local treesit-font-lock-settings
+                  (append elixir-ts-mode--font-lock-settings
+                          heex-ts-mode--font-lock-settings))
 
-    (setq-local treesit-simple-indent-rules
-                (append elixir-ts-mode--indent-rules heex-ts-mode--indent-rules)))
+      (setq-local treesit-simple-indent-rules
+                  (append elixir-ts-mode--indent-rules heex-ts-mode--indent-rules)))
 
-  (setq-local treesit-font-lock-feature-list
-              '(( elixir-comment elixir-string elixir-call elixir-constant)
-                ( elixir-keyword elixir-unary-operator elixir-operator elixir-doc )
-                ( elixir-sigil elixir-string-escape elixir-string-interpolation)
-                ( heex-doctype heex-comment )
-                ( heex-bracket heex-tag heex-attribute heex-keyword heex-string )
-                ( heex-component )))
+    (setq-local treesit-font-lock-level 6)
 
-  (setq-local treesit-font-lock-level 6)
+    (setq-local treesit-font-lock-feature-list
+                '(( elixir-comment elixir-string elixir-call elixir-constant)
+                  ( elixir-keyword elixir-unary-operator elixir-operator elixir-doc )
+                  ( elixir-sigil elixir-string-escape elixir-string-interpolation)
+                  ( heex-doctype heex-comment )
+                  ( heex-bracket heex-tag heex-attribute heex-keyword heex-string )
+                  ( heex-component )))
 
-  ;; Imenu
-  (setq-local imenu-create-index-function #'elixir-ts-mode--imenu)
-  (setq-local which-func-functions nil)
+    ;; Imenu
+    (setq-local imenu-create-index-function #'elixir-ts-mode--imenu)
+    (setq-local which-func-functions nil)
 
-  ;; Navigation
-  (setq-local treesit-defun-type-regexp (rx (or "do_block")))
+    ;; Navigation
+    (setq-local treesit-defun-type-regexp
+                '("call" . elixir-ts-mode--capture-defun))
+    (setq-local treesit-defun-name-function #'elixir-ts-mode--defun-name)
 
-  (treesit-major-mode-setup))
+    (treesit-major-mode-setup)))
 
 ;;;###autoload
 (progn

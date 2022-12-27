@@ -153,6 +153,44 @@
     (insert (concat " " comment-end))
     ))
 
+(defun heex-ts-mode--defun-name (node)
+  (pcase (treesit-node-type node)
+    ((or "component" "slot" "tag")
+     (treesit-node-text
+      (treesit-node-child (treesit-node-child node 0) 1)
+      t))
+    (_ nil)))
+
+(defun heex-ts-mode--imenu ()
+  "Return Imenu alist for the current buffer."
+  (let* ((node (treesit-buffer-root-node))
+         (call-tree (treesit-induce-sparse-tree
+                     node
+                     (lambda (node)
+                       (pcase (treesit-node-type node)
+                         ((rx (or "component" "slot" "tag")) t)
+                         (_ nil))))))
+    (heex-ts-mode--imenu-1 call-tree)))
+
+(defun heex-ts-mode--imenu-1 (node)
+  "Helper for `heex-ts-mode--imenu'.
+Find string representation for NODE and set marker, then recurse
+the subtrees."
+  (let* ((ts-node (car node))
+         (children (cdr node))
+         (subtrees (mapcan #'heex-ts-mode--imenu-1 children))
+         (name (when ts-node
+                 (heex-ts-mode--defun-name ts-node)))
+         (marker (when ts-node
+                   (set-marker (make-marker)
+                               (treesit-node-start ts-node)))))
+    (cond
+     ((or (null ts-node) (null name)) subtrees)
+     (subtrees
+      `((,name ,(cons name marker) ,@subtrees)))
+     (t
+      `((,name . ,marker))))))
+
 (defvar heex-ts-mode--syntax-table
   (let ((table (make-syntax-table)))
     (modify-syntax-entry ?\{ "(}" table)
@@ -188,6 +226,11 @@
   ;; Navigation.
   (setq-local treesit-defun-type-regexp
               (rx bol (or "component" "tag" "slot") eol))
+  (setq-local treesit-defun-name-function #'heex-ts-mode--defun-name)
+
+  ;; Imenu
+  (setq-local imenu-create-index-function #'heex-ts-mode--imenu)
+  (setq-local which-func-functions nil)
 
   ;; Treesit.
   (setq-local treesit-mode-supported t)
