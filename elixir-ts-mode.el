@@ -187,21 +187,25 @@
   (apply #'vector elixir-ts-mode--reserved-keywords))
 
 (defvar elixir-ts-mode--capture-anonymous-function-end
-  (treesit-query-compile 'elixir '((anonymous_function "end" @end))))
+  (if (treesit-available-p)
+      (treesit-query-compile 'elixir '((anonymous_function "end" @end)))))
 
 (defvar elixir-ts-mode--capture-operator-parent
-  (treesit-query-compile 'elixir '((binary_operator operator: _ @val))))
+  (if (treesit-available-p)
+      (treesit-query-compile 'elixir '((binary_operator operator: _ @val)))))
 
 (defvar elixir-ts-mode--capture-first-argument
-  (treesit-query-compile
-   'elixir
-   '((arguments :anchor (_) @first-child) (tuple :anchor (_) @first-child))))
+  (if (treesit-available-p)
+      (treesit-query-compile
+       'elixir
+       '((arguments :anchor (_) @first-child) (tuple :anchor (_) @first-child)))))
 
 (defvar elixir-ts-mode--capture-definition
-  (treesit-query-compile
-   'elixir
-   `((call target: (identifier) @keyword
-           (:match ,elixir-ts-mode--definition-keywords-re @keyword)))))
+  (if (treesit-available-p)
+      (treesit-query-compile
+       'elixir
+       `((call target: (identifier) @keyword
+               (:match ,elixir-ts-mode--definition-keywords-re @keyword))))))
 
 (defvar elixir-ts-mode--syntax-table
   (let ((table (make-syntax-table)))
