@@ -187,25 +187,21 @@
   (apply #'vector elixir-ts-mode--reserved-keywords))
 
 (defvar elixir-ts-mode--capture-anonymous-function-end
-  (if (treesit-available-p)
-      (treesit-query-compile 'elixir '((anonymous_function "end" @end)))))
+  (treesit-query-compile 'elixir '((anonymous_function "end" @end))))
 
 (defvar elixir-ts-mode--capture-operator-parent
-  (if (treesit-available-p)
-      (treesit-query-compile 'elixir '((binary_operator operator: _ @val)))))
+  (treesit-query-compile 'elixir '((binary_operator operator: _ @val))))
 
 (defvar elixir-ts-mode--capture-first-argument
-  (if (treesit-available-p)
-      (treesit-query-compile
-       'elixir
-       '((arguments :anchor (_) @first-child) (tuple :anchor (_) @first-child)))))
+  (treesit-query-compile
+   'elixir
+   '((arguments :anchor (_) @first-child) (tuple :anchor (_) @first-child))))
 
 (defvar elixir-ts-mode--capture-definition
-  (if (treesit-available-p)
-      (treesit-query-compile
-       'elixir
-       `((call target: (identifier) @keyword
-               (:match ,elixir-ts-mode--definition-keywords-re @keyword))))))
+  (treesit-query-compile
+   'elixir
+   `((call target: (identifier) @keyword
+           (:match ,elixir-ts-mode--definition-keywords-re @keyword)))))
 
 (defvar elixir-ts-mode--syntax-table
   (let ((table (make-syntax-table)))
@@ -487,10 +483,9 @@
          (call-tree (treesit-induce-sparse-tree
                      node
                      (lambda (node)
-                       (treesit-available-p
-                        (treesit-query-capture
+                       (treesit-query-capture
                         node
-                        elixir-ts-mode--capture-definition)))
+                        elixir-ts-mode--capture-definition))
                      )))
     (elixir-ts-mode--imenu-1 call-tree)))
 
@@ -549,8 +544,7 @@ the subtrees."
       language-in-range)))
 
 (defun elixir-ts-mode--capture-defun (node)
-  (treesit-available-p
-   (treesit-query-capture node elixir-ts-mode--capture-definition)))
+  (treesit-query-capture node elixir-ts-mode--capture-definition))
 
 (defun elixir-ts-mode--defun-name (node)
   (pcase (treesit-node-type node)
