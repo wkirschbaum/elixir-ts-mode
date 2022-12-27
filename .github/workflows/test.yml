@@ -21,16 +21,16 @@ jobs:
         uses: purcell/setup-emacs@master
         with:
           version: ${{matrix.emacs_version}}
-      - name: Run tests
+      - name: Check emacs version
         run: emacs --version
       - name: Check out the source code
         uses: actions/checkout@v2
       - name: Run tests
         run: |
           emacs -batch -l ert \
-          -l ../heex-ts-mode.el \
-          -l ../elixir-ts-mode.el \
-          -l elixir-ts-tests.el \
+          -l heex-ts-mode.el \
+          -l elixir-ts-mode.el \
+          -l ./test/elixir-ts-tests.el \
           --eval "(add-to-list 'treesit-extra-load-path \"./dist\")" \
           -f ert-run-tests-batch-and-exit
     
