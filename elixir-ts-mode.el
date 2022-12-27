@@ -573,7 +573,10 @@ the subtrees."
   :group 'elixir
   :syntax-table elixir-ts-mode--syntax-table
 
-  (when (and (treesit-ready-p 'elixir) (treesit-ready-p 'heex))
+  (when (and (treesit-available-p)
+             (treesit-ready-p 'elixir)
+             (treesit-ready-p 'heex))
+
     (treesit-parser-create 'heex)
     (treesit-parser-create 'elixir)
 
