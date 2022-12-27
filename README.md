@@ -21,5 +21,4 @@ which-function-mode and navigation.
 
 ## TODO
 
-    [ ] Fix Begin/End defun
-    [ ] Improve forward-sexp
+    [ ] Impliment forward-sexp
