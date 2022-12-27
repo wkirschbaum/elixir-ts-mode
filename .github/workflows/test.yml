@@ -19,7 +19,8 @@ jobs:
     steps:
       - name: Setup Emacs
         uses: purcell/setup-emacs@master
-        version: ${{matrix.emacs_version}}
+        with:
+          version: ${{matrix.emacs_version}}
       - name: Run tests
         run: |
           emacs -batch -l ert \
