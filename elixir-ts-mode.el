@@ -202,18 +202,6 @@
 (defconst elixir-ts-mode--definition-keywords-re
   (concat "^" (regexp-opt elixir-ts-mode--definition-keywords) "$"))
 
-(defconst elixir-ts-mode--definition-module
-  '("defmodule" "defprotocol"))
-
-(defconst elixir-ts-mode--definition-module-re
-  (concat "^" (regexp-opt elixir-ts-mode--definition-module) "$"))
-
-(defconst elixir-ts-mode--definition-function
-  '("def" "defp" "defdelegate" "defguard" "defguardp" "defmacro" "defmacrop" "defn" "defnp"))
-
-(defconst elixir-ts-mode--definition-function-re
-  (concat "^" (regexp-opt elixir-ts-mode--definition-function) "$"))
-
 (defconst elixir-ts-mode--kernel-keywords
   '("alias" "case" "cond" "else" "for" "if" "import" "quote" "raise" "receive" "require" "reraise" "super" "throw" "try" "unless" "unquote" "unquote_splicing" "use" "with"))
 
@@ -249,9 +237,6 @@
 
 (defconst elixir-ts-mode--reserved-keywords-vector
   (apply #'vector elixir-ts-mode--reserved-keywords))
-
-(defconst heex-ts-mode--brackets-re
-  (concat "^" (regexp-opt heex-ts-mode--brackets) "$"))
 
 (defconst heex-ts-mode--brackets-vector
   (apply #'vector heex-ts-mode--brackets))
@@ -309,9 +294,6 @@
     `((elixir
        ((parent-is "source") parent-bol 0)
        ((parent-is "string") parent-bol 0)
-       ;; TODO looking at grand-parent does not work for moduledocs in enum.ex
-       ((parent-is "\"\"\"") grand-parent 0)
-       ;; ensure we don't indent docs by setting no-indent on quoted_content
        ((parent-is "quoted_content")
         (lambda (_n parent bol &rest _)
           (save-excursion
@@ -325,18 +307,7 @@
        ((node-is "|>") parent-bol 0)
        ((node-is "|") parent-bol 0)
        ((node-is "}") parent-bol 0)
-       ((node-is ")")
-        (lambda (_node parent &rest _)
-          (if (elixir-ts-mode--indent-parent-bol-p parent)
-              ;; parent-bol
-              (save-excursion
-                (goto-char (treesit-node-start parent))
-                (back-to-indentation)
-                (point))
-
-            ;; grant-parent
-            (treesit-node-start (treesit-node-parent parent))))
-        0)
+       ((node-is ")") parent-bol 0)
        ((node-is "]") parent-bol 0)
        ((node-is "else_block") elixir-ts-mode--treesit-anchor-grand-parent-bol 0)
        ((node-is "catch_block") elixir-ts-mode--treesit-anchor-grand-parent-bol 0)
@@ -346,24 +317,7 @@
        ((node-is "when") parent 0)
        ((node-is "keywords") parent-bol ,offset)
        ((parent-is "body") parent-bol ,offset)
-       ((query ,elixir-ts-mode--capture-first-argument)
-        (lambda (_node parent &rest _)
-          (if (elixir-ts-mode--indent-parent-bol-p parent)
-              ;; parent-bol
-              (save-excursion
-                (goto-char (treesit-node-start parent))
-                (back-to-indentation)
-                (point))
-
-            ;; grant-parent
-            (treesit-node-start (treesit-node-parent parent))))
-        ,offset)
-       ((parent-is "arguments")
-        (lambda (node parent &rest _)
-          ;; grand-parent
-          (treesit-node-start
-           (treesit-node-child parent 0 t)))
-        0)
+       ((parent-is "arguments") parent-bol ,offset)
        ((parent-is "binary_operator") parent ,offset)
        ((node-is "pair") first-sibling 0)
        ((parent-is "tuple") (lambda (_n parent &rest _)
@@ -379,8 +333,7 @@
         elixir-ts-mode--treesit-anchor-grand-parent-bol ,offset)
        ((parent-is "else_block") parent ,offset)
        ((parent-is "rescue_block") parent ,offset)
-       ((parent-is "catch_block") parent ,offset)
-       ))))
+       ((parent-is "catch_block") parent ,offset)))))
 
 ;; There seems to be no parent directive block
 ;; so we ignore it for until we learn how heex treesit
@@ -547,7 +500,7 @@
       (sigil_name) @elixir-font-sigil-name-face
       quoted_start: _ @elixir-font-string-face
       quoted_end: _ @elixir-font-string-face
-      (:match "^[sS]$" @elixir-font-sigil-name-face)) @elixir-font-string-face
+      (:match "^[sSwW]$" @elixir-font-sigil-name-face)) @elixir-font-string-face
       (sigil
        (sigil_name) @elixir-font-sigil-name-face
        quoted_start: _ @elixir-font-string-regex-face
@@ -719,9 +672,6 @@ Return nil if NODE is not a defun node or doesn't have a name."
     (setq-local electric-indent-chars
                 (append "]" ")" "}" "\"" "end" ">" electric-indent-chars))
 
-    ;; Font-lock
-    (setq-local treesit-font-lock-settings elixir-ts-mode--font-lock-settings)
-
     ;; heex embedding
     (setq-local treesit-language-at-point-function
                 'elixir-ts-mode--treesit-language-at-point)
@@ -741,8 +691,8 @@ Return nil if NODE is not a defun node or doesn't have a name."
                   ( elixir-keyword elixir-unary-operator elixir-operator elixir-doc )
                   ( elixir-sigil elixir-string-escape elixir-string-interpolation)
                   ( heex-doctype heex-comment )
-                  ( heex-bracket heex-tag heex-attribute heex-keyword heex-string )
-                  ( heex-component )))
+                  ( heex-component heex-tag heex-attribute heex-keyword heex-string )
+                  ( heex-bracket )))
 
     (setq-local treesit-defun-name-function #'elixir-ts-mode--defun-name)
 
@@ -802,13 +752,14 @@ Return nil if NODE is not a defun node or doesn't have a name."
               (append heex-ts-mode--font-lock-settings
                       elixir-ts-mode--font-lock-settings))
 
-  (setq-local treesit-simple-indent-rules heex-ts-mode--indent-rules)
+  (setq-local treesit-simple-indent-rules
+              (append heex-ts-mode--indent-rules elixir-ts-mode--indent-rules))
 
   (setq-local treesit-font-lock-level 6)
   (setq-local treesit-font-lock-feature-list
               '(( heex-doctype heex-comment )
-                ( heex-bracket heex-tag heex-attribute heex-keyword heex-string )
-                ( heex-component )
+                ( heex-component heex-tag heex-attribute heex-keyword heex-string )
+                ( heex-bracket )
                 ( elixir-comment elixir-string elixir-call elixir-constant)
                 ( elixir-keyword elixir-unary-operator elixir-operator elixir-doc )
                 ( elixir-sigil elixir-string-escape elixir-string-interpolation)))
