@@ -1,24 +1,42 @@
-;;; heex-ts-mode.el --- tree-sitter support for Elixir -*- coding: utf-8; lexical-binding: t; -*-
+;;; elixir-ts-mode.el --- tree-sitter support for Elixir -*- lexical-binding: t; -*-
 
-;; Author      : Wilhelm H Kirschbaum
-;; Maintainer  : Wilhelm H Kirschbaum
-;; Package-Requires: ((emacs "29"))
-;; Created     : November 2022
-;; Keywords    : elixir languages tree-sitter
+;; Copyright (C) 2022 Wilhelm H Kirschbaum
+
+;; Author           : Wilhelm H Kirschbaum
+;; Package-Requires : ((emacs "29"))
+;; Created          : November 2022
+;; Keywords         : elixir languages tree-sitter
+
+;;  This program is free software: you can redistribute it and/or modify
+;;  it under the terms of the GNU General Public License as published by
+;;  the Free Software Foundation, either version 3 of the License, or
+;;  (at your option) any later version.
+
+;;  This program is distributed in the hope that it will be useful,
+;;  but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;;  GNU General Public License for more details.
+
+;;  You should have received a copy of the GNU General Public License
+;;  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-
-;; Custom queries for indentation is currently very slow, it might
-;; be worth while to compromise "accurate" indentation to gain some
-;; performance. The initial intention is to match the mix formatter,
-;; as with smaller files the performance impact is not too notice-able
 
 ;; Code:
 
 (require 'treesit)
-(require 'heex-ts-mode)
 
 (eval-when-compile (require 'rx))
+
+(defgroup elixir nil
+  "Major mode for editing Elixir code."
+  :group 'languages
+  :version "29.1")
+
+(defgroup heex nil
+  "Major mode for editing Heex code."
+  :group 'languages
+  :version "29.1")
 
 (defcustom elixir-ts-mode-indent-offset 2
   "Indentation of Elixir statements."
@@ -27,8 +45,12 @@
   :safe 'integerp
   :group 'elixir)
 
-;; Custom faces match highlights.scm as close as possible
-;; to help with updates
+(defcustom heex-ts-mode--indent-offset 2
+  "Indentation of Elixir statements."
+  :version "29.1"
+  :type 'integer
+  :safe 'integerp
+  :group 'heex)
 
 (defface elixir-font-keyword-face
   '((t (:inherit font-lock-keyword-face)))
@@ -134,7 +156,45 @@
   '((t (:inherit error)))
   "For use with @comment.unused tag.")
 
-;; Faces end
+(defface heex-font-keyword-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @keyword tag.")
+
+(defface heex-font-bracket-face
+  '((t (:inherit default)))
+  "For use with @keyword tag.")
+
+(defface heex-font-constant-face
+  '((t (:inherit font-lock-doc-face)))
+  "For use with @keyword tag.")
+
+(defface heex-font-comment-face
+  '((t (:inherit font-lock-comment-face)))
+  "For use with @keyword tag.")
+
+(defface heex-font-tag-face
+  '((t (:inherit font-lock-function-name-face)))
+  "For use with @tag tag.")
+
+(defface heex-font-attribute-face
+  '((t (:inherit font-lock-variable-name-face)))
+  "For use with @keyword tag.")
+
+(defface heex-font-string-face
+  '((t (:inherit font-lock-constant-face)))
+  "For use with @keyword tag.")
+
+(defface heex-font-module-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @keyword tag.")
+
+(defface heex-font-function-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @keyword tag.")
+
+(defface heex-font-delimeter-face
+  '((t (:inherit font-lock-keyword-face)))
+  "For use with @keyword tag.")
 
 (defconst elixir-ts-mode--definition-keywords
   '("def" "defdelegate" "defexception" "defguard" "defguardp" "defimpl" "defmacro" "defmacrop" "defmodule" "defn" "defnp" "defoverridable" "defp" "defprotocol" "defstruct"))
@@ -180,11 +240,21 @@
   '("when" "and" "or" "not" "in"
     "not in" "fn" "do" "end" "catch" "rescue" "after" "else"))
 
+(defconst heex-ts-mode--brackets
+  '("%>" "--%>" "-->" "/>" "<!" "<!--" "<" "<%!--" "<%" "<%#"
+    "<%%=" "<%=" "</" "</:" "<:" ">" "{" "}"))
+
 (defconst elixir-ts-mode--reserved-keywords-re
   (concat "^" (regexp-opt elixir-ts-mode--reserved-keywords) "$"))
 
 (defconst elixir-ts-mode--reserved-keywords-vector
   (apply #'vector elixir-ts-mode--reserved-keywords))
+
+(defconst heex-ts-mode--brackets-re
+  (concat "^" (regexp-opt heex-ts-mode--brackets) "$"))
+
+(defconst heex-ts-mode--brackets-vector
+  (apply #'vector heex-ts-mode--brackets))
 
 (defvar elixir-ts-mode--capture-anonymous-function-end
   (treesit-query-compile 'elixir '((anonymous_function "end" @end))))
@@ -224,6 +294,15 @@
     (modify-syntax-entry ?@ "'" table)
     table)
   "Syntax table for `elixir-ts-mode.")
+
+(defvar heex-ts-mode--syntax-table
+  (let ((table (make-syntax-table)))
+    (modify-syntax-entry ?\{ "(}" table)
+    (modify-syntax-entry ?\} "){" table)
+    (modify-syntax-entry ?< "(>" table)
+    (modify-syntax-entry ?> ")<" table)
+    table)
+  "Heex mode syntax table.")
 
 (defvar elixir-ts-mode--indent-rules
   (let ((offset elixir-ts-mode-indent-offset))
@@ -302,6 +381,22 @@
        ((parent-is "rescue_block") parent ,offset)
        ((parent-is "catch_block") parent ,offset)
        ))))
+
+;; There seems to be no parent directive block
+;; so we ignore it for until we learn how heex treesit
+;; represents directive blocks
+;; https://github.com/phoenixframework/tree-sitter-heex/issues/28
+(defvar heex-ts-mode--indent-rules
+  (let ((offset heex-ts-mode--indent-offset))
+    `((heex
+       ((parent-is "fragment") parent-bol 0)
+       ((node-is "end_tag") parent-bol 0)
+       ((node-is "end_component") parent-bol 0)
+       ((node-is "end_slot") parent-bol 0)
+       ((node-is ">") parent-bol 0)
+       ((parent-is "component") parent-bol ,offset)
+       ((parent-is "slot") parent-bol ,offset)
+       ((parent-is "tag") parent-bol ,offset)))))
 
 ;; reference:
 ;; https://github.com/elixir-lang/tree-sitter-elixir/blob/main/queries/highlights.scm
@@ -471,33 +566,56 @@
    `((escape_sequence) @elixir-font-string-escape-face))
   "Tree-sitter font-lock settings.")
 
-(defun elixir-ts-mode--imenu ()
-  "Return Imenu alist for the current buffer."
-  (let* ((node (treesit-buffer-root-node))
-         (call-tree (treesit-induce-sparse-tree
-                     node
-                     #'elixir-ts-mode--defun-p)))
-    (elixir-ts-mode--imenu-1 call-tree)))
+(defvar heex-ts-mode--font-lock-settings
+  (treesit-font-lock-rules
+   :language 'heex
+   :feature 'heex-doctype
+   '((doctype) @heex-font-constant-face)
 
-(defun elixir-ts-mode--imenu-1 (node)
-  "Helper for `elixir-ts-mode--imenu'.
-Find string representation for NODE and set marker, then recurse
-the subtrees."
-  (let* ((ts-node (car node))
-         (children (cdr node))
-         (subtrees (mapcan #'elixir-ts-mode--imenu-1
-                           children))
-         (name (when ts-node
-                 (elixir-ts-mode--defun-name ts-node)))
-         (marker (when ts-node
-                   (set-marker (make-marker)
-                               (treesit-node-start ts-node)))))
-    (cond
-     ((or (null ts-node) (null name)) subtrees)
-     (subtrees
-      `((,name ,(cons name marker) ,@subtrees)))
-     (t
-      `((,name . ,marker))))))
+   :language 'heex
+   :feature 'heex-comment
+   '((comment) @heex-font-comment-face)
+
+   :language 'heex
+   :feature 'heex-bracket
+   `(,heex-ts-mode--brackets-vector @heex-font-bracket-face)
+
+   :language 'heex
+   :feature 'heex-tag
+   `([(tag_name) (slot_name)] @heex-font-tag-face)
+
+   :language 'heex
+   :feature 'heex-attribute
+   `((attribute_name) @heex-font-attribute-face)
+
+   :language 'heex
+   :feature 'heex-keyword
+   `((special_attribute_name) @heex-font-keyword-face)
+
+   :language 'heex
+   :feature 'heex-string
+   `([(attribute_value) (quoted_attribute_value)] @heex-font-string-face)
+
+   :language 'heex
+   :feature 'heex-component
+   `([
+      (component_name) @heex-font-tag-face
+      (module) @heex-font-module-face
+      (function) @heex-font-function-face
+      "." @heex-font-delimeter-face
+      ])
+   )
+  "Tree-sitter font-lock settings.")
+
+(defun heex-ts-mode--comment-region (beg end &optional arg)
+  (save-excursion
+    (goto-char beg)
+    (insert (concat comment-start " "))
+    (goto-char end)
+    (goto-char (pos-eol))
+    (forward-comment (- (point-max)))
+    (insert (concat " " comment-end))
+    ))
 
 (defun elixir-ts-mode--indent-parent-bol-p (parent)
   (save-excursion
@@ -516,6 +634,14 @@ the subtrees."
    :embed 'heex
    :host 'elixir
    '((sigil (sigil_name) @name (:match "^[H]$" @name) (quoted_content) @heex))))
+
+(defvar heex-ts-mode--treesit-range-rules
+  (treesit-range-rules
+   :embed 'elixir
+   :host 'heex
+   '((directive (partial_expression_value) @cap)
+     (directive (expression_value) @cap)
+     (expression (expression_value) @cap))))
 
 (defun elixir-ts-mode--treesit-language-at-point (point)
   (let ((language-in-range
@@ -537,6 +663,16 @@ the subtrees."
   (member (treesit-node-text
            (treesit-node-child-by-field-name node "target"))
           elixir-ts-mode--definition-keywords))
+
+(defun heex-ts-mode--defun-name (node)
+  "Return the name of the defun NODE.
+Return nil if NODE is not a defun node or doesn't have a name."
+  (pcase (treesit-node-type node)
+    ((or "component" "slot" "tag")
+     (string-trim (treesit-node-text
+                   (treesit-node-child (treesit-node-child node 0) 1)
+                   nil)))
+    (_ nil)))
 
 (defun elixir-ts-mode--defun-name (node)
   "Return the name of the defun NODE.
@@ -586,21 +722,17 @@ Return nil if NODE is not a defun node or doesn't have a name."
     ;; Font-lock
     (setq-local treesit-font-lock-settings elixir-ts-mode--font-lock-settings)
 
-    ;; Indent
-    (setq-local treesit-simple-indent-rules elixir-ts-mode--indent-rules)
-
     ;; heex embedding
     (setq-local treesit-language-at-point-function
                 'elixir-ts-mode--treesit-language-at-point)
 
-    (when (treesit-ready-p 'heex)
-      (setq-local treesit-range-settings elixir-ts-mode--treesit-range-rules)
-      (setq-local treesit-font-lock-settings
-                  (append elixir-ts-mode--font-lock-settings
-                          heex-ts-mode--font-lock-settings))
+    (setq-local treesit-range-settings elixir-ts-mode--treesit-range-rules)
+    (setq-local treesit-font-lock-settings
+                (append elixir-ts-mode--font-lock-settings
+                        heex-ts-mode--font-lock-settings))
 
-      (setq-local treesit-simple-indent-rules
-                  (append elixir-ts-mode--indent-rules heex-ts-mode--indent-rules)))
+    (setq-local treesit-simple-indent-rules
+                (append elixir-ts-mode--indent-rules heex-ts-mode--indent-rules))
 
     (setq-local treesit-font-lock-level 6)
 
@@ -625,12 +757,73 @@ Return nil if NODE is not a defun node or doesn't have a name."
     (treesit-major-mode-setup)))
 
 ;;;###autoload
+(define-derived-mode heex-ts-mode prog-mode "Heex"
+  "Major mode for editing Elixir, powered by tree-sitter."
+  :group 'heex
+  :syntax-table heex-ts-mode--syntax-table
+
+  (when (and (treesit-ready-p 'elixir)
+             (treesit-ready-p 'heex))
+
+    (treesit-parser-create 'elixir)
+    (treesit-parser-create 'heex))
+
+  ;; Comments.
+  (setq-local comment-start "<!-- ")
+  (setq-local comment-start-skip (rx (or "<!--")
+                                     (* (syntax whitespace))))
+  (setq-local comment-end "-->")
+  (setq-local comment-end-skip (rx (* (syntax whitespace))
+                                   (group (or "-->"))))
+
+  (setq-local comment-region-function 'heex-ts-mode--comment-region)
+
+  ;; Electric.
+  (setq-local electric-indent-chars
+              (append ">" electric-indent-chars))
+
+  ;; Navigation.
+  (setq-local treesit-defun-type-regexp
+              (rx bol (or "component" "tag" "slot") eol))
+  (setq-local treesit-defun-name-function #'heex-ts-mode--defun-name)
+
+  ;; Imenu
+  (setq-local treesit-simple-imenu-settings
+              '(("Component" "\\`component\\'" nil nil)
+                ("Slot" "\\`slot\\'" nil nil)
+                ("Tag" "\\`tag\\'" nil nil)))
+
+  ;; Treesit.
+  (setq-local treesit-language-at-point-function
+              'elixir-ts-mode--treesit-language-at-point)
+
+  (setq-local treesit-range-settings heex-ts-mode--treesit-range-rules)
+  (setq-local treesit-font-lock-settings
+              (append heex-ts-mode--font-lock-settings
+                      elixir-ts-mode--font-lock-settings))
+
+  (setq-local treesit-simple-indent-rules heex-ts-mode--indent-rules)
+
+  (setq-local treesit-font-lock-level 6)
+  (setq-local treesit-font-lock-feature-list
+              '(( heex-doctype heex-comment )
+                ( heex-bracket heex-tag heex-attribute heex-keyword heex-string )
+                ( heex-component )
+                ( elixir-comment elixir-string elixir-call elixir-constant)
+                ( elixir-keyword elixir-unary-operator elixir-operator elixir-doc )
+                ( elixir-sigil elixir-string-escape elixir-string-interpolation)))
+
+  (treesit-major-mode-setup))
+
+(provide 'elixir-ts-mode)
+(provide 'heex-ts-mode)
+
+;;;###autoload
 (progn
   (add-to-list 'auto-mode-alist '("\\.elixir\\'" . elixir-ts-mode))
   (add-to-list 'auto-mode-alist '("\\.ex\\'" . elixir-ts-mode))
   (add-to-list 'auto-mode-alist '("\\.exs\\'" . elixir-ts-mode))
-  (add-to-list 'auto-mode-alist '("mix\\.lock" . elixir-ts-mode)))
+  (add-to-list 'auto-mode-alist '("mix\\.lock" . elixir-ts-mode))
+  (add-to-list 'auto-mode-alist '("\\.[hl]?eex\\'" . heex-ts-mode)))
 
-(provide 'elixir-ts-mode)
 ;;; elixir-ts-mode.el ends here
-
