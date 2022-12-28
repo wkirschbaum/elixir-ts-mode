@@ -26,7 +26,6 @@
 
 (require 'treesit)
 (require 'heex-ts-mode)
-
 (eval-when-compile (require 'rx))
 
 (defgroup elixir nil

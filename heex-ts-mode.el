@@ -24,6 +24,9 @@
 
 ;; Code:
 
+(require 'treesit)
+(eval-when-compile (require 'rx))
+
 (defgroup heex nil
   "Major mode for editing Heex code."
   :group 'languages
@@ -208,7 +211,6 @@ Return nil if NODE is not a defun node or doesn't have a name."
 
   (setq-local treesit-simple-indent-rules heex-ts-mode--indent-rules)
 
-  (setq-local treesit-font-lock-level 6)
   (setq-local treesit-font-lock-feature-list
               '(( heex-doctype heex-comment )
                 ( heex-component heex-tag heex-attribute heex-keyword heex-string )

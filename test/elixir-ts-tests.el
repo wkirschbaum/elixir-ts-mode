@@ -3,6 +3,7 @@
 
 (ert-deftest elixir-ts-mode-indentation ()
   "Test module indentation."
+  (skip-unless (treesit-language-available-p 'elixir))
   (let ((original "defmodule Foo do
 def bar(), do: \"bar\"
      end")
