@@ -202,9 +202,9 @@ Return nil if NODE is not a defun node or doesn't have a name."
 
   ;; Imenu
   (setq-local treesit-simple-imenu-settings
-              '(("Component" "\\`component\\'" nil heex-ts-mode--defun-name)
-                ("Slot" "\\`slot\\'" nil heex-ts-mode--defun-name)
-                ("Tag" "\\`tag\\'" nil heex-ts-mode--defun-name)))
+              '(("Component" "\\`component\\'" nil nil)
+                ("Slot" "\\`slot\\'" nil nil)
+                ("Tag" "\\`tag\\'" nil nil)))
 
   ;; Treesit.
   (setq-local treesit-mode-supported t)

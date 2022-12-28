@@ -453,17 +453,17 @@
       quoted_start: _ @elixir-font-string-face
       quoted_end: _ @elixir-font-string-face
       (:match "^[sS]$" @elixir-font-sigil-name-face)) @elixir-font-string-face
-     (sigil
-      (sigil_name) @elixir-font-sigil-name-face
-      quoted_start: _ @elixir-font-string-regex-face
-      quoted_end: _ @elixir-font-string-regex-face
-      (:match "^[rR]$" @elixir-font-sigil-name-face)) @elixir-font-string-regex-face
-     (sigil
-      "~" @elixir-font-string-special-face
-      (sigil_name) @elixir-font-sigil-name-face
-      quoted_start: _ @elixir-font-string-special-face
-      quoted_end: _ @elixir-font-string-special-face
-      (:match "^H$" @elixir-font-sigil-name-face)))
+      (sigil
+       (sigil_name) @elixir-font-sigil-name-face
+       quoted_start: _ @elixir-font-string-regex-face
+       quoted_end: _ @elixir-font-string-regex-face
+       (:match "^[rR]$" @elixir-font-sigil-name-face)) @elixir-font-string-regex-face
+      (sigil
+       "~" @elixir-font-string-special-face
+       (sigil_name) @elixir-font-sigil-name-face
+       quoted_start: _ @elixir-font-string-special-face
+       quoted_end: _ @elixir-font-string-special-face
+       (:match "^H$" @elixir-font-sigil-name-face)))
 
    :language 'elixir
    :feature 'elixir-string-escape
@@ -539,7 +539,7 @@ the subtrees."
           elixir-ts-mode--definition-keywords))
 
 (defun elixir-ts-mode--defun-name (node)
-"Return the name of the defun NODE.
+  "Return the name of the defun NODE.
 Return nil if NODE is not a defun node or doesn't have a name."
   (pcase (treesit-node-type node)
     ("call" (let ((node-child
@@ -612,15 +612,15 @@ Return nil if NODE is not a defun node or doesn't have a name."
                   ( heex-bracket heex-tag heex-attribute heex-keyword heex-string )
                   ( heex-component )))
 
+    (setq-local treesit-defun-name-function #'elixir-ts-mode--defun-name)
+
     ;; Imenu
     (setq-local treesit-simple-imenu-settings
-                '((nil "\\`call\\'" elixir-ts-mode--defun-p
-                       elixir-ts-mode--defun-name)))
+                '((nil "\\`call\\'" elixir-ts-mode--defun-p nil)))
 
     ;; Navigation
     (setq-local treesit-defun-type-regexp
                 '("call" . elixir-ts-mode--defun-p))
-    (setq-local treesit-defun-name-function #'elixir-ts-mode--defun-name)
 
     (treesit-major-mode-setup)))
 
