@@ -476,7 +476,7 @@
   (let* ((node (treesit-buffer-root-node))
          (call-tree (treesit-induce-sparse-tree
                      node
-                     #'elixir-ts-mode--capture-defun)))
+                     #'elixir-ts-mode--defun-p)))
     (elixir-ts-mode--imenu-1 call-tree)))
 
 (defun elixir-ts-mode--imenu-1 (node)
@@ -533,12 +533,14 @@ the subtrees."
           (treesit-parser-language parser))
       language-in-range)))
 
-(defun elixir-ts-mode--capture-defun (node)
+(defun elixir-ts-mode--defun-p (node)
   (member (treesit-node-text
            (treesit-node-child-by-field-name node "target"))
           elixir-ts-mode--definition-keywords))
 
 (defun elixir-ts-mode--defun-name (node)
+"Return the name of the defun NODE.
+Return nil if NODE is not a defun node or doesn't have a name."
   (pcase (treesit-node-type node)
     ("call" (let ((node-child
                    (treesit-node-child (treesit-node-child node 1) 0)))
@@ -611,12 +613,13 @@ the subtrees."
                   ( heex-component )))
 
     ;; Imenu
-    (setq-local imenu-create-index-function #'elixir-ts-mode--imenu)
-    (setq-local which-func-functions nil)
+    (setq-local treesit-simple-imenu-settings
+                '((nil "\\`call\\'" elixir-ts-mode--defun-p
+                       elixir-ts-mode--defun-name)))
 
     ;; Navigation
     (setq-local treesit-defun-type-regexp
-                '("call" . elixir-ts-mode--capture-defun))
+                '("call" . elixir-ts-mode--defun-p))
     (setq-local treesit-defun-name-function #'elixir-ts-mode--defun-name)
 
     (treesit-major-mode-setup)))
