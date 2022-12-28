@@ -1,15 +1,14 @@
-# Experimental Elixir and Heex Major Modes using Treesitter
+# Elixir and Heex Major Modes using Treesitter
 
-Using treesitter for font-lock, indentation, imenu,
-which-function-mode and navigation.
+Using treesitter for font-lock, indentation, imenu and navigation.
 
 ## Install
 
 - Ensure you are using the latest emacs `emacs-29` branch or later. 
-- Ensure you have tree-sitter installed
+- Ensure you have tree-sitter 0.20.7 installed
 - Compile emacs with the --with-tree-sitter flag by running `./configure --with-tree-sitter`
-- Checkout https://github.com/casouri/tree-sitter-module
-- Run `[cloned casouri/tree-sitter-module]/tree-sitter-module/batch.sh`
+- Clone https://github.com/casouri/tree-sitter-module
+- Run `[cloned casouri/tree-sitter-module]/tree-sitter-module/batch.sh` ( you can remove other languages from the batch.sh file if you wish )
 - Add the following to your emacs config
 
 ```elisp
