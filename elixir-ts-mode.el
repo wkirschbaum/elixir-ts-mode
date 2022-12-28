@@ -197,12 +197,6 @@
    'elixir
    '((arguments :anchor (_) @first-child) (tuple :anchor (_) @first-child))))
 
-(defvar elixir-ts-mode--capture-definition
-  (treesit-query-compile
-   'elixir
-   `((call target: (identifier) @keyword
-           (:match ,elixir-ts-mode--definition-keywords-re @keyword)))))
-
 (defvar elixir-ts-mode--syntax-table
   (let ((table (make-syntax-table)))
     (modify-syntax-entry ?| "." table)
@@ -482,11 +476,7 @@
   (let* ((node (treesit-buffer-root-node))
          (call-tree (treesit-induce-sparse-tree
                      node
-                     (lambda (node)
-                       (treesit-query-capture
-                        node
-                        elixir-ts-mode--capture-definition))
-                     )))
+                     #'elixir-ts-mode--capture-defun)))
     (elixir-ts-mode--imenu-1 call-tree)))
 
 (defun elixir-ts-mode--imenu-1 (node)
@@ -544,7 +534,9 @@ the subtrees."
       language-in-range)))
 
 (defun elixir-ts-mode--capture-defun (node)
-  (treesit-query-capture node elixir-ts-mode--capture-definition))
+  (member (treesit-node-text
+           (treesit-node-child-by-field-name node "target"))
+          elixir-ts-mode--definition-keywords))
 
 (defun elixir-ts-mode--defun-name (node)
   (pcase (treesit-node-type node)
