@@ -18,6 +18,18 @@ Using treesitter for font-lock, indentation, imenu and navigation.
     (load "[cloned wkirschbaum/elixir-mode]/elixir-ts-mode.el")
 ```
 
+## Developement
+
+To test you can run `make test` which will download a batch script
+from https://github.com/casouri/tree-sitter-module and compile
+tree-sitter-elixir as well as tree-sitter-heex. 
+
+Requirements:
+
+- git
+- wget
+- tree-sitter 0.20.7
+
 ## TODO
 
     [ ] Impliment forward-sexp
