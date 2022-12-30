@@ -4,9 +4,8 @@ Using treesitter for font-lock, indentation, imenu and navigation.
 
 ## Install
 
-- Ensure you are using the latest emacs `emacs-29` branch or later. 
-- Ensure you have tree-sitter 0.20.7 installed
-- Compile emacs with the --with-tree-sitter flag by running `./configure --with-tree-sitter`
+- Ensure you have tree-sitter 0.20.7 installed ( tree-sitter --version )
+- Ensure you are using the latest `emacs-29` or `master` branch.
 - Clone this repository
 - Run `make dist` ( Please review the script and download links before
   running this )
