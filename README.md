@@ -8,7 +8,8 @@ Using treesitter for font-lock, indentation, imenu and navigation.
 - Ensure you have tree-sitter 0.20.7 installed
 - Compile emacs with the --with-tree-sitter flag by running `./configure --with-tree-sitter`
 - Clone this repository
-- Run `make dist` 
+- Run `make dist` ( Please review the script and download links before
+  running this )
 - Add the following to your emacs config
 
 ```elisp
