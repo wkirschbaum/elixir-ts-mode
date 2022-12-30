@@ -26,6 +26,7 @@ tree-sitter-elixir as well as tree-sitter-heex.
 
 Requirements:
 
+- make
 - git
 - wget
 - tree-sitter 0.20.7
