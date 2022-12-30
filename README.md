@@ -1,6 +1,6 @@
 # Elixir and Heex Major Modes using tree-sitter
 
-Using tree-sitter for font-lock, indentation, imenu and navigation.
+Using [tree-sitter][https://tree-sitter.github.io/tree-sitter/] for font-lock, indentation, imenu and navigation.
 
 This must not be confused with the MELPA tree-sitter package as it
 uses the built-in emacs treesit package.
