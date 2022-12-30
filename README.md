@@ -61,6 +61,13 @@ has not been released, you can add the following so long:
                 (heex-ts-mode . "elixir"))))
 ```
 
+### Installing emacs-29 on Mac OS
+
+```bash
+brew install tree-sitter
+brew install emacs-plus@29
+```
+
 ## Developement
 
 Tree-sitter starter guide: https://git.savannah.gnu.org/cgit/emacs.git/tree/admin/notes/tree-sitter/starter-guide?h=emacs-29
