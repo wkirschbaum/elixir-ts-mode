@@ -49,7 +49,8 @@ https://emacs-lsp.github.io/lsp-mode/page/installation/ )
 (heex-ts-mode   . lsp)
 ```
 
-While this change has not been released, you can add the following:
+While [this change](https://github.com/emacs-lsp/lsp-mode/pull/3883)
+has not been released, you can add the following so long:
 
 ```elisp
 (require 'lsp-mode)
