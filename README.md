@@ -6,6 +6,7 @@ Using treesitter for font-lock, indentation, imenu and navigation.
 
 - Ensure you have tree-sitter 0.20.7 installed ( tree-sitter --version )
 - Ensure you are using the latest `emacs-29` or `master` branch.
+- You have to configure and compile emacs after you install tree-sitter
 - Clone this repository
 - Run `make dist` ( Please review the script and download links before
   running this )
@@ -13,9 +14,9 @@ Using treesitter for font-lock, indentation, imenu and navigation.
 
 ```elisp
     (when (boundp 'treesit-extra-load-path)
-      (add-to-list 'treesit-extra-load-path "[cloned wkirschbaum/elixir-mode]/dist/")
-      (load "[cloned wkirschbaum/elixir-mode]/heex-ts-mode.el")
-      (load "[cloned wkirschbaum/elixir-mode]/elixir-ts-mode.el"))
+      (add-to-list 'treesit-extra-load-path "[cloned wkirschbaum/elixir-ts-mode]/dist/")
+      (load "[cloned wkirschbaum/elixir-ts-mode]/heex-ts-mode.el")
+      (load "[cloned wkirschbaum/elixir-ts-mode]/elixir-ts-mode.el"))
 ```
 
 ## Developement
@@ -28,6 +29,7 @@ Requirements:
 
 - make
 - git
+- curl
 - tree-sitter 0.20.7
 
 ## TODO
