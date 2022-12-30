@@ -28,7 +28,6 @@ Requirements:
 
 - make
 - git
-- wget
 - tree-sitter 0.20.7
 
 ## TODO
