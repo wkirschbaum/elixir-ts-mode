@@ -86,4 +86,3 @@ Requirements:
 ## TODO
 
     [ ] Impliment forward-sexp
-    [ ] standardise font-lock settings
