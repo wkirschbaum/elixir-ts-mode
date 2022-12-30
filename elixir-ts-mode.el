@@ -535,15 +535,14 @@ Return nil if NODE is not a defun node or doesn't have a name."
     (setq-local treesit-simple-indent-rules
                 (append elixir-ts-mode--indent-rules heex-ts-mode--indent-rules))
 
-    (setq-local treesit-font-lock-level 6)
-
     (setq-local treesit-font-lock-feature-list
-                '(( elixir-comment elixir-string elixir-call elixir-constant)
-                  ( elixir-keyword elixir-unary-operator elixir-operator elixir-doc )
-                  ( elixir-sigil elixir-string-escape elixir-string-interpolation)
-                  ( heex-doctype heex-comment )
-                  ( heex-component heex-tag heex-attribute heex-keyword heex-string )
-                  ( heex-bracket )))
+                '(( elixir-comment elixir-constant elixir-doc
+                    heex-doctype heex-comment)
+                  ( elixir-string elixir-keyword elixir-unary-operator
+                    elixir-call elixir-operator
+                    heex-string heex-keyword heex-component heex-tag heex-attribute)
+                  ( elixir-sigil elixir-string-escape elixir-string-interpolation
+                    heex-bracket)))
 
     (setq-local treesit-defun-name-function #'elixir-ts-mode--defun-name)
 

@@ -213,7 +213,7 @@ Return nil if NODE is not a defun node or doesn't have a name."
 
   (setq-local treesit-font-lock-feature-list
               '(( heex-doctype heex-comment )
-                ( heex-component heex-tag heex-attribute heex-keyword heex-string )
+                ( heex-string heex-keyword heex-component heex-tag heex-attribute )
                 ( heex-bracket )))
 
   (treesit-major-mode-setup))
