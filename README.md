@@ -61,7 +61,7 @@ has not been released, you can add the following so long:
                 (heex-ts-mode . "elixir"))))
 ```
 
-### Installing emacs-29 on Mac OS
+### Installing emacs-29 on Mac OS or Linux via Homebrew
 
 ```bash
 brew install tree-sitter
