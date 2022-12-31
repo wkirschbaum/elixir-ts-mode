@@ -2,9 +2,6 @@
 
 Using [tree-sitter](https://tree-sitter.github.io/tree-sitter/) for font-lock, indentation, imenu and navigation.
 
-This must not be confused with the MELPA tree-sitter package as it
-uses the built-in emacs treesit package.
-
 For an implementation without tree-sitter support please have a
 look at: https://github.com/elixir-editors/emacs-elixir
 
