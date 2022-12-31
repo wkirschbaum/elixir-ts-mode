@@ -31,6 +31,10 @@
 (require 'treesit)
 (eval-when-compile (require 'rx))
 
+(declare-function treesit-parser-create "treesit.c")
+(declare-function treesit-node-child "treesit.c")
+(declare-function treesit-node-type "treesit.c")
+
 (defcustom heex-ts-mode--indent-offset 2
   "Indentation of Heex statements."
   :version "29.1"
