@@ -182,9 +182,6 @@ Return nil if NODE is not a defun node or doesn't have a name."
   :group 'heex
   :syntax-table heex-ts-mode--syntax-table
 
-  (when (and (treesit-ready-p 'heex))
-    (treesit-parser-create 'heex))
-
   ;; Comments.
   (setq-local comment-start "<!-- ")
   (setq-local comment-start-skip (rx (or "<!--")
@@ -193,34 +190,36 @@ Return nil if NODE is not a defun node or doesn't have a name."
   (setq-local comment-end-skip (rx (* (syntax whitespace))
                                    (group (or "-->"))))
 
-  (setq-local comment-region-function 'heex-ts-mode--comment-region)
+  (when (and (treesit-ready-p 'heex))
+    (treesit-parser-create 'heex)
 
-  ;; Electric.
-  (setq-local electric-indent-chars
-              (append ">" electric-indent-chars))
+    (setq-local comment-region-function 'heex-ts-mode--comment-region)
 
-  ;; Navigation.
-  (setq-local treesit-defun-type-regexp
-              (rx bol (or "component" "tag" "slot") eol))
-  (setq-local treesit-defun-name-function #'heex-ts-mode--defun-name)
+    ;; Electric.
+    (setq-local electric-indent-chars
+                (append ">" electric-indent-chars))
 
-  ;; Imenu
-  (setq-local treesit-simple-imenu-settings
-              '(("Component" "\\`component\\'" nil nil)
-                ("Slot" "\\`slot\\'" nil nil)
-                ("Tag" "\\`tag\\'" nil nil)))
+    ;; Navigation.
+    (setq-local treesit-defun-type-regexp
+                (rx bol (or "component" "tag" "slot") eol))
+    (setq-local treesit-defun-name-function #'heex-ts-mode--defun-name)
 
-  (setq-local treesit-font-lock-settings heex-ts-mode--font-lock-settings)
+    ;; Imenu
+    (setq-local treesit-simple-imenu-settings
+                '(("Component" "\\`component\\'" nil nil)
+                  ("Slot" "\\`slot\\'" nil nil)
+                  ("Tag" "\\`tag\\'" nil nil)))
 
-  (setq-local treesit-simple-indent-rules heex-ts-mode--indent-rules)
+    (setq-local treesit-font-lock-settings heex-ts-mode--font-lock-settings)
 
-  (setq-local treesit-font-lock-feature-list
-              '(( heex-doctype heex-comment )
-                ( heex-string heex-keyword heex-component heex-tag heex-attribute )
-                ( heex-bracket )))
+    (setq-local treesit-simple-indent-rules heex-ts-mode--indent-rules)
 
-  (treesit-major-mode-setup))
+    (setq-local treesit-font-lock-feature-list
+                '(( heex-doctype heex-comment )
+                  ( heex-string heex-keyword heex-component heex-tag heex-attribute )
+                  ( heex-bracket )))
 
+    (treesit-major-mode-setup)))
 
 ;;;###autoload
 (progn

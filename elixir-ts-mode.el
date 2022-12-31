@@ -511,46 +511,33 @@ Return nil if NODE is not a defun node or doesn't have a name."
   :group 'elixir
   :syntax-table elixir-ts-mode--syntax-table
 
-  (when (and (treesit-ready-p 'elixir)
-             (treesit-ready-p 'heex))
+  ;; Comments
+  (setq-local comment-start "# ")
+  (setq-local comment-start-skip
+              (rx "#" (* (syntax whitespace))))
 
-    (treesit-parser-create 'heex)
+  (setq-local comment-end "")
+  (setq-local comment-end-skip
+              (rx (* (syntax whitespace))
+                  (group (or (syntax comment-end) "\n"))))
+
+  ;; Electric.
+  (setq-local electric-indent-chars
+              (append "]" ")" "}" "\"" "end" ">" electric-indent-chars))
+
+  (when (treesit-ready-p 'elixir)
+
+    ;; heex has to be created first for elixir to be the first language
+    ;; when looking for treesit ranges
+    (when (treesit-ready-p 'heex)
+      (treesit-parser-create 'heex))
+
     (treesit-parser-create 'elixir)
 
-    ;; Comments
-    (setq-local comment-start "# ")
-    (setq-local comment-start-skip
-                (rx "#" (* (syntax whitespace))))
-
-    (setq-local comment-end "")
-    (setq-local comment-end-skip
-                (rx (* (syntax whitespace))
-                    (group (or (syntax comment-end) "\n"))))
-
-    ;; Electric.
-    (setq-local electric-indent-chars
-                (append "]" ")" "}" "\"" "end" ">" electric-indent-chars))
-
-    ;; heex embedding
-    (setq-local treesit-language-at-point-function
-                'elixir-ts-mode--treesit-language-at-point)
-
-    (setq-local treesit-range-settings elixir-ts-mode--treesit-range-rules)
-    (setq-local treesit-font-lock-settings
-                (append elixir-ts-mode--font-lock-settings
-                        heex-ts-mode--font-lock-settings))
+    (setq-local treesit-font-lock-settings elixir-ts-mode--font-lock-settings)
 
     (setq-local treesit-simple-indent-rules
                 (append elixir-ts-mode--indent-rules heex-ts-mode--indent-rules))
-
-    (setq-local treesit-font-lock-feature-list
-                '(( elixir-comment elixir-constant elixir-doc
-                    heex-doctype heex-comment)
-                  ( elixir-string elixir-keyword elixir-unary-operator
-                    elixir-call elixir-operator
-                    heex-string heex-keyword heex-component heex-tag heex-attribute)
-                  ( elixir-sigil elixir-string-escape elixir-string-interpolation
-                    heex-bracket)))
 
     (setq-local treesit-defun-name-function #'elixir-ts-mode--defun-name)
 
@@ -561,6 +548,38 @@ Return nil if NODE is not a defun node or doesn't have a name."
     ;; Navigation
     (setq-local treesit-defun-type-regexp
                 '("call" . elixir-ts-mode--defun-p))
+
+    (setq-local treesit-font-lock-feature-list
+                '(( elixir-comment elixir-constant elixir-doc )
+                  ( elixir-string elixir-keyword elixir-unary-operator
+                    elixir-call elixir-operator )
+                  ( elixir-sigil elixir-string-escape elixir-string-interpolation)))
+
+    ;; Embedded Heex
+    (when (treesit-ready-p 'heex)
+      (treesit-parser-create 'heex)
+
+      (setq-local treesit-language-at-point-function
+                  'elixir-ts-mode--treesit-language-at-point)
+
+      (setq-local treesit-range-settings elixir-ts-mode--treesit-range-rules)
+
+      (setq-local treesit-font-lock-settings
+                  (append treesit-font-lock-settings
+                          heex-ts-mode--font-lock-settings))
+
+      (setq-local treesit-simple-indent-rules
+                  (append treesit-simple-indent-rules
+                          heex-ts-mode--indent-rules))
+
+      (setq-local treesit-font-lock-feature-list
+                  '(( elixir-comment elixir-constant elixir-doc
+                      heex-doctype heex-comment)
+                    ( elixir-string elixir-keyword elixir-unary-operator
+                      elixir-call elixir-operator
+                      heex-string heex-keyword heex-component heex-tag heex-attribute)
+                    ( elixir-sigil elixir-string-escape elixir-string-interpolation
+                      heex-bracket))))
 
     (treesit-major-mode-setup)))
 
