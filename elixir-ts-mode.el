@@ -451,16 +451,17 @@
 
 (defun elixir-ts-mode--treesit-language-at-point (point)
   "Return the language at POINT."
-  (let ((language-in-range
-         (cl-loop
-          for parser in (treesit-parser-list)
-          do (setq range
-                   (cl-loop
-                    for range in (treesit-parser-included-ranges parser)
-                    if (and (>= point (car range)) (<= point (cdr range)))
-                    return parser))
-          if range
-          return (treesit-parser-language parser))))
+  (let* ((range nil)
+         (language-in-range
+          (cl-loop
+           for parser in (treesit-parser-list)
+           do (setq range
+                    (cl-loop
+                     for range in (treesit-parser-included-ranges parser)
+                     if (and (>= point (car range)) (<= point (cdr range)))
+                     return parser))
+           if range
+           return (treesit-parser-language parser))))
     (if (null language-in-range)
         (when-let ((parser (car (treesit-parser-list))))
           (treesit-parser-language parser))
