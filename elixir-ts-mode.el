@@ -5,7 +5,7 @@
 ;; Author           : Wilhelm H Kirschbaum
 ;; Version          : 1.0
 ;; URL              : https://github.com/wkirschbaum/elixir-ts-mode
-;; Package-Requires : ((emacs "29") (heex-ts-mode "1.0"))
+;; Package-Requires : ((emacs "29"))
 ;; Created          : November 2022
 ;; Keywords         : elixir languages tree-sitter
 
