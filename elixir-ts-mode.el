@@ -455,10 +455,11 @@
     (point)))
 
 (defvar elixir-ts-mode--treesit-range-rules
-  (treesit-range-rules
-   :embed 'heex
-   :host 'elixir
-   '((sigil (sigil_name) @name (:match "^[H]$" @name) (quoted_content) @heex))))
+  (when (treesit-available-p)
+    (treesit-range-rules
+     :embed 'heex
+     :host 'elixir
+     '((sigil (sigil_name) @name (:match "^[H]$" @name) (quoted_content) @heex)))))
 
 (defun elixir-ts-mode--treesit-language-at-point (point)
   "Return the language at POINT."
