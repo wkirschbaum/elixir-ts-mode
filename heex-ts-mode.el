@@ -1,8 +1,10 @@
-;;; heex-ts-mode.el --- tree-sitter support for Heex -*- lexical-binding: t; -*-
+;;; heex-ts-mode.el --- Major mode for Heex with tree-sitter support -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2022 Wilhelm H Kirschbaum
 
 ;; Author           : Wilhelm H Kirschbaum
+;; Version          : 0.1.0
+;; URL              : https://github.com/wkirschbaum/elixir-ts-mode
 ;; Package-Requires : ((emacs "29"))
 ;; Created          : November 2022
 ;; Keywords         : heex languages tree-sitter
@@ -22,15 +24,12 @@
 
 ;;; Commentary:
 
+;; Using tree-sitter for font-lock, indentation, imenu and navigation.
+
 ;;; Code:
 
 (require 'treesit)
 (eval-when-compile (require 'rx))
-
-(defgroup heex nil
-  "Major mode for editing Heex code."
-  :group 'languages
-  :version "29.1")
 
 (defcustom heex-ts-mode--indent-offset 2
   "Indentation of Heex statements."
@@ -39,43 +38,43 @@
   :safe 'integerp
   :group 'heex)
 
-(defface heex-font-keyword-face
+(defface heex-ts-font-keyword-face
   '((t (:inherit font-lock-keyword-face)))
   "For use with @keyword tag.")
 
-(defface heex-font-bracket-face
+(defface heex-ts-font-bracket-face
   '((t (:inherit default)))
   "For use with @keyword tag.")
 
-(defface heex-font-constant-face
+(defface heex-ts-font-constant-face
   '((t (:inherit font-lock-doc-face)))
   "For use with @keyword tag.")
 
-(defface heex-font-comment-face
+(defface heex-ts-font-comment-face
   '((t (:inherit font-lock-comment-face)))
   "For use with @keyword tag.")
 
-(defface heex-font-tag-face
+(defface heex-ts-font-tag-face
   '((t (:inherit font-lock-function-name-face)))
   "For use with @tag tag.")
 
-(defface heex-font-attribute-face
+(defface heex-ts-font-attribute-face
   '((t (:inherit font-lock-variable-name-face)))
   "For use with @keyword tag.")
 
-(defface heex-font-string-face
+(defface heex-ts-font-string-face
   '((t (:inherit font-lock-constant-face)))
   "For use with @keyword tag.")
 
-(defface heex-font-module-face
+(defface heex-ts-font-module-face
   '((t (:inherit font-lock-keyword-face)))
   "For use with @keyword tag.")
 
-(defface heex-font-function-face
+(defface heex-ts-font-function-face
   '((t (:inherit font-lock-keyword-face)))
   "For use with @keyword tag.")
 
-(defface heex-font-delimeter-face
+(defface heex-ts-font-delimeter-face
   '((t (:inherit font-lock-keyword-face)))
   "For use with @keyword tag.")
 
@@ -116,41 +115,40 @@
   (treesit-font-lock-rules
    :language 'heex
    :feature 'heex-doctype
-   '((doctype) @heex-font-constant-face)
+   '((doctype) @heex-ts-font-constant-face)
 
    :language 'heex
    :feature 'heex-comment
-   '((comment) @heex-font-comment-face)
+   '((comment) @heex-ts-font-comment-face)
 
    :language 'heex
    :feature 'heex-bracket
-   `(,heex-ts-mode--brackets-vector @heex-font-bracket-face)
+   `(,heex-ts-mode--brackets-vector @heex-ts-font-bracket-face)
 
    :language 'heex
    :feature 'heex-tag
-   `([(tag_name) (slot_name)] @heex-font-tag-face)
+   `([(tag_name) (slot_name)] @heex-ts-font-tag-face)
 
    :language 'heex
    :feature 'heex-attribute
-   `((attribute_name) @heex-font-attribute-face)
+   `((attribute_name) @heex-ts-font-attribute-face)
 
    :language 'heex
    :feature 'heex-keyword
-   `((special_attribute_name) @heex-font-keyword-face)
+   `((special_attribute_name) @heex-ts-font-keyword-face)
 
    :language 'heex
    :feature 'heex-string
-   `([(attribute_value) (quoted_attribute_value)] @heex-font-string-face)
+   `([(attribute_value) (quoted_attribute_value)] @heex-ts-font-string-face)
 
    :language 'heex
    :feature 'heex-component
    `([
-      (component_name) @heex-font-tag-face
-      (module) @heex-font-module-face
-      (function) @heex-font-function-face
-      "." @heex-font-delimeter-face
-      ])
-   )
+      (component_name) @heex-ts-font-tag-face
+      (module) @heex-ts-font-module-face
+      (function) @heex-ts-font-function-face
+      "." @heex-ts-font-delimeter-face
+      ]))
   "Tree-sitter font-lock settings.")
 
 (defun heex-ts-mode--comment-region (beg end &optional _arg)
@@ -161,8 +159,7 @@
     (goto-char end)
     (goto-char (pos-eol))
     (forward-comment (- (point-max)))
-    (insert (concat " " comment-end))
-    ))
+    (insert (concat " " comment-end))))
 
 (defun heex-ts-mode--defun-name (node)
   "Return the name of the defun NODE.
