@@ -68,7 +68,7 @@ brew install tree-sitter
 brew install emacs-plus@29
 ```
 
-## Developement
+## Development
 
 Tree-sitter starter guide: https://git.savannah.gnu.org/cgit/emacs.git/tree/admin/notes/tree-sitter/starter-guide?h=emacs-29
 
@@ -82,7 +82,3 @@ Requirements:
 - git
 - curl
 - tree-sitter 0.20.7
-
-## TODO
-
-    [ ] Impliment forward-sexp
