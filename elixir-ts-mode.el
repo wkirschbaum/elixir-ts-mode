@@ -30,7 +30,6 @@
 
 (require 'treesit)
 (require 'heex-ts-mode)
-
 (eval-when-compile (require 'rx))
 
 (defcustom elixir-ts-mode-indent-offset 2
@@ -438,7 +437,7 @@
   "Tree-sitter font-lock settings.")
 
 (defun elixir-ts-mode--treesit-anchor-grand-parent-bol (_n parent &rest _)
-  "Return the beginning of non-space characters on the line where the PARENT node's parent is on."
+  "Return the beginning of non-space characters for the parent node of PARENT."
   (save-excursion
     (goto-char (treesit-node-start (treesit-node-parent parent)))
     (back-to-indentation)
