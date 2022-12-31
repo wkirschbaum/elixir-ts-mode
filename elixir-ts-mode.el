@@ -22,10 +22,11 @@
 
 ;;; Commentary:
 
-;; Code:
+;;; Code:
 
 (require 'treesit)
 (require 'heex-ts-mode)
+
 (eval-when-compile (require 'rx))
 
 (defgroup elixir nil
@@ -439,13 +440,8 @@
    `((escape_sequence) @elixir-font-string-escape-face))
   "Tree-sitter font-lock settings.")
 
-(defun elixir-ts-mode--indent-parent-bol-p (parent)
-  (save-excursion
-    (goto-char (treesit-node-start parent))
-    (back-to-indentation)
-    (and (eq (char-after) ?|) (eq (char-after (1+ (point))) ?>))))
-
 (defun elixir-ts-mode--treesit-anchor-grand-parent-bol (_n parent &rest _)
+  "Return the beginning of non-space characters on the line where the PARENT node's parent is on."
   (save-excursion
     (goto-char (treesit-node-start (treesit-node-parent parent)))
     (back-to-indentation)
@@ -458,6 +454,7 @@
    '((sigil (sigil_name) @name (:match "^[H]$" @name) (quoted_content) @heex))))
 
 (defun elixir-ts-mode--treesit-language-at-point (point)
+  "Return the language at POINT."
   (let ((language-in-range
          (cl-loop
           for parser in (treesit-parser-list)
@@ -474,6 +471,7 @@
       language-in-range)))
 
 (defun elixir-ts-mode--defun-p (node)
+  "Return non-nil when NODE is a defun."
   (member (treesit-node-text
            (treesit-node-child-by-field-name node "target"))
           elixir-ts-mode--definition-keywords))

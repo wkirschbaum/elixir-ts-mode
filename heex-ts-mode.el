@@ -22,7 +22,7 @@
 
 ;;; Commentary:
 
-;; Code:
+;;; Code:
 
 (require 'treesit)
 (eval-when-compile (require 'rx))
@@ -153,7 +153,8 @@
    )
   "Tree-sitter font-lock settings.")
 
-(defun heex-ts-mode--comment-region (beg end &optional arg)
+(defun heex-ts-mode--comment-region (beg end &optional _arg)
+  "Comments the region between BEG and END."
   (save-excursion
     (goto-char beg)
     (insert (concat comment-start " "))
