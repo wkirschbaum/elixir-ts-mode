@@ -116,43 +116,44 @@
        (no-node parent-bol ,offset)))))
 
 (defvar heex-ts-mode--font-lock-settings
-  (treesit-font-lock-rules
-   :language 'heex
-   :feature 'heex-doctype
-   '((doctype) @heex-ts-font-constant-face)
+  (when (treesit-available-p)
+    (treesit-font-lock-rules
+     :language 'heex
+     :feature 'heex-doctype
+     '((doctype) @heex-ts-font-constant-face)
 
-   :language 'heex
-   :feature 'heex-comment
-   '((comment) @heex-ts-font-comment-face)
+     :language 'heex
+     :feature 'heex-comment
+     '((comment) @heex-ts-font-comment-face)
 
-   :language 'heex
-   :feature 'heex-bracket
-   `(,heex-ts-mode--brackets-vector @heex-ts-font-bracket-face)
+     :language 'heex
+     :feature 'heex-bracket
+     `(,heex-ts-mode--brackets-vector @heex-ts-font-bracket-face)
 
-   :language 'heex
-   :feature 'heex-tag
-   `([(tag_name) (slot_name)] @heex-ts-font-tag-face)
+     :language 'heex
+     :feature 'heex-tag
+     `([(tag_name) (slot_name)] @heex-ts-font-tag-face)
 
-   :language 'heex
-   :feature 'heex-attribute
-   `((attribute_name) @heex-ts-font-attribute-face)
+     :language 'heex
+     :feature 'heex-attribute
+     `((attribute_name) @heex-ts-font-attribute-face)
 
-   :language 'heex
-   :feature 'heex-keyword
-   `((special_attribute_name) @heex-ts-font-keyword-face)
+     :language 'heex
+     :feature 'heex-keyword
+     `((special_attribute_name) @heex-ts-font-keyword-face)
 
-   :language 'heex
-   :feature 'heex-string
-   `([(attribute_value) (quoted_attribute_value)] @heex-ts-font-string-face)
+     :language 'heex
+     :feature 'heex-string
+     `([(attribute_value) (quoted_attribute_value)] @heex-ts-font-string-face)
 
-   :language 'heex
-   :feature 'heex-component
-   `([
-      (component_name) @heex-ts-font-tag-face
-      (module) @heex-ts-font-module-face
-      (function) @heex-ts-font-function-face
-      "." @heex-ts-font-delimeter-face
-      ]))
+     :language 'heex
+     :feature 'heex-component
+     `([
+        (component_name) @heex-ts-font-tag-face
+        (module) @heex-ts-font-module-face
+        (function) @heex-ts-font-function-face
+        "." @heex-ts-font-delimeter-face
+        ])))
   "Tree-sitter font-lock settings.")
 
 (defun heex-ts-mode--comment-region (beg end &optional _arg)
