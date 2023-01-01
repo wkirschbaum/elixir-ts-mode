@@ -192,7 +192,7 @@
 (defconst elixir-ts-mode--reserved-keywords-vector
   (apply #'vector elixir-ts-mode--reserved-keywords))
 
-(defvar elixir-ts-mode-default-sources
+(defvar elixir-ts-mode-default-grammar-sources
   '((elixir . ("https://github.com/elixir-lang/tree-sitter-elixir.git"))
     (heex . ("https://github.com/phoenixframework/tree-sitter-heex.git"))))
 
@@ -514,8 +514,9 @@ Return nil if NODE is not a defun node or doesn't have a name."
   (interactive)
   (if (treesit-available-p)
       (let ((treesit-language-source-alist
-             (append treesit-language-source-alist elixir-ts-mode-default-sources)))
-
+             (append
+              treesit-language-source-alist
+              elixir-ts-mode-default-grammar-sources)))
         (if (y-or-n-p
              (format (concat "Do you want to download and compile grammars from the "
                              "following repositories? "
