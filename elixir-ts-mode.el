@@ -192,6 +192,10 @@
 (defconst elixir-ts-mode--reserved-keywords-vector
   (apply #'vector elixir-ts-mode--reserved-keywords))
 
+(defvar elixir-ts-mode-default-sources
+  '((elixir . ("https://github.com/elixir-lang/tree-sitter-elixir.git"))
+    (heex . ("https://github.com/phoenixframework/tree-sitter-heex.git"))))
+
 (defvar elixir-ts-mode--capture-anonymous-function-end
   (when (treesit-available-p)
     (treesit-query-compile 'elixir '((anonymous_function "end" @end)))))
@@ -505,6 +509,31 @@ Return nil if NODE is not a defun node or doesn't have a name."
                 (_ nil))))
     (_ nil)))
 
+(defun elixir-ts-install-grammar ()
+  "Experimental function to install the tree-sitter-elixir grammar."
+  (interactive)
+  (if (treesit-available-p)
+      (let ((treesit-language-source-alist
+             (append treesit-language-source-alist elixir-ts-mode-default-sources)))
+        ;; ensure the directory exists
+        ;; this can be removed once this bug has been fixed:
+        ;; https://debbugs.gnu.org/cgi/bugreport.cgi?bug=60465
+        (make-directory (locate-user-emacs-file "tree-sitter") t)
+        (treesit-install-language-grammar 'elixir)
+        (treesit-install-language-grammar 'heex))
+    (display-warning
+     'treesit
+     (concat "Cannot install grammar because"
+             " "
+             "tree-sitter library is not compiled with Emacs"))))
+
+;;;###autoload
+(progn
+  (add-to-list 'auto-mode-alist '("\\.elixir\\'" . elixir-ts-mode))
+  (add-to-list 'auto-mode-alist '("\\.ex\\'" . elixir-ts-mode))
+  (add-to-list 'auto-mode-alist '("\\.exs\\'" . elixir-ts-mode))
+  (add-to-list 'auto-mode-alist '("mix\\.lock" . elixir-ts-mode)))
+
 ;;;###autoload
 (define-derived-mode elixir-ts-mode prog-mode "Elixir"
   "Major mode for editing Elixir, powered by tree-sitter."
@@ -582,13 +611,6 @@ Return nil if NODE is not a defun node or doesn't have a name."
                       heex-bracket))))
 
     (treesit-major-mode-setup)))
-
-;;;###autoload
-(progn
-  (add-to-list 'auto-mode-alist '("\\.elixir\\'" . elixir-ts-mode))
-  (add-to-list 'auto-mode-alist '("\\.ex\\'" . elixir-ts-mode))
-  (add-to-list 'auto-mode-alist '("\\.exs\\'" . elixir-ts-mode))
-  (add-to-list 'auto-mode-alist '("mix\\.lock" . elixir-ts-mode)))
 
 (provide 'elixir-ts-mode)
 
