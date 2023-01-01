@@ -11,15 +11,28 @@ look at: https://github.com/elixir-editors/emacs-elixir
 - Ensure you are using the latest `emacs-29` or `master` branch.
 - You have to configure and compile emacs after you install tree-sitter
 - Clone this repository
-- Run `make dist` ( Please review the Makefile and download link(s) before
-  running the make command and DO NOT run it as root or with sudo )
 - Add the following to your emacs config
 
 ```elisp
-    (when (boundp 'treesit-extra-load-path)
-      (add-to-list 'treesit-extra-load-path "[cloned wkirschbaum/elixir-ts-mode]/dist/")
-      (load "[cloned wkirschbaum/elixir-ts-mode]/heex-ts-mode.el")
-      (load "[cloned wkirschbaum/elixir-ts-mode]/elixir-ts-mode.el"))
+(load "[cloned wkirschbaum/elixir-ts-mode]/heex-ts-mode.el")
+(load "[cloned wkirschbaum/elixir-ts-mode]/elixir-ts-mode.el")
+```
+
+## Installing Grammars
+
+You can install both tree-sitter-elixir and tree-sitter-heex grammars
+by running `M-x elixir-ts-install-grammar` from within emacs. You can also
+run `M-x treesit-install-language-grammar` to do so individually, but
+you need to either specify the recipe or set the language source like
+below first.
+
+If you prefer other grammar repositories for elixir and heex you can
+set `treesit-language-source-alist` in your emacs config like this:
+
+```elisp
+(append treesit-language-source-alist
+  '((elixir . ("https://[your-repo].git"))
+    (heex . ("https://[your-repo].git"))))
 ```
 
 ### Using with Eglot
