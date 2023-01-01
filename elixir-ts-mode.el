@@ -520,8 +520,8 @@ Return nil if NODE is not a defun node or doesn't have a name."
               elixir-ts-mode-default-grammar-sources)))
         (if (y-or-n-p
              (format
-              (concat "Language grammar repositories which will be "
-                      " downloaded and compiled"
+              (concat "The following language grammar repositories which will be "
+                      "downloaded and installed "
                       "(%s %s), proceed?")
               (cadr (assoc 'elixir treesit-language-source-alist))
               (cadr (assoc 'heex treesit-language-source-alist))))
