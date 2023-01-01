@@ -5,7 +5,7 @@ Using [tree-sitter](https://tree-sitter.github.io/tree-sitter/) for font-lock, i
 For an implementation without tree-sitter support please have a
 look at: https://github.com/elixir-editors/emacs-elixir
 
-## Install
+## Installing
 
 - Ensure you have tree-sitter 0.20.7 installed ( tree-sitter --version )
 - Ensure you are using the latest `emacs-29` or `master` branch.
@@ -18,20 +18,22 @@ look at: https://github.com/elixir-editors/emacs-elixir
 (load "[cloned wkirschbaum/elixir-ts-mode]/elixir-ts-mode.el")
 ```
 
-## Installing Grammars
+## Installing Language Grammars
 
-Please confirm if you your distribution has language grammars available
-before using the below methods. The `elixir-ts-install-grammar`
-and `treesit-install-language-grammar` functions should only be used
-as a fallback if you can not obtain tree-sitter-elixir or
-tree-sitter-heex from your distribution.
+Please confirm if you your system distribution has language grammars
+available before using the below methods. The
+`elixir-ts-install-grammar` and `treesit-install-language-grammar`
+functions should only be used as a fallback if you can not obtain
+tree-sitter-elixir or tree-sitter-heex from your system distribution.
 
 You can install both tree-sitter-elixir and tree-sitter-heex grammars
-by running `M-x elixir-ts-install-grammar` from within emacs. You can also
-run `M-x treesit-install-language-grammar` to do so individually, but
-you need to either specify the recipe or set the language source like
-below first. You need to have git, as well as a c and c++ compiler
-installed for these functions to work.
+by running `M-x elixir-ts-install-grammar` from within emacs. You can
+also run `M-x treesit-install-language-grammar` to do so individually,
+but you need to either specify the recipe or set the language source
+like below first. You need to have git, as well as a c and c++
+compiler installed for these functions to work. Ensure that you
+confirm that you are happy to download and install these external
+programs before using them.
 
 If you prefer other grammar repositories for elixir and heex you can
 set `treesit-language-source-alist` in your emacs config like this:
