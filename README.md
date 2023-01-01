@@ -101,3 +101,7 @@ Requirements:
 - git
 - curl
 - tree-sitter 0.20.7
+
+Please make sure you run `M-x byte-compile-file` against the updated
+file(s) with an emacs version --without-tree-sitter to ensure it still
+works for non tree-sitter users. 

@@ -42,6 +42,7 @@
 (declare-function treesit-node-parent "treesit.c")
 (declare-function treesit-node-start "treesit.c")
 (declare-function treesit-query-compile "treesit.c")
+(declare-function treesit-install-language-grammar "treesit.el")
 
 (defcustom elixir-ts-mode-indent-offset 2
   "Indentation of Elixir statements."
@@ -512,17 +513,18 @@ Return nil if NODE is not a defun node or doesn't have a name."
 (defun elixir-ts-install-grammar ()
   "Experimental function to install the tree-sitter-elixir grammar."
   (interactive)
-  (if (and (treesit-available-p) (boundp treesit-language-source-alist))
+  (if (and (treesit-available-p) (boundp 'treesit-language-source-alist))
       (let ((treesit-language-source-alist
              (append
               treesit-language-source-alist
               elixir-ts-mode-default-grammar-sources)))
         (if (y-or-n-p
-             (format (concat "Do you want to download and compile grammars from the "
-                             "following repositories? "
-                             "%s, %s")
-                     (cadr (assoc 'elixir treesit-language-source-alist))
-                     (cadr (assoc 'heex treesit-language-source-alist))))
+             (format
+              (concat "Language grammar repositories which will be "
+                      " downloaded and compiled"
+                      "(%s %s), proceed?")
+              (cadr (assoc 'elixir treesit-language-source-alist))
+              (cadr (assoc 'heex treesit-language-source-alist))))
             (progn
               ;; ensure the directory exists
               ;; this can be removed once this bug has been fixed:
