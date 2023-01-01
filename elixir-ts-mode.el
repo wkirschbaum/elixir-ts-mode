@@ -512,7 +512,7 @@ Return nil if NODE is not a defun node or doesn't have a name."
 (defun elixir-ts-install-grammar ()
   "Experimental function to install the tree-sitter-elixir grammar."
   (interactive)
-  (if (treesit-available-p)
+  (if (and (treesit-available-p) (boundp treesit-language-source-alist))
       (let ((treesit-language-source-alist
              (append
               treesit-language-source-alist
