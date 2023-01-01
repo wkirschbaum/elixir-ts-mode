@@ -515,12 +515,20 @@ Return nil if NODE is not a defun node or doesn't have a name."
   (if (treesit-available-p)
       (let ((treesit-language-source-alist
              (append treesit-language-source-alist elixir-ts-mode-default-sources)))
-        ;; ensure the directory exists
-        ;; this can be removed once this bug has been fixed:
-        ;; https://debbugs.gnu.org/cgi/bugreport.cgi?bug=60465
-        (make-directory (locate-user-emacs-file "tree-sitter") t)
-        (treesit-install-language-grammar 'elixir)
-        (treesit-install-language-grammar 'heex))
+
+        (if (y-or-n-p
+             (format (concat "Do you want to download and compile grammars from the "
+                             "following repositories? "
+                             "%s, %s")
+                     (cadr (assoc 'elixir treesit-language-source-alist))
+                     (cadr (assoc 'heex treesit-language-source-alist))))
+            (progn
+              ;; ensure the directory exists
+              ;; this can be removed once this bug has been fixed:
+              ;; https://debbugs.gnu.org/cgi/bugreport.cgi?bug=60465
+              (make-directory (locate-user-emacs-file "tree-sitter") t)
+              (treesit-install-language-grammar 'elixir)
+              (treesit-install-language-grammar 'heex))))
     (display-warning
      'treesit
      (concat "Cannot install grammar because"
