@@ -20,11 +20,18 @@ look at: https://github.com/elixir-editors/emacs-elixir
 
 ## Installing Grammars
 
+Please confirm if you your distribution has language grammars available
+before using the below methods. The `elixir-ts-install-grammar`
+and `treesit-install-language-grammar` functions should only be used
+as a fallback if you can not obtain tree-sitter-elixir or
+tree-sitter-heex from your distribution.
+
 You can install both tree-sitter-elixir and tree-sitter-heex grammars
 by running `M-x elixir-ts-install-grammar` from within emacs. You can also
 run `M-x treesit-install-language-grammar` to do so individually, but
 you need to either specify the recipe or set the language source like
-below first.
+below first. You need to have git, as well as a c and c++ compiler
+installed for these functions to work.
 
 If you prefer other grammar repositories for elixir and heex you can
 set `treesit-language-source-alist` in your emacs config like this:
