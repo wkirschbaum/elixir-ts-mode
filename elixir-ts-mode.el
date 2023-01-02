@@ -526,10 +526,6 @@ Return nil if NODE is not a defun node or doesn't have a name."
               (cadr (assoc 'elixir treesit-language-source-alist))
               (cadr (assoc 'heex treesit-language-source-alist))))
             (progn
-              ;; ensure the directory exists
-              ;; this can be removed once this bug has been fixed:
-              ;; https://debbugs.gnu.org/cgi/bugreport.cgi?bug=60465
-              (make-directory (locate-user-emacs-file "tree-sitter") t)
               (treesit-install-language-grammar 'elixir)
               (treesit-install-language-grammar 'heex))))
     (display-warning
