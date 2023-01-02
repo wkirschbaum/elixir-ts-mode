@@ -35,7 +35,7 @@
 (declare-function treesit-node-child "treesit.c")
 (declare-function treesit-node-type "treesit.c")
 
-(defcustom heex-ts-mode--indent-offset 2
+(defcustom heex-ts-mode-indent-offset 2
   "Indentation of Heex statements."
   :version "29.1"
   :type 'integer
@@ -103,7 +103,7 @@
 ;; represents directive blocks
 ;; https://github.com/phoenixframework/tree-sitter-heex/issues/28
 (defvar heex-ts-mode--indent-rules
-  (let ((offset heex-ts-mode--indent-offset))
+  (let ((offset heex-ts-mode-indent-offset))
     `((heex
        ((parent-is "fragment") parent-bol 0)
        ((node-is "end_tag") parent-bol 0)
