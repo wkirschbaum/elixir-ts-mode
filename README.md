@@ -17,10 +17,18 @@ use both at the same time as both will load the first mode on the
 - Clone this repository
 - Add the following to your emacs config
 
+It also need to clone 
+[heex-ts-mode](https://github.com/wkirschbaum/heex-ts-mode) and
+loading it as well if you want to use them together:
+
 ```elisp
-(load "[cloned wkirschbaum/elixir-ts-mode]/heex-ts-mode.el")
+(load "[cloned wkirschbaum/heex-ts-mode]/heex-ts-mode.el")
 (load "[cloned wkirschbaum/elixir-ts-mode]/elixir-ts-mode.el")
 ```
+
+The packages are in different repositories to make it easier for MELPA
+package management.
+
 
 ## Installing Language Grammars
 
@@ -44,9 +52,13 @@ set `treesit-language-source-alist` in your emacs config like this:
 
 ```elisp
 (append treesit-language-source-alist
-  '((elixir . ("https://[your-repo].git"))
-    (heex . ("https://[your-repo].git"))))
+  '((elixir . ("https://[grammar-repo].git"))
+    (heex . ("https://[grammar-repo].git"))))
 ```
+
+`C-h v treesit-language-source-alist` for more info.
+
+View the 
 
 ### Using with Eglot
 
@@ -101,10 +113,12 @@ tree-sitter-elixir as well as tree-sitter-heex.
 
 Requirements:
 
+- tree-sitter
 - make
+- gcc
 - git
 - curl
-- tree-sitter 0.20.7
+
 
 Please make sure you run `M-x byte-compile-file` against the updated
 file(s) with an emacs version --without-tree-sitter to ensure it still
