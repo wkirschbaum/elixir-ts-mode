@@ -17,9 +17,9 @@ use both at the same time as both will load the first mode on the
 - Clone this repository
 - Add the following to your emacs config
 
-It also need to clone 
+It is also necessary to clone 
 [heex-ts-mode](https://github.com/wkirschbaum/heex-ts-mode) and
-loading it as well if you want to use them together:
+load the heex-ts-mode.el file before loading elixir-ts-mode.el:
 
 ```elisp
 (load "[cloned wkirschbaum/heex-ts-mode]/heex-ts-mode.el")
