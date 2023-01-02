@@ -5,6 +5,10 @@ Using [tree-sitter](https://tree-sitter.github.io/tree-sitter/) for font-lock, i
 For an implementation without tree-sitter support please have a
 look at: https://github.com/elixir-editors/emacs-elixir
 
+You must use either `elixir-mode` mode or `elixir-ts-mode` you can't
+use both at the same time as both will load the first mode on the
+`auto-mode-alist`.
+
 ## Installing
 
 - Ensure you have tree-sitter 0.20.7 installed ( tree-sitter --version )
