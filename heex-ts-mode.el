@@ -160,11 +160,11 @@
   "Comments the region between BEG and END."
   (save-excursion
     (goto-char beg)
-    (insert (concat comment-start " "))
+    (insert comment-start " ")
     (goto-char end)
     (goto-char (pos-eol))
     (forward-comment (- (point-max)))
-    (insert (concat " " comment-end))))
+    (insert " " comment-end)))
 
 (defun heex-ts-mode--defun-name (node)
   "Return the name of the defun NODE.
@@ -175,6 +175,9 @@ Return nil if NODE is not a defun node or doesn't have a name."
                    (treesit-node-child (treesit-node-child node 0) 1)
                    nil)))
     (_ nil)))
+
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.[hl]?eex\\'" . heex-ts-mode))
 
 ;;;###autoload
 (define-derived-mode heex-ts-mode prog-mode "Heex"
@@ -220,10 +223,6 @@ Return nil if NODE is not a defun node or doesn't have a name."
                   ( heex-bracket )))
 
     (treesit-major-mode-setup)))
-
-;;;###autoload
-(progn
-  (add-to-list 'auto-mode-alist '("\\.[hl]?eex\\'" . heex-ts-mode)))
 
 (provide 'heex-ts-mode)
 ;;; heex-ts-mode.el ends here
