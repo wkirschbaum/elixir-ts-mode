@@ -183,10 +183,6 @@
   '("when" "and" "or" "not" "in"
     "not in" "fn" "do" "end" "catch" "rescue" "after" "else"))
 
-(defconst elixir-ts-mode--reserved-keywords
-  '("when" "and" "or" "not" "in"
-    "not in" "fn" "do" "end" "catch" "rescue" "after" "else"))
-
 (defconst elixir-ts-mode--reserved-keywords-re
   (concat "^" (regexp-opt elixir-ts-mode--reserved-keywords) "$"))
 
