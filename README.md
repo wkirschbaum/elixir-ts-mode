@@ -14,6 +14,25 @@ use both at the same time as both will load the first mode on the
 - Ensure you have tree-sitter 0.20.7 installed ( tree-sitter --version )
 - Ensure you are using the latest `emacs-29` or `master` branch.
 - You have to configure and compile emacs after you install tree-sitter
+
+### Using MELPA and use-package
+
+```elisp
+(use-package elixir-ts-mode
+    :ensure t)
+```
+
+It might make navigation simpler for modules when setting subword-mode
+
+```elisp
+(use-package elixir-ts-mode
+    :ensure t
+    :config
+    (global-subword-mode t))
+```
+
+### From source
+
 - Clone this repository
 - Add the following to your emacs config
 
