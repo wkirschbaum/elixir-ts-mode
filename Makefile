@@ -20,7 +20,7 @@ test: dist
 	-f ert-run-tests-batch-and-exit
 
 clean:
-	rm -rf build.sh heex-ts-mode.el dist
+	rm -rf build.sh dist
 
 version:
 	emacs --version
