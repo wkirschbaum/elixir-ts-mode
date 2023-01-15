@@ -1,5 +1,6 @@
 (require 'ert)
 (require 'elixir-ts-mode)
+(require 'heex-ts-mode)
 
 (ert-deftest elixir-ts-mode-indentation ()
   "Test module indentation."
