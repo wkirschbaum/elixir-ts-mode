@@ -51,8 +51,6 @@
   :safe 'integerp
   :group 'elixir)
 
-(defconst elixir-ts-mode--required-version 14)
-
 (defface elixir-ts-font-keyword-face
   '((t (:inherit font-lock-keyword-face)))
   "For use with @keyword tag.")
@@ -533,6 +531,17 @@ Return nil if NODE is not a defun node or doesn't have a name."
              " "
              "tree-sitter library is not compiled with Emacs"))))
 
+(defun elixir-ts-mode-treesit-ready-p ()
+  (let ((language-version 14))
+    (and (treesit-ready-p 'elixir)
+         (if (< (treesit-language-abi-version 'elixir) language-version)
+             (progn
+               (display-warning
+                'treesit
+                (format "Cannot activate tree-sitter for %s, because tree-sitter language version %s or later is required" "elixir-ts-mode" language-version))
+               nil)
+           t))))
+
 ;;;###autoload
 (progn
   (add-to-list 'auto-mode-alist '("\\.elixir\\'" . elixir-ts-mode))
@@ -560,23 +569,11 @@ Return nil if NODE is not a defun node or doesn't have a name."
   (setq-local electric-indent-chars
               (append "]" ")" "}" "\"" "end" ">" electric-indent-chars))
 
-  (when (treesit-ready-p 'elixir)
-    (unless (>= (treesit-language-abi-version 'elixir)
-                elixir-ts-mode--required-version)
-      (error
-       (concat "Cannot activate tree-sitter for "
-               "elixir-ts-mode"
-               ", because tree-sitter language version 14 or later is required.")))
+  (when (elixir-ts-mode-treesit-ready-p)
 
     ;; heex has to be created first for elixir to be the first language
     ;; when looking for treesit ranges
-    (when (treesit-ready-p 'heex)
-      (unless (>= (treesit-language-abi-version 'elixir)
-                  elixir-ts-mode--required-version)
-        (error
-         (concat "Cannot activate tree-sitter for "
-                 "heex-ts-mode"
-                 ", because tree-sitter language version 14 or later is required.")))
+    (when (heex-ts-mode-treesit-ready-p)
       (treesit-parser-create 'heex))
 
       (treesit-parser-create 'elixir)
