@@ -53,3 +53,26 @@ rescue
     "bar"
 end
 =-=-=
+
+
+Name: Spec and method
+
+=-=
+@spec foobar(
+        t,
+        acc,
+        (one, something -> :bar | far),
+        (two -> :bar | far)
+      ) :: any()
+      when chunk: any
+def foobar(enumerable, acc, chunk_fun, after_fun) do
+  {_, {res, acc}} =
+    case after_fun.(acc) do
+      {:one, "one"} ->
+        "one"
+
+      {:two, "two"} ->
+        "two"
+    end
+end
+=-=-=
