@@ -292,16 +292,14 @@
           ), offset)
        ((parent-is "^binary_operator$")
         (lambda (node parent bol &rest _)
-          (if (treesit-node-eq (treesit-node-child-by-field-name parent "right:") node)
-              (treesit-node-start parent)
-            (save-excursion
-              (goto-char (treesit-node-start parent))
-              (back-to-indentation)
+          (save-excursion
+            (goto-char (treesit-node-start parent))
+            (back-to-indentation)
+            (if (looking-at "@")
+                (treesit-node-start (treesit-node-parent parent))
               (point)))) ,offset)
        ((node-is "^pair$") first-sibling 0)
-       ((parent-is "^tuple$") (lambda (_n parent &rest _)
-                              (treesit-node-start
-                               (treesit-node-child parent 0 t))) 0)
+       ((parent-is "^tuple$") parent-bol ,offset)
        ((parent-is "^list$") parent-bol ,offset)
        ((parent-is "^pair$") parent ,offset)
        ((parent-is "^map_content$") parent-bol 0)

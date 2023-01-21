@@ -96,6 +96,17 @@ Name: Spec return type
         {:done, term}
         | {:two}
         | {:one}
+
+@type result ::
+        {
+          :done,
+          term
+        }
+        | {:two}
+        | {:one}
+
+@type boo_bar ::
+        (foo :: pos_integer, bar :: pos_integer -> any())
 =-=-=
 
 
