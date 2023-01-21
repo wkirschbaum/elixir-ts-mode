@@ -76,3 +76,15 @@ def foobar(enumerable, acc, chunk_fun, after_fun) do
     end
 end
 =-=-=
+
+Name: With statement
+=-=
+with one <- one(),
+     two <- two(),
+     {:ok, value} <- get_value(one, two) do
+  {:ok, value}
+else
+  {:error, {"Message" => message} ->
+    {:error, message}
+end
+=-=-=
