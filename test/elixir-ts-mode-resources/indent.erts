@@ -97,3 +97,23 @@ Name: Spec return type
         | {:two}
         | {:one}
 =-=-=
+
+
+Name: Pipe statements with fn
+
+=-=
+[1, 2]
+|> Enum.map(fn num ->
+  num + 1
+end)
+=-=-=
+
+Name: Pipe statements with params
+
+=-=
+[1, 2]
+|> Enum.map(
+  one,
+  two
+)
+=-=-=
