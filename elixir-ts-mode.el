@@ -262,21 +262,26 @@
        ((query ,elixir-ts-mode--capture-operator-parent) grand-parent 0)
        ((node-is "^when$") parent 0)
        ((node-is "^keywords$") parent-bol ,offset)
-       ((node-is "^binary_operator$")
-        (lambda (_n parent &rest _)
-          (if (equal (treesit-node-type parent) "do_block")
-              (treesit-node-start (treesit-node-parent parent))
-            (- (treesit-node-start parent) ,offset))) ,offset)
        ((parent-is "^body$") parent-bol ,offset)
+       ((node-is "^binary_operator$")
+        (lambda (node parent &rest _)
+          (cond
+           ((equal (treesit-node-type parent) "do_block")
+            ;; when it is a do_block, we want to find the call
+            ;; to indent to
+            (treesit-node-start (treesit-node-parent parent)))
+           ((equal (treesit-node-type parent) "binary_operator")
+            (treesit-node-start parent))
+           (t (- (treesit-node-start parent) ,offset)))) ,offset)
        ((parent-is "^arguments$") grand-parent ,offset)
        ((parent-is "^binary_operator$")
-        (lambda (_n parent bol &rest _)
-          (save-excursion
-            (progn
+        (lambda (node parent bol &rest _)
+          (if (treesit-node-eq (treesit-node-child-by-field-name parent "right:") node)
+              (treesit-node-start parent)
+            (save-excursion
               (goto-char (treesit-node-start parent))
               (back-to-indentation)
-              (point))
-            (point))) ,offset)
+              (point)))) ,offset)
        ((node-is "^pair$") first-sibling 0)
        ((parent-is "^tuple$") (lambda (_n parent &rest _)
                               (treesit-node-start

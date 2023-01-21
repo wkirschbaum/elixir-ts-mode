@@ -4,7 +4,7 @@ Code:
     (elixir-ts-mode)
     (indent-region (point-min) (point-max)))
 
-Point-Char: |
+Point-Char: $
 
 Name: Basic modules
 
@@ -87,4 +87,13 @@ else
   {:error, {"Message" => message} ->
     {:error, message}
 end
+=-=-=
+
+Name: Spec return type
+
+=-=
+@type result ::
+        {:done, term}
+        | {:two}
+        | {:one}
 =-=-=
