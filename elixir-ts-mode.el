@@ -276,10 +276,11 @@
           (let ((first-child (treesit-node-child parent 0 t)))
             (if (treesit-node-eq node first-child)
                 (let ((call-parent
-                       (treesit-parent-until
-                        parent
-                        (lambda (node)
-                          (equal (treesit-node-type node) "call")))))
+                       (or (treesit-parent-until
+                            parent
+                            (lambda (node)
+                              (equal (treesit-node-type node) "call")))
+                           parent)))
                   (save-excursion
                     (goto-char (treesit-node-start call-parent))
                     (back-to-indentation)
