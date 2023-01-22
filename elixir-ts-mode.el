@@ -290,8 +290,15 @@
         (lambda (node parent bol &rest _)
           (let ((first-child (treesit-node-child parent 0 t)))
             (if (treesit-node-eq node first-child)
-                (+ (elixir-ts-mode--call-parent-start parent) ,offset)
-              (treesit-node-start first-child)))) 0)
+                (elixir-ts-mode--call-parent-start parent)
+              (treesit-node-start first-child))))
+        (lambda (node parent rest)
+          ;; if first-child offset otherwise don't
+          (if (treesit-node-eq
+               (treesit-node-child parent 0 t)
+               node)
+              ,offset
+            0)))
        ((node-is "^binary_operator$")
         (lambda (node parent &rest _)
           (cond
@@ -299,9 +306,15 @@
             ;; when it is a do_block, we want to find the call
             ;; to indent to
             (treesit-node-start (treesit-node-parent parent)))
+           (t (treesit-node-start parent))))
+        (lambda (node parent _)
+          (cond
+           ((equal (treesit-node-type parent) "do_block")
+            ,offset)
            ((equal (treesit-node-type parent) "binary_operator")
-            (treesit-node-start parent))
-           (t (- (treesit-node-start parent) ,offset)))) ,offset)
+            ,offset)
+           (t 0))))
+       ;; double check if we still need to look for '@'
        ((parent-is "^binary_operator$")
         (lambda (node parent bol &rest _)
           (save-excursion
@@ -311,7 +324,25 @@
                 (treesit-node-start (treesit-node-parent parent))
               (point)))) ,offset)
        ((node-is "^pair$") first-sibling 0)
-       ((parent-is "^tuple$") parent-bol ,offset)
+       ((parent-is "^tuple$")
+        ;; the first argument must indent ,offset from {
+        ;; otherwise indent should be the same as the first argument
+        (lambda (node parent _bol &rest _)
+          (let ((first-child
+                 (treesit-node-child parent 0 t)))
+            (if (treesit-node-eq node first-child)
+                (save-excursion
+                  (goto-char (treesit-node-start parent))
+                  (back-to-indentation)
+                  (point))
+              (treesit-node-start first-child))))
+        (lambda (node parent rest)
+          ;; if first-child offset otherwise don't
+          (if (treesit-node-eq
+               (treesit-node-child parent 0 t)
+               node)
+              ,offset
+            0)))
        ((parent-is "^list$") parent-bol ,offset)
        ((parent-is "^pair$") parent ,offset)
        ((parent-is "^map_content$") parent-bol 0)

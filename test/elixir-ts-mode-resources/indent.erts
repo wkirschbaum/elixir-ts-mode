@@ -32,6 +32,23 @@ map = %{
 }
 =-=-=
 
+Name: Tuple
+
+=-=
+tuple = {
+  :one,
+  :two
+}
+
+{
+  :one,
+  :two
+}
+
+{:one,
+ :two}
+=-=-=
+
 Name: Block assignments
 
 =-=
@@ -149,7 +166,7 @@ end
 =-=-=
 
 
-Name: binary operator in else block
+Name: Binary operator in else block
 
 =-=
 defp foobar() do
@@ -159,4 +176,14 @@ defp foobar() do
     :bar |> foo
   end
 end
+=-=-=
+
+Name: Tuple indentation
+
+=-=
+{:ok,
+ fn one ->
+   one
+   |> String.upcase(one)
+ end}
 =-=-=
