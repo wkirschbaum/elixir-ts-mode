@@ -109,6 +109,18 @@ Name: Spec return type
         (foo :: pos_integer, bar :: pos_integer -> any())
 =-=-=
 
+Name: Spec return type comples
+
+=-=
+@spec foo_bar(
+        t,
+        (foo -> any),
+        (() -> any) | (foo, foo -> boolean) | module()
+      ) :: any
+      when foo: any
+def foo(one, fun, other)
+=-=-=
+
 
 Name: Pipe statements with fn
 
@@ -126,5 +138,29 @@ Name: Pipe statements with params
 |> Enum.map(
   one,
   two
+)
+=-=-=
+
+Name: String concatenation
+
+=-=
+foo =
+  "one" <>
+    "two" <>
+    "three"
+
+"one" <>
+  "two" <>
+  "three" <>
+  "four"
+=-=-=
+
+
+Name: String concatenation in call
+
+=-=
+IO.warn(
+ "one " <>
+   "two"
 )
 =-=-=

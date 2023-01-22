@@ -269,6 +269,25 @@
        ((node-is "^when$") parent 0)
        ((node-is "^keywords$") parent-bol ,offset)
        ((parent-is "^body$") parent-bol ,offset)
+       ((parent-is "^arguments$")
+        ;; the first argument must indent ,offset from start of call
+        ;; otherwise indent should be the same as the first argument
+        (lambda (node parent bol &rest _)
+          (let ((first-child (treesit-node-child parent 0 t)))
+            (if (treesit-node-eq node first-child)
+                (let ((call-parent
+                       (treesit-parent-until
+                        parent
+                        (lambda (node)
+                          (equal (treesit-node-type node) "call")))))
+                  (save-excursion
+                    (goto-char (treesit-node-start call-parent))
+                    (back-to-indentation)
+                    ;; for pipes we ignore the call indentation
+                    (if (looking-at "|>")
+                        (+ (point) 2)
+                      (+ (treesit-node-start call-parent) ,offset))))
+              (treesit-node-start first-child)))) 0)
        ((node-is "^binary_operator$")
         (lambda (node parent &rest _)
           (cond
@@ -279,17 +298,6 @@
            ((equal (treesit-node-type parent) "binary_operator")
             (treesit-node-start parent))
            (t (- (treesit-node-start parent) ,offset)))) ,offset)
-       ;; ((parent-is "^arguments$") grand-parent, offset)
-       ((parent-is "^arguments$")
-        (lambda (_node parent bol &rest _)
-          (save-excursion
-            (goto-char (treesit-node-start parent))
-            (back-to-indentation)
-            ;; if its a unary_operator
-            (if (looking-at "@")
-                (treesit-node-start (treesit-node-parent parent))
-              (point)))
-          ), offset)
        ((parent-is "^binary_operator$")
         (lambda (node parent bol &rest _)
           (save-excursion
