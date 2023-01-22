@@ -304,11 +304,12 @@
             0)))
        ((node-is "^binary_operator$")
         (lambda (node parent &rest _)
-          (let ((top-level (treesit-parent-while
-            node
-            (lambda (node)
-              (equal (treesit-node-type node)
-                     "binary_operator")))))
+          (let ((top-level
+                 (treesit-parent-while
+                  node
+                  (lambda (node)
+                    (equal (treesit-node-type node)
+                           "binary_operator")))))
             (if (treesit-node-eq top-level node)
                 (elixir-ts-mode--call-parent-start parent)
               (treesit-node-start top-level))))
@@ -658,56 +659,56 @@ Return nil if NODE is not a defun node or doesn't have a name."
     (when (heex-ts-mode-treesit-ready-p)
       (treesit-parser-create 'heex))
 
-      (treesit-parser-create 'elixir)
+    (treesit-parser-create 'elixir)
 
-      (setq-local treesit-font-lock-settings elixir-ts-mode--font-lock-settings)
+    (setq-local treesit-font-lock-settings elixir-ts-mode--font-lock-settings)
+
+    (setq-local treesit-simple-indent-rules
+                (append elixir-ts-mode--indent-rules heex-ts-mode--indent-rules))
+
+    (setq-local treesit-defun-name-function #'elixir-ts-mode--defun-name)
+
+    ;; Imenu
+    (setq-local treesit-simple-imenu-settings
+                '((nil "\\`call\\'" elixir-ts-mode--defun-p nil)))
+
+    ;; Navigation
+    (setq-local treesit-defun-type-regexp
+                '("call" . elixir-ts-mode--defun-p))
+
+    (setq-local treesit-font-lock-feature-list
+                '(( elixir-comment elixir-constant elixir-doc )
+                  ( elixir-string elixir-keyword elixir-unary-operator
+                    elixir-call elixir-operator )
+                  ( elixir-sigil elixir-string-escape elixir-string-interpolation)))
+
+    ;; Embedded Heex
+    (when (treesit-ready-p 'heex)
+      (treesit-parser-create 'heex)
+
+      (setq-local treesit-language-at-point-function
+                  'elixir-ts-mode--treesit-language-at-point)
+
+      (setq-local treesit-range-settings elixir-ts-mode--treesit-range-rules)
+
+      (setq-local treesit-font-lock-settings
+                  (append treesit-font-lock-settings
+                          heex-ts-mode--font-lock-settings))
 
       (setq-local treesit-simple-indent-rules
-                  (append elixir-ts-mode--indent-rules heex-ts-mode--indent-rules))
-
-      (setq-local treesit-defun-name-function #'elixir-ts-mode--defun-name)
-
-      ;; Imenu
-      (setq-local treesit-simple-imenu-settings
-                  '((nil "\\`call\\'" elixir-ts-mode--defun-p nil)))
-
-      ;; Navigation
-      (setq-local treesit-defun-type-regexp
-                  '("call" . elixir-ts-mode--defun-p))
+                  (append treesit-simple-indent-rules
+                          heex-ts-mode--indent-rules))
 
       (setq-local treesit-font-lock-feature-list
-                  '(( elixir-comment elixir-constant elixir-doc )
+                  '(( elixir-comment elixir-constant elixir-doc
+                      heex-doctype heex-comment)
                     ( elixir-string elixir-keyword elixir-unary-operator
-                      elixir-call elixir-operator )
-                    ( elixir-sigil elixir-string-escape elixir-string-interpolation)))
+                      elixir-call elixir-operator
+                      heex-string heex-keyword heex-component heex-tag heex-attribute)
+                    ( elixir-sigil elixir-string-escape elixir-string-interpolation
+                      heex-bracket))))
 
-      ;; Embedded Heex
-      (when (treesit-ready-p 'heex)
-        (treesit-parser-create 'heex)
-
-        (setq-local treesit-language-at-point-function
-                    'elixir-ts-mode--treesit-language-at-point)
-
-        (setq-local treesit-range-settings elixir-ts-mode--treesit-range-rules)
-
-        (setq-local treesit-font-lock-settings
-                    (append treesit-font-lock-settings
-                            heex-ts-mode--font-lock-settings))
-
-        (setq-local treesit-simple-indent-rules
-                    (append treesit-simple-indent-rules
-                            heex-ts-mode--indent-rules))
-
-        (setq-local treesit-font-lock-feature-list
-                    '(( elixir-comment elixir-constant elixir-doc
-                        heex-doctype heex-comment)
-                      ( elixir-string elixir-keyword elixir-unary-operator
-                        elixir-call elixir-operator
-                        heex-string heex-keyword heex-component heex-tag heex-attribute)
-                      ( elixir-sigil elixir-string-escape elixir-string-interpolation
-                        heex-bracket))))
-
-      (treesit-major-mode-setup)))
+    (treesit-major-mode-setup)))
 
 (provide 'elixir-ts-mode)
 
