@@ -235,7 +235,7 @@
     table)
   "Syntax table for `elixir-ts-mode.")
 
-(defun elixir-ts-mode--call-parent-indentation (parent offset)
+(defun elixir-ts-mode--call-parent-start (parent)
   (let ((call-parent
          (or (treesit-parent-until
               parent
@@ -247,8 +247,8 @@
       (back-to-indentation)
       ;; for pipes we ignore the call indentation
       (if (looking-at "|>")
-          (+ (point) offset)
-        (+ (treesit-node-start call-parent) offset)))))
+          (point)
+        (treesit-node-start call-parent)))))
 
 (defvar elixir-ts-mode--indent-rules
   (let ((offset elixir-ts-mode-indent-offset))
@@ -269,16 +269,16 @@
        ((node-is "^|$") parent-bol 0)
        ((node-is "^}$") parent-bol 0)
        ((node-is "^)$")
-        (lambda (_n _p bol &rest _)
-          (save-excursion
-            (forward-line -1)
-            (back-to-indentation)
-            (- (point) ,offset)))
+        (lambda (_node parent &rest _)
+          (elixir-ts-mode--call-parent-start parent))
         0)
        ((node-is "^]$") parent-bol 0)
        ((node-is "^else_block$") grand-parent 0)
        ((node-is "^catch_block$") grand-parent 0)
        ((node-is "^rescue_block$") grand-parent 0)
+       ((parent-is "^else_block$") parent ,offset)
+       ((parent-is "^catch_block$") parent ,offset)
+       ((parent-is "^rescue_block$") parent ,offset)
        ((node-is "^stab_clause$") parent-bol ,offset)
        ((query ,elixir-ts-mode--capture-operator-parent) grand-parent 0)
        ((node-is "^when$") parent 0)
@@ -290,7 +290,7 @@
         (lambda (node parent bol &rest _)
           (let ((first-child (treesit-node-child parent 0 t)))
             (if (treesit-node-eq node first-child)
-                (elixir-ts-mode--call-parent-indentation parent ,offset)
+                (+ (elixir-ts-mode--call-parent-start parent) ,offset)
               (treesit-node-start first-child)))) 0)
        ((node-is "^binary_operator$")
         (lambda (node parent &rest _)
@@ -317,7 +317,9 @@
        ((parent-is "^map_content$") parent-bol 0)
        ((parent-is "^map$") parent-bol ,offset)
        ((query ,elixir-ts-mode--capture-anonymous-function-end) parent-bol 0)
-       ((node-is "^end$") grand-parent 0)
+       ((node-is "^end$")
+        (lambda (_node parent &rest _)
+          (elixir-ts-mode--call-parent-start parent)) 0)
        ((parent-is "^do_block$") grand-parent ,offset)
        ((parent-is "^anonymous_function$")
         elixir-ts-mode--treesit-anchor-grand-parent-bol ,offset)

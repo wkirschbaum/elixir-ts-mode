@@ -139,4 +139,24 @@ Name: Pipe statements with params
   one,
   two
 )
+
+"foo"
+|> case do
+  "foobar" ->
+    raise "an error"
+  other -> :other
+end
+=-=-=
+
+
+Name: binary operator in else block
+
+=-=
+defp foobar() do
+  if false do
+    :foo
+  else
+    :bar |> foo
+  end
+end
 =-=-=
