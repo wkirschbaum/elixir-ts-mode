@@ -314,15 +314,14 @@
            ((equal (treesit-node-type parent) "binary_operator")
             ,offset)
            (t 0))))
-       ;; double check if we still need to look for '@'
        ((parent-is "^binary_operator$")
         (lambda (node parent bol &rest _)
-          (save-excursion
-            (goto-char (treesit-node-start parent))
-            (back-to-indentation)
-            (if (looking-at "@")
-                (treesit-node-start (treesit-node-parent parent))
-              (point)))) ,offset)
+          (treesit-node-start
+           (treesit-parent-while
+            parent
+            (lambda (node)
+              (equal (treesit-node-type node) "binary_operator")))))
+        ,offset)
        ((node-is "^pair$") first-sibling 0)
        ((parent-is "^tuple$")
         ;; the first argument must indent ,offset from {
