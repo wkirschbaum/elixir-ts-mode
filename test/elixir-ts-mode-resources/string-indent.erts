@@ -1,0 +1,31 @@
+Code:
+  (lambda ()
+    (setq indent-tabs-mode nil)
+    (elixir-ts-mode)
+    (indent-region (point-min) (point-max)))
+
+Point-Char: $
+
+Name: String concatenation
+
+=-=
+foo =
+  "one" <>
+    "two" <>
+    "three"
+
+"one" <>
+  "two" <>
+  "three" <>
+  "four"
+=-=-=
+
+
+Name: String concatenation in call
+
+=-=
+IO.warn(
+ "one " <>
+   "two"
+)
+=-=-=
