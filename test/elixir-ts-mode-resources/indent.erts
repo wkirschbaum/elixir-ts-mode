@@ -188,3 +188,14 @@ Name: Tuple indentation
    |> String.upcase(one)
  end}
 =-=-=
+
+Name: Parameter maps
+
+=-=
+def something(%{
+      one: :one,
+      two: :two
+    }) do
+  {:ok, "done"}
+end
+=-=-=

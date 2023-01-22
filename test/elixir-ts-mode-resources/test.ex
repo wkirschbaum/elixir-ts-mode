@@ -7,3 +7,10 @@
   one: one(),
   three: two()
 }
+
+def something(%{
+  one: :one,
+  two: :two
+}) do
+  {:ok, "done"}
+end
