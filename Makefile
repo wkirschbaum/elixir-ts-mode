@@ -15,7 +15,7 @@ test: dist
 	emacs -batch -l ert \
 	-l ./dist/heex-ts-mode.el \
 	-l elixir-ts-mode.el \
-	-l ./test/elixir-ts-tests.el \
+	-l ./test/elixir-ts-mode-tests.el \
 	--eval "(add-to-list 'treesit-extra-load-path \"./dist\"))" \
 	-f ert-run-tests-batch-and-exit
 
