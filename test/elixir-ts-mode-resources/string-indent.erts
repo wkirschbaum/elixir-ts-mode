@@ -12,7 +12,8 @@ Name: String concatenation
 foo =
   "one" <>
     "two" <>
-    "three"
+    "three" <>
+    "zar"
 
 "one" <>
   "two" <>
@@ -25,7 +26,13 @@ Name: String concatenation in call
 
 =-=
 IO.warn(
- "one " <>
-   "two"
+  "one" <>
+    "two" <>
+    "bar"
+)
+
+IO.warn(
+  "foo" <>
+    "bar"
 )
 =-=-=

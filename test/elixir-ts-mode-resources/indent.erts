@@ -124,9 +124,15 @@ Name: Spec return type
 
 @type boo_bar ::
         (foo :: pos_integer, bar :: pos_integer -> any())
+
+@type something() :: %{
+        one: one(),
+        two: two(),
+        three: two()
+      }
 =-=-=
 
-Name: Spec return type comples
+Name: Spec return types
 
 =-=
 @spec foo_bar(

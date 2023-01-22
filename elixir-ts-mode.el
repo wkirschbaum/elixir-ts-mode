@@ -276,9 +276,12 @@
        ((node-is "^else_block$") grand-parent 0)
        ((node-is "^catch_block$") grand-parent 0)
        ((node-is "^rescue_block$") grand-parent 0)
+       ((node-is "^after_block$") grand-parent 0)
        ((parent-is "^else_block$") parent ,offset)
        ((parent-is "^catch_block$") parent ,offset)
        ((parent-is "^rescue_block$") parent ,offset)
+       ((parent-is "^rescue_block$") parent ,offset)
+       ((parent-is "^after_block$") parent ,offset)
        ((node-is "^stab_clause$") parent-bol ,offset)
        ((query ,elixir-ts-mode--capture-operator-parent) grand-parent 0)
        ((node-is "^when$") parent 0)
@@ -301,13 +304,16 @@
             0)))
        ((node-is "^binary_operator$")
         (lambda (node parent &rest _)
-          (cond
-           ((equal (treesit-node-type parent) "do_block")
-            ;; when it is a do_block, we want to find the call
-            ;; to indent to
-            (treesit-node-start (treesit-node-parent parent)))
-           (t (treesit-node-start parent))))
+          (let ((top-level (treesit-parent-while
+            node
+            (lambda (node)
+              (equal (treesit-node-type node)
+                     "binary_operator")))))
+            (if (treesit-node-eq top-level node)
+                (elixir-ts-mode--call-parent-start parent)
+              (treesit-node-start top-level))))
         (lambda (node parent _)
+          ;; (message "%s %s" node parent)
           (cond
            ((equal (treesit-node-type parent) "do_block")
             ,offset)
