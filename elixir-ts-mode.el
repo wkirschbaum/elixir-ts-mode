@@ -364,7 +364,7 @@
        ((parent-is "^rescue_block$") parent ,offset)
        ((parent-is "^catch_block$") parent ,offset)
        ((parent-is "^keywords$") parent-bol 0)
-       (no-node parent-bol ,offset)))))))
+       (no-node parent-bol ,offset)))))
 
 ;; reference:
 ;; https://github.com/elixir-lang/tree-sitter-elixir/blob/main/queries/highlights.scm
