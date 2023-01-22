@@ -235,6 +235,21 @@
     table)
   "Syntax table for `elixir-ts-mode.")
 
+(defun elixir-ts-mode--call-parent-indentation (parent offset)
+  (let ((call-parent
+         (or (treesit-parent-until
+              parent
+              (lambda (node)
+                (equal (treesit-node-type node) "call")))
+             parent)))
+    (save-excursion
+      (goto-char (treesit-node-start call-parent))
+      (back-to-indentation)
+      ;; for pipes we ignore the call indentation
+      (if (looking-at "|>")
+          (+ (point) offset)
+        (+ (treesit-node-start call-parent) offset)))))
+
 (defvar elixir-ts-mode--indent-rules
   (let ((offset elixir-ts-mode-indent-offset))
     `((elixir
@@ -275,19 +290,7 @@
         (lambda (node parent bol &rest _)
           (let ((first-child (treesit-node-child parent 0 t)))
             (if (treesit-node-eq node first-child)
-                (let ((call-parent
-                       (or (treesit-parent-until
-                            parent
-                            (lambda (node)
-                              (equal (treesit-node-type node) "call")))
-                           parent)))
-                  (save-excursion
-                    (goto-char (treesit-node-start call-parent))
-                    (back-to-indentation)
-                    ;; for pipes we ignore the call indentation
-                    (if (looking-at "|>")
-                        (+ (point) 2)
-                      (+ (treesit-node-start call-parent) ,offset))))
+                (elixir-ts-mode--call-parent-indentation parent ,offset)
               (treesit-node-start first-child)))) 0)
        ((node-is "^binary_operator$")
         (lambda (node parent &rest _)
