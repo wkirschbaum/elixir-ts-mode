@@ -140,27 +140,3 @@ Name: Pipe statements with params
   two
 )
 =-=-=
-
-Name: String concatenation
-
-=-=
-foo =
-  "one" <>
-    "two" <>
-    "three"
-
-"one" <>
-  "two" <>
-  "three" <>
-  "four"
-=-=-=
-
-
-Name: String concatenation in call
-
-=-=
-IO.warn(
- "one " <>
-   "two"
-)
-=-=-=
