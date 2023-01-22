@@ -330,6 +330,7 @@
               (equal (treesit-node-type node) "binary_operator")))))
         ,offset)
        ((node-is "^pair$") first-sibling 0)
+       ((node-is "^call$") parent-bol ,offset)
        ((parent-is "^tuple$")
         ;; the first argument must indent ,offset from {
         ;; otherwise indent should be the same as the first argument

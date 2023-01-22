@@ -1,5 +1,9 @@
+@type something() :: [
+  "foo",
+  "bar"
+]
+
 @type something() :: %{
   one: one(),
-  two: two(),
   three: two()
 }

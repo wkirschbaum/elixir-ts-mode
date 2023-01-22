@@ -130,11 +130,7 @@ Name: Spec return type
         two: two(),
         three: two()
       }
-=-=-=
 
-Name: Spec return types
-
-=-=
 @spec foo_bar(
         t,
         (foo -> any),
@@ -143,7 +139,6 @@ Name: Spec return types
       when foo: any
 def foo(one, fun, other)
 =-=-=
-
 
 Name: Pipe statements with fn
 
