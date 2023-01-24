@@ -84,21 +84,18 @@ View the
 ```elisp
 (require 'eglot)
 
-(dolist (mode '(elixir-mode elixir-ts-mode heex-ts-mode))
+(dolist (mode '(elixir-ts-mode heex-ts-mode))
     (add-to-list 'eglot-server-programs `(,mode . ("[elixir language server path]"))))
 
-(add-hook 'elixir-mode-hook 'eglot-ensure)
 (add-hook 'elixir-ts-mode-hook 'eglot-ensure)
 (add-hook 'heex-ts-mode-hook 'eglot-ensure)
 ```
 
 ### Using with lsp-mode
 
-Ensure to add two additional hooks after elixir-mode ( refer to
-https://emacs-lsp.github.io/lsp-mode/page/installation/ )
+Ensure to add elixir-ts-mode and heex-ts-mode hooks ( refer to https://emacs-lsp.github.io/lsp-mode/page/installation/ )
 
 ```
-(elixir-mode    . lsp)
 (elixir-ts-mode . lsp)
 (heex-ts-mode   . lsp)
 ```
