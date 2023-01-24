@@ -553,7 +553,9 @@
   (or arg (setq arg 1))
   (funcall
    (if (> arg 0) #'treesit-end-of-thing #'treesit-beginning-of-thing)
-   (rx (or "call" "list" "tuple" "pair")) (abs arg)))
+   ;; do we exclude rather? most tokens we would like to match
+   (rx (or "call" "list" "tuple" "pair" "string" "atom" "pair" "alias" "key"))
+   (abs arg)))
 
 (defun elixir-ts-mode--treesit-anchor-grand-parent-bol (_n parent &rest _)
   "Return the beginning of non-space characters for the parent node of PARENT."
