@@ -106,40 +106,6 @@ else
 end
 =-=-=
 
-Name: Spec return type
-
-=-=
-@type result ::
-        {:done, term}
-        | {:two}
-        | {:one}
-
-@type result ::
-        {
-          :done,
-          term
-        }
-        | {:two}
-        | {:one}
-
-@type boo_bar ::
-        (foo :: pos_integer, bar :: pos_integer -> any())
-
-@type something() :: %{
-        one: one(),
-        two: two(),
-        three: two()
-      }
-
-@spec foo_bar(
-        t,
-        (foo -> any),
-        (() -> any) | (foo, foo -> boolean) | module()
-      ) :: any
-      when foo: any
-def foo(one, fun, other)
-=-=-=
-
 Name: Pipe statements with fn
 
 =-=
@@ -190,13 +156,18 @@ Name: Tuple indentation
  end}
 =-=-=
 
-Name: Parameter maps
+
+Name: String concatenation in call
 
 =-=
-def something(%{
-      one: :one,
-      two: :two
-    }) do
-  {:ok, "done"}
-end
+IO.warn(
+  "one" <>
+    "two" <>
+    "bar"
+)
+
+IO.warn(
+  "foo" <>
+    "bar"
+)
 =-=-=

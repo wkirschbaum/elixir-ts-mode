@@ -1,0 +1,68 @@
+Code:
+  (lambda ()
+    (setq indent-tabs-mode nil)
+    (elixir-ts-mode)
+    (indent-region (point-min) (point-max)))
+
+Point-Char: $
+
+Name: Spec return type
+
+=-=
+@type result ::
+        {:done, term}
+        | {:two}
+        | {:one}
+
+@type result ::
+        {
+          :done,
+          term
+        }
+        | {:two}
+        | {:one}
+
+@type boo_bar ::
+        (foo :: pos_integer, bar :: pos_integer -> any())
+
+@type something() :: %{
+        one: one(),
+        two: two(),
+        three: two()
+      }
+
+@spec foo_bar(
+        t,
+        (foo -> any),
+        (() -> any) | (foo, foo -> boolean) | module()
+      ) :: any
+      when foo: any
+def foo(one, fun, other)
+=-=-=
+
+Name: Parameter maps
+
+=-=
+def something(%{
+      one: :one,
+      two: :two
+    }) do
+  {:ok, "done"}
+end
+=-=-=
+
+Name: String concatenation
+
+=-=
+foo =
+  "one" <>
+    "two" <>
+    "three" <>
+    "zar"
+
+"one" <>
+  "two" <>
+  "three" <>
+  "four"
+=-=-=
+
