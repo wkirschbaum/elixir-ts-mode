@@ -534,6 +534,13 @@
      `((escape_sequence) @elixir-ts-font-string-escape-face)))
   "Tree-sitter font-lock settings.")
 
+(defun elixir-ts-mode--forward-sexp (&optional arg)
+  (interactive "^p")
+  (or arg (setq arg 1))
+  (funcall
+   (if (> arg 0) #'treesit-end-of-thing #'treesit-beginning-of-thing)
+   (rx (or "call" "list" "tuple" "pair")) (abs arg)))
+
 (defun elixir-ts-mode--treesit-anchor-grand-parent-bol (_n parent &rest _)
   "Return the beginning of non-space characters for the parent node of PARENT."
   (save-excursion
@@ -663,6 +670,8 @@ Return nil if NODE is not a defun node or doesn't have a name."
     (treesit-parser-create 'elixir)
 
     (setq-local treesit-font-lock-settings elixir-ts-mode--font-lock-settings)
+
+    (setq-local forward-sexp-function #'elixir-ts-mode--forward-sexp)
 
     (setq-local treesit-simple-indent-rules
                 (append elixir-ts-mode--indent-rules heex-ts-mode--indent-rules))
