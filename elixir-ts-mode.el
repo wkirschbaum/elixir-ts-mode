@@ -265,14 +265,13 @@
                   (back-to-indentation)
                   (point))
               (point)))) 0)
+       ((node-is "^]") parent-bol 0)
        ((node-is "^|>$") parent-bol 0)
-       ((node-is "^|$") parent-bol 0)
        ((node-is "^}$") parent-bol 0)
        ((node-is "^)$")
         (lambda (_node parent &rest _)
           (elixir-ts-mode--call-parent-start parent))
         0)
-       ((node-is "^]$") parent-bol 0)
        ((node-is "^else_block$") grand-parent 0)
        ((node-is "^catch_block$") grand-parent 0)
        ((node-is "^rescue_block$") grand-parent 0)
@@ -342,10 +341,11 @@
        ((parent-is "^tuple$")
         ;; the first argument must indent ,offset from {
         ;; otherwise indent should be the same as the first argument
+        ;; if there are no elements indent same as first-child
         (lambda (node parent _bol &rest _)
           (let ((first-child
                  (treesit-node-child parent 0 t)))
-            (if (treesit-node-eq node first-child)
+            (if (or (null first-child) (treesit-node-eq first-child node))
                 (save-excursion
                   (goto-char (treesit-node-start parent))
                   (back-to-indentation)
@@ -353,11 +353,10 @@
               (treesit-node-start first-child))))
         (lambda (node parent rest)
           ;; if first-child offset otherwise don't
-          (if (treesit-node-eq
-               (treesit-node-child parent 0 t)
-               node)
-              ,offset
-            0)))
+          (let ((first-child (treesit-node-child parent 0 t)))
+            (if (or (null first-child) (treesit-node-eq first-child node))
+                ,offset
+              0))))
        ((parent-is "^list$") parent-bol ,offset)
        ((parent-is "^pair$") parent ,offset)
        ((parent-is "^map_content$") parent-bol 0)
@@ -375,7 +374,9 @@
        ((parent-is "^keywords$") parent-bol 0)
        ((node-is "^call$") parent-bol ,offset)
        ((node-is "^comment$") parent-bol ,offset)
-       (no-node parent-bol ,offset)))))
+       ;; prev-line is for some reason is one pos behind, so adding
+       ;; using prev-line, not parent will handle some strange ERROR states
+       (no-node prev-line ,(1+ offset))))))
 
 ;; reference:
 ;; https://github.com/elixir-lang/tree-sitter-elixir/blob/main/queries/highlights.scm

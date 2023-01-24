@@ -51,7 +51,8 @@ def something(%{
 end
 =-=-=
 
-Name: String concatenation
+
+Name: String concatenation assignment
 
 =-=
 foo =
@@ -59,10 +60,4 @@ foo =
     "two" <>
     "three" <>
     "zar"
-
-"one" <>
-  "two" <>
-  "three" <>
-  "four"
 =-=-=
-

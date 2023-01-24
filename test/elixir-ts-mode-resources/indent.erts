@@ -72,28 +72,6 @@ end
 =-=-=
 
 
-Name: Spec and method
-
-=-=
-@spec foobar(
-        t,
-        acc,
-        (one, something -> :bar | far),
-        (two -> :bar | far)
-      ) :: any()
-      when chunk: any
-def foobar(enumerable, acc, chunk_fun, after_fun) do
-  {_, {res, acc}} =
-    case after_fun.(acc) do
-      {:one, "one"} ->
-        "one"
-
-      {:two, "two"} ->
-        "two"
-    end
-end
-=-=-=
-
 Name: With statement
 =-=
 with one <- one(),
@@ -157,6 +135,29 @@ Name: Tuple indentation
 =-=-=
 
 
+Name: Spec and method
+
+=-=
+@spec foobar(
+        t,
+        acc,
+        (one, something -> :bar | far),
+        (two -> :bar | far)
+      ) :: any()
+      when chunk: any
+def foobar(enumerable, acc, chunk_fun, after_fun) do
+  {_, {res, acc}} =
+    case after_fun.(acc) do
+      {:one, "one"} ->
+        "one"
+
+      {:two, "two"} ->
+        "two"
+    end
+end
+=-=-=
+
+
 Name: String concatenation in call
 
 =-=
@@ -171,3 +172,38 @@ IO.warn(
     "bar"
 )
 =-=-=
+
+Name: Incomplete map
+
+=-=
+map = {
+:foo
+
+=-=
+map = {
+  :foo
+
+=-=-=
+
+Name: Incomplete list
+
+=-=
+map = [
+:foo
+
+=-=
+map = [
+  :foo
+
+=-=-=
+
+
+Name: String concatenation
+
+=-=
+"one" <>
+  "two" <>
+  "three" <>
+  "four"
+=-=-=
+
