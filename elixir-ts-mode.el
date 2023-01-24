@@ -328,7 +328,6 @@
                 (elixir-ts-mode--call-parent-start parent)
               (treesit-node-start top-level))))
         (lambda (node parent _)
-          ;; (message "%s %s" node parent)
           (cond
            ((equal (treesit-node-type parent) "do_block")
             ,offset)
