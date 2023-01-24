@@ -1,3 +1,13 @@
+"foo"
+|> case do
+  "foobar" ->
+    # foobar
+    raise "an error"
+
+  other -> :other
+end
+
+
 @type something() :: [
   "foo",
   "bar"

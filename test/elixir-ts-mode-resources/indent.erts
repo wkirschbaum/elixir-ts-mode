@@ -161,6 +161,7 @@ Name: Pipe statements with params
 "foo"
 |> case do
   "foobar" ->
+    # raise an issue
     raise "an error"
   other -> :other
 end

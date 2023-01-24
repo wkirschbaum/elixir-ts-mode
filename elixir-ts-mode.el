@@ -286,7 +286,16 @@
        ((query ,elixir-ts-mode--capture-operator-parent) grand-parent 0)
        ((node-is "^when$") parent 0)
        ((node-is "^keywords$") parent-bol ,offset)
-       ((parent-is "^body$") parent-bol ,offset)
+       ((parent-is "^body$")
+        (lambda (node parent _)
+          (save-excursion
+            ;; the grammar adds a comment outside of the body, so we have to indent
+            ;; to the grand-parent if it is available
+            (goto-char (treesit-node-start
+                        (or (treesit-node-parent parent) (parent))))
+            (back-to-indentation)
+            (point)))
+        ,offset)
        ((parent-is "^arguments$")
         ;; the first argument must indent ,offset from start of call
         ;; otherwise indent should be the same as the first argument
@@ -365,6 +374,7 @@
        ((parent-is "^catch_block$") parent ,offset)
        ((parent-is "^keywords$") parent-bol 0)
        ((node-is "^call$") parent-bol ,offset)
+       ((node-is "^comment$") parent-bol ,offset)
        (no-node parent-bol ,offset)))))
 
 ;; reference:
