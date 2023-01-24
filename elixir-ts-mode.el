@@ -339,25 +339,27 @@
               (equal (treesit-node-type node) "binary_operator")))))
         ,offset)
        ((node-is "^pair$") first-sibling 0)
-       ((parent-is "^tuple$")
-        ;; the first argument must indent ,offset from {
-        ;; otherwise indent should be the same as the first argument
-        ;; if there are no elements indent same as first-child
-        (lambda (node parent _bol &rest _)
-          (let ((first-child
-                 (treesit-node-child parent 0 t)))
-            (if (or (null first-child) (treesit-node-eq first-child node))
-                (save-excursion
-                  (goto-char (treesit-node-start parent))
-                  (back-to-indentation)
-                  (point))
-              (treesit-node-start first-child))))
-        (lambda (node parent rest)
-          ;; if first-child offset otherwise don't
-          (let ((first-child (treesit-node-child parent 0 t)))
-            (if (or (null first-child) (treesit-node-eq first-child node))
-                ,offset
-              0))))
+       ;; ((parent-is "^tuple$")
+       ;;  ;; the first argument must indent ,offset from {
+       ;;  ;; otherwise indent should be the same as the first argument
+       ;;  ;; if there are no elements indent same as first-child
+       ;;  (lambda (node parent _bol &rest _)
+       ;;    (let ((first-child
+       ;;           (treesit-node-child parent 0 t)))
+       ;;      (if (or (null first-child) (treesit-node-eq first-child node))
+       ;;          (save-excursion
+       ;;            (goto-char (treesit-node-start parent))
+       ;;            (back-to-indentation)
+       ;;            (point))
+       ;;        (treesit-node-start first-child))))
+       ;;  (lambda (node parent rest)
+       ;;    ;; if first-child offset otherwise don't
+       ;;    (let ((first-child (treesit-node-child parent 0 t)))
+       ;;      (message "%s" first-child)
+       ;;      (if (or (null first-child) (treesit-node-eq first-child node))
+       ;;          ,offset
+       ;;        0))))
+       ((parent-is "^tuple$") parent-bol ,offset)
        ((parent-is "^list$") parent-bol ,offset)
        ((parent-is "^pair$") parent ,offset)
        ((parent-is "^map_content$") parent-bol 0)
@@ -377,7 +379,7 @@
        ((node-is "^comment$") parent-bol ,offset)
        ;; prev-line is for some reason is one pos behind, so adding
        ;; using prev-line, not parent will handle some strange ERROR states
-       (no-node prev-line ,(1+ offset))))))
+       (no-node parent-bol 2)))))
 
 ;; reference:
 ;; https://github.com/elixir-lang/tree-sitter-elixir/blob/main/queries/highlights.scm

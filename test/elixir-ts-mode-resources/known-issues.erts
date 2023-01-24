@@ -61,3 +61,18 @@ foo =
     "three" <>
     "zar"
 =-=-=
+
+
+Name: Tuple with same line first node
+
+=-=
+{:one,
+ :two}
+
+{:ok,
+ fn one ->
+   one
+   |> String.upcase(one)
+ end}
+
+=-=-=

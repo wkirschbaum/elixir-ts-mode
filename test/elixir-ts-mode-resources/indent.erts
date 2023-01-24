@@ -32,23 +32,6 @@ map = %{
 }
 =-=-=
 
-Name: Tuple
-
-=-=
-tuple = {
-  :one,
-  :two
-}
-
-{
-  :one,
-  :two
-}
-
-{:one,
- :two}
-=-=-=
-
 Name: Block assignments
 
 =-=
@@ -127,11 +110,15 @@ end
 Name: Tuple indentation
 
 =-=
-{:ok,
- fn one ->
-   one
-   |> String.upcase(one)
- end}
+tuple = {
+  :one,
+  :two
+}
+
+{
+  :one,
+  :two
+}
 =-=-=
 
 
