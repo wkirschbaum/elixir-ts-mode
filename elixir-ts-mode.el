@@ -267,6 +267,7 @@
               (point)))) 0)
        ((node-is "^]") parent-bol 0)
        ((node-is "^|>$") parent-bol 0)
+       ((node-is "^|$") parent-bol 0)
        ((node-is "^}$") parent-bol 0)
        ((node-is "^)$")
         (lambda (_node parent &rest _)
