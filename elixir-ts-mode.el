@@ -676,7 +676,6 @@ Return nil if NODE is not a defun node or doesn't have a name."
               (append "]" ")" "}" "\"" "end" ">" electric-indent-chars))
 
   (when (elixir-ts-mode-treesit-ready-p)
-
     ;; heex has to be created first for elixir to be the first language
     ;; when looking for treesit ranges
     (when (heex-ts-mode-treesit-ready-p)
