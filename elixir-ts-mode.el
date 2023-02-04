@@ -554,7 +554,7 @@
    (if (> arg 0) #'treesit-end-of-thing #'treesit-beginning-of-thing)
    ;; do we exclude rather? most tokens we would like to match
    (rx (or "call" "stab_clause" "binary_operator" "list" "tuple" "map" "pair"
-           "string" "atom" "pair" "alias" "key" "arguments"))
+           "string" "atom" "pair" "alias" "arguments"))
    (abs arg)))
 
 (defun elixir-ts-mode--treesit-anchor-grand-parent-bol (_n parent &rest _)
