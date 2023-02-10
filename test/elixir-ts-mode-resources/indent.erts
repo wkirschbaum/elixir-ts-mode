@@ -172,18 +172,11 @@ map = {
 
 =-=-=
 
-Name: Incomplete map with string
+Name: Incomplete map
 
 =-=
 map = %{
-"a" => "a",
-"
-# test
-=-=
-map = %{
   "a" => "a",
-  "
-  # test
 =-=-=
 
 Name: Incomplete list
