@@ -9,7 +9,7 @@ Point-Char: $
 Name: Basic modules
 
 =-=
-defmodule Foobar do
+  defmodule Foobar do
 def bar() do
 "one"
       end
@@ -160,7 +160,7 @@ IO.warn(
 )
 =-=-=
 
-Name: Incomplete map
+Name: Incomplete tuple
 
 =-=
 map = {
@@ -170,6 +170,20 @@ map = {
 map = {
   :foo
 
+=-=-=
+
+Name: Incomplete map with string
+
+=-=
+map = %{
+"a" => "a",
+"
+# test
+=-=
+map = %{
+  "a" => "a",
+  "
+  # test
 =-=-=
 
 Name: Incomplete list
@@ -193,4 +207,3 @@ Name: String concatenation
   "three" <>
   "four"
 =-=-=
-
