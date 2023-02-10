@@ -680,10 +680,6 @@ Return nil if NODE is not a defun node or doesn't have a name."
               (rx (* (syntax whitespace))
                   (group (or (syntax comment-end) "\n"))))
 
-  ;; Electric.
-  (setq-local electric-indent-chars
-              (append "]" ")" "}" "\"" "end" ">" electric-indent-chars))
-
   ;; Compile
   (setq-local compile-command "mix")
 
