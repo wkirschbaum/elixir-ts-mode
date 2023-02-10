@@ -168,13 +168,17 @@
   "For use with @comment.unused tag.")
 
 (defconst elixir-ts-mode--definition-keywords
-  '("def" "defdelegate" "defexception" "defguard" "defguardp" "defimpl" "defmacro" "defmacrop" "defmodule" "defn" "defnp" "defoverridable" "defp" "defprotocol" "defstruct"))
+  '("def" "defdelegate" "defexception" "defguard" "defguardp"
+    "defimpl" "defmacro" "defmacrop" "defmodule" "defn" "defnp"
+    "defoverridable" "defp" "defprotocol" "defstruct"))
 
 (defconst elixir-ts-mode--definition-keywords-re
   (concat "^" (regexp-opt elixir-ts-mode--definition-keywords) "$"))
 
 (defconst elixir-ts-mode--kernel-keywords
-  '("alias" "case" "cond" "else" "for" "if" "import" "quote" "raise" "receive" "require" "reraise" "super" "throw" "try" "unless" "unquote" "unquote_splicing" "use" "with"))
+  '("alias" "case" "cond" "else" "for" "if" "import" "quote"
+    "raise" "receive" "require" "reraise" "super" "throw" "try"
+    "unless" "unquote" "unquote_splicing" "use" "with"))
 
 (defconst elixir-ts-mode--kernel-keywords-re
   (concat "^" (regexp-opt elixir-ts-mode--kernel-keywords) "$"))
@@ -355,26 +359,6 @@
               (equal (treesit-node-type node) "binary_operator")))))
         ,offset)
        ((node-is "^pair$") first-sibling 0)
-       ;; ((parent-is "^tuple$")
-       ;;  ;; the first argument must indent ,offset from {
-       ;;  ;; otherwise indent should be the same as the first argument
-       ;;  ;; if there are no elements indent same as first-child
-       ;;  (lambda (node parent _bol &rest _)
-       ;;    (let ((first-child
-       ;;           (treesit-node-child parent 0 t)))
-       ;;      (if (or (null first-child) (treesit-node-eq first-child node))
-       ;;          (save-excursion
-       ;;            (goto-char (treesit-node-start parent))
-       ;;            (back-to-indentation)
-       ;;            (point))
-       ;;        (treesit-node-start first-child))))
-       ;;  (lambda (node parent rest)
-       ;;    ;; if first-child offset otherwise don't
-       ;;    (let ((first-child (treesit-node-child parent 0 t)))
-       ;;      (message "%s" first-child)
-       ;;      (if (or (null first-child) (treesit-node-eq first-child node))
-       ;;          ,offset
-       ;;        0))))
        ((query ,elixir-ts-mode--capture-anonymous-function-end) parent-bol 0)
        ((node-is "^end$")
         (lambda (_node parent &rest _)
@@ -415,7 +399,8 @@
          quoted_start: _ @elixir-ts-font-string-face
          (quoted_content) @elixir-ts-font-string-face
          (interpolation
-          "#{" @elixir-ts-font-string-escape-face "}" @elixir-ts-font-string-escape-face)
+          "#{" @elixir-ts-font-string-escape-face "}"
+          @elixir-ts-font-string-escape-face)
          ])
        (charlist
         [
@@ -423,7 +408,8 @@
          quoted_start: _ @elixir-ts-font-string-face
          (quoted_content) @elixir-ts-font-string-face
          (interpolation
-          "#{" @elixir-ts-font-string-escape-face "}" @elixir-ts-font-string-escape-face)
+          "#{" @elixir-ts-font-string-escape-face "}"
+          @elixir-ts-font-string-escape-face)
          ]))
 
      :language 'elixir
@@ -523,9 +509,11 @@
 
      :language 'elixir
      :feature 'elixir-constant
-     `((binary_operator operator: "|>" right: (identifier) @elixir-ts-font-function-face)
+     `((binary_operator operator: "|>" right: (identifier)
+                        @elixir-ts-font-function-face)
        ((identifier) @elixir-ts-font-constant-builtin-face
-        (:match ,elixir-ts-mode--builtin-keywords-re @elixir-ts-font-constant-builtin-face))
+        (:match ,elixir-ts-mode--builtin-keywords-re
+                @elixir-ts-font-constant-builtin-face))
        ((identifier) @elixir-ts-font-comment-unused-face
         (:match "^_" @elixir-ts-font-comment-unused-face))
        (identifier) @elixir-ts-font-variable-face
@@ -540,18 +528,20 @@
         (sigil_name) @elixir-ts-font-sigil-name-face
         quoted_start: _ @elixir-ts-font-string-face
         quoted_end: _ @elixir-ts-font-string-face
-        (:match "^[sSwW]$" @elixir-ts-font-sigil-name-face)) @elixir-ts-font-string-face
-        (sigil
-         (sigil_name) @elixir-ts-font-sigil-name-face
-         quoted_start: _ @elixir-ts-font-string-regex-face
-         quoted_end: _ @elixir-ts-font-string-regex-face
-         (:match "^[rR]$" @elixir-ts-font-sigil-name-face)) @elixir-ts-font-string-regex-face
-        (sigil
-         "~" @elixir-ts-font-string-special-face
-         (sigil_name) @elixir-ts-font-sigil-name-face
-         quoted_start: _ @elixir-ts-font-string-special-face
-         quoted_end: _ @elixir-ts-font-string-special-face
-         (:match "^H$" @elixir-ts-font-sigil-name-face)))
+        (:match "^[sSwWpP]$" @elixir-ts-font-sigil-name-face))
+       @elixir-ts-font-string-face
+       (sigil
+        (sigil_name) @elixir-ts-font-sigil-name-face
+        quoted_start: _ @elixir-ts-font-string-regex-face
+        quoted_end: _ @elixir-ts-font-string-regex-face
+        (:match "^[rR]$" @elixir-ts-font-sigil-name-face))
+       @elixir-ts-font-string-regex-face
+       (sigil
+        "~" @elixir-ts-font-string-special-face
+        (sigil_name) @elixir-ts-font-sigil-name-face
+        quoted_start: _ @elixir-ts-font-string-special-face
+        quoted_end: _ @elixir-ts-font-string-special-face
+        (:match "^H$" @elixir-ts-font-sigil-name-face)))
 
      :language 'elixir
      :feature 'elixir-string-escape
