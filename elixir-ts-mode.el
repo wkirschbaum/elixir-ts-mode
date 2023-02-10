@@ -269,7 +269,7 @@
 (defvar elixir-ts-mode--indent-rules
   (let ((offset elixir-ts-mode-indent-offset))
     `((elixir
-       ((parent-is "^source$") parent-bol 0)
+       ((parent-is "^source$") point-min 0)
        ((parent-is "^string$") parent-bol 0)
        ((parent-is "^quoted_content$")
         (lambda (_n parent bol &rest _)
