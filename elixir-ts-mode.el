@@ -167,6 +167,9 @@
   '((t (:inherit error)))
   "For use with @comment.unused tag.")
 
+(defconst elixir-ts-mode--test-definition-keywords
+  '("describe" "test"))
+
 (defconst elixir-ts-mode--definition-keywords
   '("def" "defdelegate" "defexception" "defguard" "defguardp"
     "defimpl" "defmacro" "defmacrop" "defmodule" "defn" "defnp"
@@ -602,7 +605,9 @@
   "Return non-nil when NODE is a defun."
   (member (treesit-node-text
            (treesit-node-child-by-field-name node "target"))
-          elixir-ts-mode--definition-keywords))
+          (append
+           elixir-ts-mode--definition-keywords
+           elixir-ts-mode--test-definition-keywords)))
 
 (defun elixir-ts-mode--defun-name (node)
   "Return the name of the defun NODE.
