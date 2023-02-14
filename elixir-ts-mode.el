@@ -379,10 +379,7 @@
        ((parent-is "^catch_block$") parent ,offset)
        ((parent-is "^keywords$") parent-bol 0)
        ((node-is "^call$") parent-bol ,offset)
-       ((node-is "^comment$") parent-bol ,offset)
-       ;; prev-line is for some reason is one pos behind, so adding
-       ;; using prev-line, not parent will handle some strange ERROR states
-       (no-node parent-bol 2)))))
+       ((node-is "^comment$") parent-bol ,offset)))))
 
 ;; reference:
 ;; https://github.com/elixir-lang/tree-sitter-elixir/blob/main/queries/highlights.scm
@@ -739,12 +736,12 @@ Return nil if NODE is not a defun node or doesn't have a name."
 
       (setq-local treesit-font-lock-feature-list
                   '(( elixir-comment elixir-constant elixir-doc
-                      heex-doctype heex-comment)
+                      heex-comment heex-keyword heex-doctype )
                     ( elixir-string elixir-keyword elixir-unary-operator
                       elixir-call elixir-operator
-                      heex-string heex-keyword heex-component heex-tag heex-attribute)
-                    ( elixir-sigil elixir-string-escape elixir-string-interpolation
-                      heex-bracket))))
+                      heex-component heex-tag heex-attribute heex-string)
+                    ( elixir-sigil elixir-string-escape
+                      elixir-string-interpolation ))))
 
     (treesit-major-mode-setup)))
 
