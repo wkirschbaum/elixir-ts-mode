@@ -560,10 +560,15 @@
   (funcall
    (if (> arg 0) #'treesit-end-of-thing #'treesit-beginning-of-thing)
    ;; do we exclude rather? most tokens we would like to match
-   (rx bol
-       (or "call" "stab_clause" "binary_operator" "list" "tuple" "map" "pair"
-           "string" "atom" "pair" "alias" "arguments" "atom" "identifier" "boolean")
-       eol)
+   (if (eq (treesit-language-at (point)) 'heex)
+       (rx bol
+           ;; TODO: maybe pull this from heex-ts-mode
+           (or "attribute" "directive" "tag" "component" "slot")
+           eol)
+     (rx bol
+         (or "call" "stab_clause" "binary_operator" "list" "tuple" "map" "pair"
+             "string" "atom" "pair" "alias" "arguments" "atom" "identifier" "boolean")
+         eol))
    (abs arg)))
 
 (defun elixir-ts-mode--treesit-anchor-grand-parent-bol (_n parent &rest _)
