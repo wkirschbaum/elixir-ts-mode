@@ -3,7 +3,7 @@
 ;; Copyright (C) 2022, 2023 Wilhelm H Kirschbaum
 
 ;; Author           : Wilhelm H Kirschbaum
-;; Version          : 1.0
+;; Version          : 1.1
 ;; URL              : https://github.com/wkirschbaum/elixir-ts-mode
 ;; Package-Requires : ((emacs "29") (heex-ts-mode "1.0"))
 ;; Created          : November 2022
@@ -166,6 +166,13 @@
 (defface elixir-ts-font-error-face
   '((t (:inherit error)))
   "For use with @comment.unused tag.")
+
+(defconst elixir-ts-mode-sexp-regexp
+  (rx bol
+      (or "call" "stab_clause" "binary_operator" "list" "tuple" "map" "pair"
+          "sigil" "string" "atom" "pair" "alias" "arguments" "atom" "identifier"
+          "boolean" "quoted_content")
+      eol))
 
 (defconst elixir-ts-mode--test-definition-keywords
   '("describe" "test"))
@@ -561,16 +568,8 @@
    (if (> arg 0) #'treesit-end-of-thing #'treesit-beginning-of-thing)
    ;; do we exclude rather? most tokens we would like to match
    (if (eq (treesit-language-at (point)) 'heex)
-       (rx bol
-           ;; TODO: maybe pull this from heex-ts-mode
-           (or "attribute" "directive" "tag" "component" "slot"
-               "attribute_value" "quoted_attribute_value")
-           eol)
-     (rx bol
-         (or "call" "stab_clause" "binary_operator" "list" "tuple" "map" "pair"
-             "sigil" "string" "atom" "pair" "alias" "arguments" "atom" "identifier"
-             "boolean" "quoted_content")
-         eol))
+       heex-ts-mode-sexp-regexp
+     elixir-ts-mode-sexp-regexp)
    (abs arg)))
 
 (defun elixir-ts-mode--treesit-anchor-grand-parent-bol (_n parent &rest _)
