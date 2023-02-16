@@ -563,12 +563,13 @@
    (if (eq (treesit-language-at (point)) 'heex)
        (rx bol
            ;; TODO: maybe pull this from heex-ts-mode
-           (or "attribute" "directive" "tag" "component" "slot")
+           (or "attribute" "directive" "tag" "component" "slot"
+               "attribute_value" "quoted_attribute_value")
            eol)
      (rx bol
          (or "call" "stab_clause" "binary_operator" "list" "tuple" "map" "pair"
              "sigil" "string" "atom" "pair" "alias" "arguments" "atom" "identifier"
-             "boolean")
+             "boolean" "quoted_content")
          eol))
    (abs arg)))
 
