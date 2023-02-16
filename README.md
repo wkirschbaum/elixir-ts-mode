@@ -1,5 +1,7 @@
 # Elixir and Heex Major Modes using tree-sitter
 
+[![MELPA](https://melpa.org/packages/elixir-ts-mode-badge.svg)](https://melpa.org/#/elixir-ts-mode)
+
 Using [tree-sitter](https://tree-sitter.github.io/tree-sitter/) for font-lock, indentation, imenu and navigation.
 
 For an implementation without tree-sitter support please have a
