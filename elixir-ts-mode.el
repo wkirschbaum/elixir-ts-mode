@@ -567,7 +567,8 @@
            eol)
      (rx bol
          (or "call" "stab_clause" "binary_operator" "list" "tuple" "map" "pair"
-             "string" "atom" "pair" "alias" "arguments" "atom" "identifier" "boolean")
+             "sigil" "string" "atom" "pair" "alias" "arguments" "atom" "identifier"
+             "boolean")
          eol))
    (abs arg)))
 
