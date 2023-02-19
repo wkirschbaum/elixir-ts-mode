@@ -553,7 +553,7 @@
         (sigil_name) @elixir-ts-font-sigil-name-face
         quoted_start: _ @elixir-ts-font-string-special-face
         quoted_end: _ @elixir-ts-font-string-special-face
-        (:match "^H$" @elixir-ts-font-sigil-name-face)))
+        (:match "^[HF]$" @elixir-ts-font-sigil-name-face)))
 
      :language 'elixir
      :feature 'elixir-string-escape
@@ -584,7 +584,7 @@
     (treesit-range-rules
      :embed 'heex
      :host 'elixir
-     '((sigil (sigil_name) @name (:match "^[H]$" @name) (quoted_content) @heex)))))
+     '((sigil (sigil_name) @name (:match "^[HF]$" @name) (quoted_content) @heex)))))
 
 (defun elixir-ts-mode--treesit-language-at-point (point)
   "Return the language at POINT."
