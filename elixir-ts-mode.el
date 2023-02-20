@@ -261,6 +261,24 @@
     table)
   "Syntax table for `elixir-ts-mode.")
 
+(defvar elxiir-ts-mode--syntax-query
+  (when (treesit-available-p)
+    (treesit-query-compile 'elixir
+                           '((sigil "~" quoted_end: "\"\"\"" @string_start)
+                             (sigil "~" "\"\"\"" @string_end :anchor)))))
+
+(defun elixir-ts-mode--syntax-propertize (beg end)
+  (let ((captures (treesit-query-capture 'elixir elxiir-ts-mode--syntax-query beg end)))
+    ;; copied and adapted from ruby-ts-mode
+    (pcase-dolist (`(,name . ,node) captures)
+      (pcase-exhaustive name
+        ('string_start
+         (put-text-property (treesit-node-start node) (1+ (treesit-node-end node))
+                            'syntax-table (string-to-syntax "\"")))
+        ('string_end
+         (put-text-property (treesit-node-start node) (1+ (treesit-node-end node))
+                            'syntax-table (string-to-syntax "\"")))))))
+
 (defun elixir-ts-mode--call-parent-start (parent)
   (let ((call-parent
          (or (treesit-parent-until
@@ -722,6 +740,8 @@ Return nil if NODE is not a defun node or doesn't have a name."
                   ( elixir-string elixir-keyword elixir-unary-operator
                     elixir-call elixir-operator )
                   ( elixir-sigil elixir-string-escape elixir-string-interpolation)))
+
+    (setq-local syntax-propertize-function #'elixir-ts-mode--syntax-propertize)
 
     ;; Embedded Heex
     (when (treesit-ready-p 'heex)
