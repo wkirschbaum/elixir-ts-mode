@@ -15,6 +15,8 @@ Emacs 29.1 or above with tree-sitter support is required.
 
 Tree-sitter starter guide: https://git.savannah.gnu.org/cgit/emacs.git/tree/admin/notes/tree-sitter/starter-guide?h=emacs-29
 
+You can install the tree-sitter Elixir and HEEx grammars by running: `M-x elixir-ts-install-grammar`.
+
 ### Using MELPA and use-package
 
 ```elisp
