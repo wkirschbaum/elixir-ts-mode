@@ -3,9 +3,9 @@
 ;; Copyright (C) 2022, 2023 Wilhelm H Kirschbaum
 
 ;; Author           : Wilhelm H Kirschbaum
-;; Version          : 1.0
+;; Version          : 1.1
 ;; URL              : https://github.com/wkirschbaum/elixir-ts-mode
-;; Package-Requires : ((emacs "29") (heex-ts-mode "1.0"))
+;; Package-Requires : ((emacs "29") (heex-ts-mode "1.1"))
 ;; Created          : November 2022
 ;; Keywords         : elixir languages tree-sitter
 
@@ -166,6 +166,13 @@
 (defface elixir-ts-font-error-face
   '((t (:inherit error)))
   "For use with @comment.unused tag.")
+
+(defconst elixir-ts-mode-sexp-regexp
+  (rx bol
+      (or "call" "stab_clause" "binary_operator" "list" "tuple" "map" "pair"
+          "sigil" "string" "atom" "pair" "alias" "arguments" "atom" "identifier"
+          "boolean" "quoted_content")
+      eol))
 
 (defconst elixir-ts-mode--test-definition-keywords
   '("describe" "test"))
@@ -379,10 +386,7 @@
        ((parent-is "^catch_block$") parent ,offset)
        ((parent-is "^keywords$") parent-bol 0)
        ((node-is "^call$") parent-bol ,offset)
-       ((node-is "^comment$") parent-bol ,offset)
-       ;; prev-line is for some reason is one pos behind, so adding
-       ;; using prev-line, not parent will handle some strange ERROR states
-       (no-node parent-bol 2)))))
+       ((node-is "^comment$") parent-bol ,offset)))))
 
 ;; reference:
 ;; https://github.com/elixir-lang/tree-sitter-elixir/blob/main/queries/highlights.scm
@@ -549,7 +553,7 @@
         (sigil_name) @elixir-ts-font-sigil-name-face
         quoted_start: _ @elixir-ts-font-string-special-face
         quoted_end: _ @elixir-ts-font-string-special-face
-        (:match "^H$" @elixir-ts-font-sigil-name-face)))
+        (:match "^[HF]$" @elixir-ts-font-sigil-name-face)))
 
      :language 'elixir
      :feature 'elixir-string-escape
@@ -563,10 +567,9 @@
   (funcall
    (if (> arg 0) #'treesit-end-of-thing #'treesit-beginning-of-thing)
    ;; do we exclude rather? most tokens we would like to match
-   (rx bol
-       (or "call" "stab_clause" "binary_operator" "list" "tuple" "map" "pair"
-           "string" "atom" "pair" "alias" "arguments" "atom" "identifier" "boolean")
-       eol)
+   (if (eq (treesit-language-at (point)) 'heex)
+       heex-ts-mode-sexp-regexp
+     elixir-ts-mode-sexp-regexp)
    (abs arg)))
 
 (defun elixir-ts-mode--treesit-anchor-grand-parent-bol (_n parent &rest _)
@@ -581,7 +584,7 @@
     (treesit-range-rules
      :embed 'heex
      :host 'elixir
-     '((sigil (sigil_name) @name (:match "^[H]$" @name) (quoted_content) @heex)))))
+     '((sigil (sigil_name) @name (:match "^[HF]$" @name) (quoted_content) @heex)))))
 
 (defun elixir-ts-mode--treesit-language-at-point (point)
   "Return the language at POINT."
@@ -739,12 +742,12 @@ Return nil if NODE is not a defun node or doesn't have a name."
 
       (setq-local treesit-font-lock-feature-list
                   '(( elixir-comment elixir-constant elixir-doc
-                      heex-doctype heex-comment)
+                      heex-comment heex-keyword heex-doctype )
                     ( elixir-string elixir-keyword elixir-unary-operator
                       elixir-call elixir-operator
-                      heex-string heex-keyword heex-component heex-tag heex-attribute)
-                    ( elixir-sigil elixir-string-escape elixir-string-interpolation
-                      heex-bracket))))
+                      heex-component heex-tag heex-attribute heex-string)
+                    ( elixir-sigil elixir-string-escape
+                      elixir-string-interpolation ))))
 
     (treesit-major-mode-setup)))
 
