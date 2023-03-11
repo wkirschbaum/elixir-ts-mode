@@ -534,6 +534,10 @@ Return nil if NODE is not a defun node or doesn't have a name."
                 (_ nil))))
     (_ nil)))
 
+(defvar elixir-ts-mode-default-grammar-sources
+  '((elixir . ("https://github.com/elixir-lang/tree-sitter-elixir.git"))
+    (heex . ("https://github.com/phoenixframework/tree-sitter-heex.git"))))
+
 (defun elixir-ts-install-grammar ()
   "Experimental function to install the tree-sitter-elixir grammar."
   (interactive)
