@@ -1,36 +1,25 @@
-# Elixir and Heex Major Modes using tree-sitter
+# Elixir Major Mode using tree-sitter
 
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![MELPA](https://melpa.org/packages/elixir-ts-mode-badge.svg)](https://melpa.org/#/elixir-ts-mode)
-
-Using [tree-sitter](https://tree-sitter.github.io/tree-sitter/) for font-lock, indentation, imenu and navigation.
 
 For an implementation without tree-sitter support please have a
 look at: https://github.com/elixir-editors/emacs-elixir
 
-You must use either `elixir-mode` mode or `elixir-ts-mode` you can't
-use both at the same time as both will load the first mode on the
-`auto-mode-alist`.
+This package is compatible with and was tested against the tree-sitter grammar
+for Elixir found at https://github.com/elixir-lang/tree-sitter-elixir.
 
 ## Installing
 
-- Ensure you have tree-sitter 0.20.7 installed ( tree-sitter --version )
-- Ensure you are using the latest `emacs-29` or `master` branch.
-- You have to configure and compile emacs after you install tree-sitter
+Emacs 29.1 or above with tree-sitter support is required. 
+
+Tree-sitter starter guide: https://git.savannah.gnu.org/cgit/emacs.git/tree/admin/notes/tree-sitter/starter-guide?h=emacs-29
 
 ### Using MELPA and use-package
 
 ```elisp
 (use-package elixir-ts-mode
     :ensure t)
-```
-
-It might make navigation simpler for modules when setting subword-mode
-
-```elisp
-(use-package elixir-ts-mode
-    :ensure t
-    :config
-    (global-subword-mode t))
 ```
 
 ### From source
@@ -46,40 +35,6 @@ load the heex-ts-mode.el file before loading elixir-ts-mode.el:
 (load "[cloned wkirschbaum/heex-ts-mode]/heex-ts-mode.el")
 (load "[cloned wkirschbaum/elixir-ts-mode]/elixir-ts-mode.el")
 ```
-
-The packages are in different repositories to make it easier for MELPA
-package management.
-
-
-## Installing Language Grammars
-
-Please confirm if you your system distribution has language grammars
-available before using the below methods. The
-`elixir-ts-install-grammar` and `treesit-install-language-grammar`
-functions should only be used as a fallback if you can not obtain
-tree-sitter-elixir or tree-sitter-heex from your system distribution.
-
-You can install both tree-sitter-elixir and tree-sitter-heex grammars
-by running `M-x elixir-ts-install-grammar` from within emacs. You can
-also run `M-x treesit-install-language-grammar` to do so individually,
-but you need to either specify the recipe or set the language source
-like below first. You need to have git, as well as a c and c++
-compiler installed for these functions to work. Ensure that you
-confirm that you are happy to download and install these external
-programs before using them.
-
-If you prefer other grammar repositories for elixir and heex you can
-set `treesit-language-source-alist` in your emacs config like this:
-
-```elisp
-(append treesit-language-source-alist
-  '((elixir . ("https://[grammar-repo].git"))
-    (heex . ("https://[grammar-repo].git"))))
-```
-
-`C-h v treesit-language-source-alist` for more info.
-
-View the 
 
 ### Using with Eglot
 
@@ -123,8 +78,6 @@ brew install emacs-plus@29
 
 ## Development
 
-Tree-sitter starter guide: https://git.savannah.gnu.org/cgit/emacs.git/tree/admin/notes/tree-sitter/starter-guide?h=emacs-29
-
 To test you can run `make test` which will download a batch script
 from https://github.com/casouri/tree-sitter-module and compile
 tree-sitter-elixir as well as tree-sitter-heex. 
@@ -139,5 +92,5 @@ Requirements:
 
 
 Please make sure you run `M-x byte-compile-file` against the updated
-file(s) with an emacs version --without-tree-sitter to ensure it still
+file(s) with an emacs version --with-tree-sitter=no to ensure it still
 works for non tree-sitter users. 
