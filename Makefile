@@ -5,12 +5,12 @@ dist: build.sh
 	./build.sh elixir
 
 build.sh: ./dist/heex-ts-mode.el
-	curl -s https://raw.githubusercontent.com/casouri/tree-sitter-module/master/build.sh -o build.sh
+	curl -s -N https://raw.githubusercontent.com/casouri/tree-sitter-module/master/build.sh -o build.sh
 
 ./dist/heex-ts-mode.el:
 	mkdir -p dist
-	curl -s https://raw.githubusercontent.com/wkirschbaum/heex-ts-mode/main/heex-ts-mode.el -o ./dist/heex-ts-mode.el
-
+	curl -s -N https://raw.githubusercontent.com/wkirschbaum/heex-ts-mode/main/heex-ts-mode.el -o ./dist/heex-ts-mode.el
+  
 test: dist
 	emacs -batch -l ert \
 	-l ./dist/heex-ts-mode.el \
