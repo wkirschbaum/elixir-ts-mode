@@ -165,15 +165,20 @@
     table)
   "Syntax table for `elixir-ts-mode'.")
 
-(defun elixir-ts--column-0-function ()
-  "Return the anchor function for column-0.
-This keeps backwards compatibility with emacs 29."
-  (if (version<= "30" emacs-version) 'column-0 'point-min))
+;; TODO: Remove this once emacs 29.1 released
+(defun elixir-ts--column-0 ()
+  "Return the anchor function for column-0."
+  (if (<= 30 emacs-major-version)
+      'column-0
+    (lambda (_n _p bol &rest _)
+      (save-excursion
+        (goto-char bol)
+        (line-beginning-position)))))
 
 (defvar elixir-ts--indent-rules
   (let ((offset elixir-ts-indent-offset))
     `((elixir
-       ((parent-is "^source$") ,(elixir-ts--column-0-function) 0)
+       ((parent-is "^source$") ,(elixir-ts--column-0) 0)
        ((parent-is "^string$") parent-bol 0)
        ((parent-is "^quoted_content$")
         (lambda (_n parent bol &rest _)
