@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  test:
+    name: "test emacs ${{matrix.emacs_version}}"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        emacs_version: ['release-snapshot', 'snapshot']
+    steps:
+      - name: Setup requirements
+        run: sudo apt install curl -y
+      - name: Setup Emacs
+        uses: purcell/setup-emacs@master
+        with:
+          version: ${{matrix.emacs_version}}
+      - name: Check emacs version
+        run: emacs --version
+      - name: Check out the source code
+        uses: actions/checkout@v2
+      - name: Setup dependencies
+        run: make dist
+      - name: Run tests
+        run: |
+          emacs -batch -l ert \
+          -l ./dist/heex-ts-mode.el \
+          -l elixir-ts-mode.el \
+          -l ./test/elixir-ts-mode-tests.el \
+          --eval "(add-to-list 'treesit-extra-load-path \"./dist\"))" \
+          -f ert-run-tests-batch-and-exit
