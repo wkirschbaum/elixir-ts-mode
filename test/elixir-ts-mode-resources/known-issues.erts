@@ -16,18 +16,6 @@ Name: Spec map return type
       }
 =-=-=
 
-Name: Parameter maps
-
-=-=
-def something(%{
-      one: :one,
-      two: :two
-    }) do
-  {:ok, "done"}
-end
-=-=-=
-
-
 Name: String concatenation assignment
 
 =-=
@@ -39,16 +27,3 @@ foo =
 =-=-=
 
 
-Name: Tuple with same line first node
-
-=-=
-{:one,
- :two}
-
-{:ok,
- fn one ->
-   one
-   |> String.upcase(one)
- end}
-
-=-=-=

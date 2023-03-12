@@ -32,6 +32,55 @@ map = %{
 }
 =-=-=
 
+Name: Map in function def
+
+=-=
+def foobar() do
+  %{
+    one: "one",
+    two: "two",
+    three: "three",
+    four: "four"
+  }
+end
+=-=-=
+
+Name: Map in tuple
+
+=-=
+def foo() do
+  {:ok,
+   %{
+     state
+     | extra_arguments: extra_arguments,
+       max_children: max_children,
+       max_restarts: max_restarts,
+       max_seconds: max_seconds,
+       strategy: strategy
+   }}
+end
+=-=-=
+
+Name: Nested maps
+
+=-=
+%{
+  foo: "bar",
+  bar: %{
+    foo: "bar"
+  }
+}
+
+def foo() do
+  %{
+    foo: "bar",
+    bar: %{
+      foo: "bar"
+    }
+  }
+end
+=-=-=
+
 Name: Block assignments
 
 =-=
@@ -96,6 +145,17 @@ Name: Pipe statements params
   :three,
   :four
 )
+=-=-=
+
+Name: Parameter maps
+
+=-=
+def something(%{
+      one: :one,
+      two: :two
+    }) do
+  {:ok, "done"}
+end
 =-=-=
 
 Name: Binary operator in else block
@@ -231,4 +291,25 @@ Name: String concatenation
   "two" <>
   "three" <>
   "four"
+=-=-=
+
+Name: Tuple with same line first node
+
+=-=
+{:one,
+ :two}
+
+{:ok,
+ fn one ->
+   one
+   |> String.upcase(one)
+ end}
+=-=-=
+
+
+Name: Long tuple
+
+=-=
+{"January", "February", "March", "April", "May", "June", "July", "August", "September",
+ "October", "November", "December"}
 =-=-=
