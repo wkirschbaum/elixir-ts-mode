@@ -463,10 +463,10 @@
   "Return the closest parent of NODE that is of type call."
   (let ((call-parent
          (or (treesit-parent-until
-              parent
-              (lambda (node)
-                (equal (treesit-node-type node) "call")))
-             parent)))
+              node
+              (lambda (n)
+                (equal (treesit-node-type n) "call")))
+             node)))
     (save-excursion
       (goto-char (treesit-node-start call-parent))
       (back-to-indentation)
