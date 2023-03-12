@@ -273,7 +273,7 @@
        ;; Handle incomplete maps when parent is ERROR.
        ((n-p-gp "^binary_operator$" "ERROR" nil) parent-bol 0)
        ;; When there is an ERROR, just indent to prev-line.
-       ((parent-is "ERROR") prev-line 1)
+       ((parent-is "ERROR") prev-line 0)
        ((node-is "^binary_operator$")
         (lambda (node parent &rest _)
           (let ((top-level
