@@ -88,7 +88,7 @@ If you get the following warning:
 library is not compiled with Emacs [2 times]
 ```
 
-Then you do not have tree-sitter support on your emacs installation.
+Then you do not have tree-sitter support for your emacs installation.
 
 If you get the following warnings:
 ```
