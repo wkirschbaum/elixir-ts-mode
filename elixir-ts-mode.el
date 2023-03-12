@@ -241,6 +241,9 @@
        ((parent-is "^rescue_block$") parent ,offset)
        ((parent-is "^rescue_block$") parent ,offset)
        ((parent-is "^after_block$") parent ,offset)
+       ((parent-is "^access_call$")
+        ,'elixir-ts--argument-indent-anchor
+        ,'elixir-ts--argument-indent-offset)
        ((parent-is "^tuple$")
         ,'elixir-ts--argument-indent-anchor
         ,'elixir-ts--argument-indent-offset)
