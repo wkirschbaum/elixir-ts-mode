@@ -6,38 +6,14 @@ Code:
 
 Point-Char: $
 
-Name: Spec return type
+Name: Spec map return type
 
 =-=
-@type result ::
-        {:done, term}
-        | {:two}
-        | {:one}
-
-@type result ::
-        {
-          :done,
-          term
-        }
-        | {:two}
-        | {:one}
-
-@type boo_bar ::
-        (foo :: pos_integer, bar :: pos_integer -> any())
-
 @type something() :: %{
         one: one(),
         two: two(),
         three: two()
       }
-
-@spec foo_bar(
-        t,
-        (foo -> any),
-        (() -> any) | (foo, foo -> boolean) | module()
-      ) :: any
-      when foo: any
-def foo(one, fun, other)
 =-=-=
 
 Name: Parameter maps

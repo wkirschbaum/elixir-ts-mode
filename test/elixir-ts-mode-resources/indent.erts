@@ -62,7 +62,7 @@ with one <- one(),
      {:ok, value} <- get_value(one, two) do
   {:ok, value}
 else
-  {:error, {"Message" => message}} ->
+  {:error, %{"Message" => message}} ->
     {:error, message}
 end
 =-=-=
@@ -76,24 +76,27 @@ Name: Pipe statements with fn
 end)
 =-=-=
 
-Name: Pipe statements with params
+Name: Pipe statements stab clases
 
 =-=
 [1, 2]
-|> Enum.map(
-  one,
-  two
-)
-
-"foo"
-|> case do
-  "foobar" ->
-    # raise an issue
-    raise "an error"
-  other -> :other
-end
+|> Enum.map(fn
+  x when x < 10 -> x * 2
+  x -> x * 3
+end)
 =-=-=
 
+Name: Pipe statements params
+
+=-=
+[1, 2]
+|> foobar(
+  :one,
+  :two,
+  :three,
+  :four
+)
+=-=-=
 
 Name: Binary operator in else block
 
@@ -142,6 +145,35 @@ def foobar(enumerable, acc, chunk_fun, after_fun) do
         "two"
     end
 end
+=-=-=
+
+
+Name: Spec with multi-line result
+
+=-=
+@type result ::
+        {:done, term}
+        | {:two}
+        | {:one}
+
+@type result ::
+        {
+          :done,
+          term
+        }
+        | {:two}
+        | {:one}
+
+@type boo_bar ::
+        (foo :: pos_integer, bar :: pos_integer -> any())
+
+@spec foo_bar(
+        t,
+        (foo -> any),
+        (() -> any) | (foo, foo -> boolean) | module()
+      ) :: any
+      when foo: any
+def foo(one, fun, other)
 =-=-=
 
 
