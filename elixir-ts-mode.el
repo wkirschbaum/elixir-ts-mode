@@ -276,10 +276,14 @@
           (point)
         (treesit-node-start call-parent)))))
 
+(defun elixir-ts--column-0-function ()
+  "For compatibility with Emacs 29 and 30."
+  (if (version<= "30" emacs-version) 'column-0 'point-min))
+
 (defvar elixir-ts-mode--indent-rules
   (let ((offset elixir-ts-mode-indent-offset))
     `((elixir
-       ((parent-is "^source$") ,(if (version<= "30" emacs-version) 'column-0 'point-min) 0)
+       ((parent-is "^source$") ,(elixir-ts--column-0-function) 0)
        ((parent-is "^string$") parent-bol 0)
        ((parent-is "^quoted_content$")
         (lambda (_n parent bol &rest _)
