@@ -223,21 +223,16 @@ This keeps backwards compatibility with emacs 29."
             (point)))
         ,offset)
        ((parent-is "^arguments$")
-        ;; The first argument must indent ,offset from start of call
-        ;; otherwise indent should be the same as the first argument.
-        (lambda (node parent bol &rest _)
-          (let ((first-child (treesit-node-child parent 0 t)))
-            (cond ((null first-child)
-                   (elixir-ts--call-parent-start parent))
-                  ((treesit-node-eq node first-child)
-                   (elixir-ts--call-parent-start parent))
-                  (t (elixir-ts--call-parent-start parent)))))
-        (lambda (node parent rest)
-          ;; If first-child offset otherwise don't.
-          (let ((first-child (treesit-node-child parent 0 t)))
-            (cond ((null first-child) ,offset)
-                  ((treesit-node-eq node first-child) ,offset)
-                  (t 0)))))
+        ;; If there is no previous sibling indent
+        ;; to the call parent, otherwise
+        ;; indent to the same column as the prev-sibling.
+        (lambda (node parent &rest _)
+          (let ((prev-sibling (treesit-node-prev-sibling node t)))
+          (if prev-sibling
+              (treesit-node-start prev-sibling)
+            (elixir-ts--call-parent-start parent))))
+        (lambda (node parent &rest _)
+          (if (treesit-node-prev-sibling node t) 0 ,offset)))
        ;; Handle incomplete maps when parent is ERROR.
        ((n-p-gp "^binary_operator$" "ERROR" nil) parent-bol 0)
        ;; When there is an ERROR, just indent to prev-line.
