@@ -78,6 +78,25 @@ brew install tree-sitter
 brew install emacs-plus@29
 ```
 
+### Troubleshooting
+
+If you get the following warning:
+
+```
+⛔ Warning (treesit): Cannot activate tree-sitter, because tree-sitter
+library is not compiled with Emacs [2 times]
+```
+
+Then you do not have tree-sitter support on your emacs installation.
+
+If you get the following warnings:
+```
+⛔ Warning (treesit): Cannot activate tree-sitter, because language grammar for heex is unavailable (not-found): (libtree-sitter-heex libtree-sitter-heex.so) No such file or directory
+⛔ Warning (treesit): Cannot activate tree-sitter, because language grammar for elixir is unavailable (not-found): (libtree-sitter-elixir libtree-sitter-elixir.so) No such file or directory
+```
+
+then the grammar files are not properly installed on your system.
+
 ## Development
 
 To test you can run `make test` which will download a batch script

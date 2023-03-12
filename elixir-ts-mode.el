@@ -645,6 +645,7 @@ Return nil if NODE is not a defun node or doesn't have a name."
 
     (treesit-major-mode-setup)))
 
+;;;###autoload
 (if (treesit-ready-p 'elixir)
     (progn
       (add-to-list 'auto-mode-alist '("\\.elixir\\'" . elixir-ts-mode))
