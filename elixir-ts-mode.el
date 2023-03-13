@@ -166,9 +166,8 @@
     table)
   "Syntax table for `elixir-ts-mode'.")
 
-;; TODO: Remove this once emacs 29.1 released
 (defun elixir-ts--column-0 ()
-  "Return the anchor function for column-0."
+  "Return a tag or function to get column-0."
   (if (<= 30 emacs-major-version)
       'column-0
     (lambda (_n _p bol &rest _)
