@@ -72,6 +72,15 @@ has not been released, you can add the following so long:
                 (heex-ts-mode . "elixir"))))
 ```
 
+### Using with lsp-bridge
+
+```elisp
+(require 'lsp-bridge)
+(add-to-list 'lsp-bridge-single-lang-server-mode-list '(elixir-ts-mode . "elixirLS"))
+(add-hook 'elixir-ts-mode-hook (lambda ()
+                                 (lsp-bridge-mode)))
+```
+
 ### Installing emacs-29 on Mac OS or Linux via Homebrew
 
 ```bash
