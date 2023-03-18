@@ -39,39 +39,6 @@ load the heex-ts-mode.el file before loading elixir-ts-mode.el:
 (load "[cloned wkirschbaum/elixir-ts-mode]/elixir-ts-mode.el")
 ```
 
-### Using with Eglot
-
-```elisp
-(require 'eglot)
-
-(dolist (mode '(elixir-ts-mode heex-ts-mode))
-    (add-to-list 'eglot-server-programs `(,mode . ("[elixir language server path]"))))
-
-(add-hook 'elixir-ts-mode-hook 'eglot-ensure)
-(add-hook 'heex-ts-mode-hook 'eglot-ensure)
-```
-
-### Using with lsp-mode
-
-Ensure to add elixir-ts-mode and heex-ts-mode hooks ( refer to https://emacs-lsp.github.io/lsp-mode/page/installation/ )
-
-```
-(elixir-ts-mode . lsp)
-(heex-ts-mode   . lsp)
-```
-
-While [this change](https://github.com/emacs-lsp/lsp-mode/pull/3883)
-has not been released, you can add the following so long:
-
-```elisp
-(require 'lsp-mode)
-
-(setq lsp-language-id-configuration
-      (append lsp-language-id-configuration
-              '((elixir-ts-mode . "elixir")
-                (heex-ts-mode . "elixir"))))
-```
-
 ### Installing emacs-29 on Mac OS or Linux via Homebrew
 
 ```bash
