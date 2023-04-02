@@ -1,6 +1,5 @@
 Code:
   (lambda ()
-    (setq indent-tabs-mode nil)
     (elixir-ts-mode)
     (indent-region (point-min) (point-max)))
 
@@ -21,7 +20,6 @@ defmodule Foobar do
   end
 end
 =-=-=
-
 
 Name: Map
 
@@ -103,7 +101,6 @@ rescue
 end
 =-=-=
 
-
 Name: With statement
 =-=
 with one <- one(),
@@ -184,7 +181,6 @@ tuple = {
 }
 =-=-=
 
-
 Name: Spec and method
 
 =-=
@@ -206,7 +202,6 @@ def foobar(enumerable, acc, chunk_fun, after_fun) do
     end
 end
 =-=-=
-
 
 Name: Spec with multi-line result
 
@@ -235,7 +230,6 @@ Name: Spec with multi-line result
       when foo: any
 def foo(one, fun, other)
 =-=-=
-
 
 Name: String concatenation in call
 
@@ -282,7 +276,6 @@ map = [
   :foo
 
 =-=-=
-
 
 Name: String concatenation
 
@@ -335,4 +328,23 @@ defmodule Foo do
     """
   end
 end
+=-=-=
+
+Code:
+  (lambda ()
+    (elixir-ts-mode)
+    (newline)
+    (indent-for-tab-command))
+
+Name: New list item
+
+=-=
+[
+  :foo,$
+]
+=-=
+[
+  :foo,
+  $
+]
 =-=-=
