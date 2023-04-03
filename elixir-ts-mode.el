@@ -610,7 +610,9 @@ Return nil if NODE is not a defun node or doesn't have a name."
                (= count 3))
              (eq (char-after) last-command-event))
     (save-excursion
-      (insert (make-string 2 last-command-event)))))
+      (insert (make-string 2 last-command-event)))
+    (save-excursion
+      (newline 1 t))))
 
 ;;;###autoload
 (define-derived-mode elixir-ts-mode prog-mode "Elixir"
