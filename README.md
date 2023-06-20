@@ -41,8 +41,12 @@ load the heex-ts-mode.el file before loading elixir-ts-mode.el:
 
 ### Installing emacs-29 on Mac OS or Linux via Homebrew
 
+This uses [Emacs Plus](https://github.com/d12frosted/homebrew-emacs-plus). Note
+that we grab its "tap" so Homebrew will know about its formula.
+
 ```bash
 brew install tree-sitter
+brew tap d12frosted/emacs-plus
 brew install emacs-plus@29
 ```
 
