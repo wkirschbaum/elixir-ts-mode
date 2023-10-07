@@ -3,9 +3,9 @@
 ;; Copyright (C) 2022, 2023 Wilhelm H Kirschbaum
 
 ;; Author           : Wilhelm H Kirschbaum
-;; Version          : 1.2
+;; Version          : 1.3
 ;; URL              : https://github.com/wkirschbaum/elixir-ts-mode
-;; Package-Requires : ((emacs "29") (heex-ts-mode "1.2"))
+;; Package-Requires : ((emacs "29.1") (heex-ts-mode "1.3"))
 ;; Created          : November 2022
 ;; Keywords         : elixir languages tree-sitter
 
@@ -41,7 +41,6 @@
 ;;; Code:
 
 (require 'treesit)
-(require 'heex-ts-mode)
 (eval-when-compile (require 'rx))
 
 (declare-function treesit-parser-create "treesit.c")
@@ -51,6 +50,7 @@
 (declare-function treesit-parser-language "treesit.c")
 (declare-function treesit-parser-included-ranges "treesit.c")
 (declare-function treesit-parser-list "treesit.c")
+(declare-function treesit-node-p "treesit.c")
 (declare-function treesit-node-parent "treesit.c")
 (declare-function treesit-node-start "treesit.c")
 (declare-function treesit-node-end "treesit.c")
@@ -88,7 +88,7 @@
   (rx bol
       (or "call" "stab_clause" "binary_operator" "list" "tuple" "map" "pair"
           "sigil" "string" "atom" "alias" "arguments" "identifier"
-          "boolean" "quoted_content")
+          "boolean" "quoted_content" "bitstring")
       eol))
 
 (defconst elixir-ts--test-definition-keywords
@@ -168,15 +168,6 @@
     table)
   "Syntax table for `elixir-ts-mode'.")
 
-(defun elixir-ts--column-0 ()
-  "Return a tag or function to get column-0."
-  (if (<= 30 emacs-major-version)
-      'column-0
-    (lambda (_n _p bol &rest _)
-      (save-excursion
-        (goto-char bol)
-        (line-beginning-position)))))
-
 (defun elixir-ts--argument-indent-offset (node _parent &rest _)
   "Return the argument offset position for NODE."
   (if (or (treesit-node-prev-sibling node t)
@@ -221,7 +212,7 @@
 (defvar elixir-ts--indent-rules
   (let ((offset elixir-ts-indent-offset))
     `((elixir
-       ((parent-is "^source$") ,(elixir-ts--column-0) 0)
+       ((parent-is "^source$") column-0 0)
        ((parent-is "^string$") parent-bol 0)
        ((parent-is "^quoted_content$")
         (lambda (_n parent bol &rest _)
@@ -239,6 +230,7 @@
        ((node-is "^]$") ,'elixir-ts--parent-expression-start 0)
        ((node-is "^}$") ,'elixir-ts--parent-expression-start 0)
        ((node-is "^)$") ,'elixir-ts--parent-expression-start 0)
+       ((node-is "^>>$") ,'elixir-ts--parent-expression-start 0)
        ((node-is "^else_block$") grand-parent 0)
        ((node-is "^catch_block$") grand-parent 0)
        ((node-is "^rescue_block$") grand-parent 0)
@@ -258,12 +250,12 @@
         ,'elixir-ts--argument-indent-anchor
         ,'elixir-ts--argument-indent-offset)
        ((parent-is "^pair$") parent ,offset)
+       ((parent-is "^bitstring$") parent ,offset)
        ((parent-is "^map_content$") parent-bol 0)
        ((parent-is "^map$") ,'elixir-ts--parent-expression-start ,offset)
        ((node-is "^stab_clause$") parent-bol ,offset)
        ((query ,elixir-ts--capture-operator-parent) grand-parent 0)
        ((node-is "^when$") parent 0)
-       ((node-is "^keywords$") parent-bol ,offset)
        ((parent-is "^body$")
         (lambda (node parent _)
           (save-excursion
@@ -278,9 +270,10 @@
         ,'elixir-ts--argument-indent-anchor
         ,'elixir-ts--argument-indent-offset)
        ;; Handle incomplete maps when parent is ERROR.
+       ((node-is "^keywords$") parent-bol ,offset)
        ((n-p-gp "^binary_operator$" "ERROR" nil) parent-bol 0)
        ;; When there is an ERROR, just indent to prev-line.
-       ((parent-is "ERROR") prev-line 2)
+       ((parent-is "ERROR") prev-line ,offset)
        ((node-is "^binary_operator$")
         (lambda (node parent &rest _)
           (let ((top-level
@@ -318,7 +311,16 @@
        ((parent-is "^catch_block$") parent ,offset)
        ((parent-is "^keywords$") parent-bol 0)
        ((node-is "^call$") parent-bol ,offset)
-       ((node-is "^comment$") parent-bol ,offset)))))
+       ((node-is "^comment$") parent-bol ,offset)
+       ((node-is "\"\"\"") parent-bol 0)
+       ;; Handle quoted_content indentation on the last
+       ;; line before the closing \"\"\", where it might
+       ;; see it as no-node outside a HEEx tag.
+       (no-node (lambda (_n _p _bol)
+                  (treesit-node-start
+                   (treesit-node-parent
+                    (treesit-node-at (point) 'elixir))))
+                  0)))))
 
 (defvar elixir-ts--font-lock-settings
   (treesit-font-lock-rules
@@ -465,7 +467,7 @@
    :override t
    `((sigil
       (sigil_name) @elixir-ts-font-sigil-name-face
-      (:match "^[sSwWpP]$" @elixir-ts-font-sigil-name-face))
+      (:match "^[sSwWpPUD]$" @elixir-ts-font-sigil-name-face))
      @font-lock-string-face
      (sigil
       "~" @font-lock-string-face
@@ -492,6 +494,10 @@
      :host 'elixir
      '((sigil (sigil_name) @name (:match "^[HF]$" @name) (quoted_content) @heex)))))
 
+(defvar heex-ts--sexp-regexp)
+(defvar heex-ts--indent-rules)
+(defvar heex-ts--font-lock-settings)
+
 (defun elixir-ts--forward-sexp (&optional arg)
   "Move forward across one balanced expression (sexp).
 With ARG, do it many times.  Negative ARG means move backward."
@@ -512,21 +518,15 @@ With ARG, do it many times.  Negative ARG means move backward."
 
 (defun elixir-ts--treesit-language-at-point (point)
   "Return the language at POINT."
-  (let* ((range nil)
-         (language-in-range
-          (cl-loop
-           for parser in (treesit-parser-list)
-           do (setq range
-                    (cl-loop
-                     for range in (treesit-parser-included-ranges parser)
-                     if (and (>= point (car range)) (<= point (cdr range)))
-                     return parser))
-           if range
-           return (treesit-parser-language parser))))
-    (if (null language-in-range)
-        (when-let ((parser (car (treesit-parser-list))))
-          (treesit-parser-language parser))
-      language-in-range)))
+  (let ((node (treesit-node-at point 'elixir)))
+    (if (and (equal (treesit-node-type node) "quoted_content")
+             (let ((prev-sibling (treesit-node-prev-sibling node t)))
+               (and (treesit-node-p prev-sibling)
+                    (string-match-p
+                     (rx bos (or "H" "F") eos)
+                     (treesit-node-text prev-sibling)))))
+        'heex
+      'elixir)))
 
 (defun elixir-ts--defun-p (node)
   "Return non-nil when NODE is a defun."
@@ -644,6 +644,7 @@ Return nil if NODE is not a defun node or doesn't have a name."
       ;; Require heex-ts-mode only when we load elixir-ts-mode
       ;; so that we don't get a tree-sitter compilation warning for
       ;; elixir-ts-mode.
+      (require 'heex-ts-mode)
       (treesit-parser-create 'heex))
 
     (treesit-parser-create 'elixir)
@@ -708,4 +709,5 @@ Return nil if NODE is not a defun node or doesn't have a name."
       (add-to-list 'auto-mode-alist '("mix\\.lock" . elixir-ts-mode)))
 
 (provide 'elixir-ts-mode)
+
 ;;; elixir-ts-mode.el ends here
