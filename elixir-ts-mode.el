@@ -486,12 +486,6 @@
    `((escape_sequence) @font-lock-regexp-grouping-backslash))
   "Tree-sitter font-lock settings.")
 
-   :language 'elixir
-   :feature 'elixir-string-escape
-   :override t
-   `((escape_sequence) @font-lock-regexp-grouping-backslash))
-  "Tree-sitter font-lock settings.")
-
 (defvar elixir-ts--treesit-range-rules
   (when (treesit-available-p)
     (treesit-range-rules
