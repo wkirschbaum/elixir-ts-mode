@@ -464,19 +464,22 @@
 
    :language 'elixir
    :feature 'elixir-sigil
+   :override t
    `((sigil
+      (sigil_name) @elixir-ts-font-sigil-name-face
+      (:match "^[^HF]$" @elixir-ts-font-sigil-name-face))
+     @font-lock-string-face
+     (sigil
       (sigil_name) @font-lock-regexp-face
       (:match "^[rR]$" @font-lock-regexp-face))
      @font-lock-regexp-face
      (sigil
-      (sigil_name) @elixir-ts-font-sigil-name-face
-      (:match "^[^HF]$" @elixir-ts-font-sigil-name-face))
-     @elixir-ts-font-sigil-name-face
-     (sigil
       "~" @font-lock-string-face
       (sigil_name) @elixir-ts-font-sigil-name-face
       quoted_start: _ @font-lock-string-face
-      quoted_end: _ @font-lock-string-face))
+      quoted_end: _ @font-lock-string-face
+      (:match "^[HF]$" @elixir-ts-font-sigil-name-face)))
+
    :language 'elixir
    :feature 'elixir-string-escape
    :override t
