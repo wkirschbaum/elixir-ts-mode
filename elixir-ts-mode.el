@@ -73,16 +73,20 @@
   :group 'elixir-ts)
 
 (defface elixir-ts-font-comment-doc-identifier-face
-  '((t (:inherit font-lock-doc-face)))
+  '((t (:inherit font-lock-preprocessor-face)))
   "Face used for @comment.doc tags in Elixir files.")
 
 (defface elixir-ts-font-comment-doc-attribute-face
-  '((t (:inherit font-lock-doc-face)))
+  '((t (:inherit font-lock-preprocessor-face)))
   "Face used for @comment.doc.__attribute__ tags in Elixir files.")
 
 (defface elixir-ts-font-sigil-name-face
   '((t (:inherit font-lock-string-face)))
   "Face used for @__name__ tags in Elixir files.")
+
+(defface elixir-ts-font-atom-face
+  '((t (:inherit font-lock-constant-face)))
+  "Face used for Elixir atoms.")
 
 (defconst elixir-ts--sexp-regexp
   (rx bol
@@ -414,10 +418,10 @@
      [(boolean) (nil)] @font-lock-constant-face
      [(integer) (float)] @font-lock-number-face
      (alias) @font-lock-type-face
-     (call target: (dot left: (atom) @font-lock-type-face))
+     (call target: (dot left: (atom) @elixir-ts-font-atom-face))
      (char) @font-lock-constant-face
-     [(atom) (quoted_atom)] @font-lock-type-face
-     [(keyword) (quoted_keyword)] @font-lock-builtin-face)
+     [(atom) (quoted_atom)] @elixir-ts-font-atom-face
+     [(keyword) (quoted_keyword)] @elixir-ts-font-atom-face)
 
    :language 'elixir
    :feature 'elixir-call
@@ -429,7 +433,7 @@
       (:match ,elixir-ts--kernel-keywords-re @font-lock-keyword-face))
      (call
       target: [(identifier) @font-lock-function-name-face
-               (dot right: (identifier) @font-lock-keyword-face)])
+               (dot right: (identifier) @font-lock-function-call-face)])
      (call
       target: (identifier) @font-lock-keyword-face
       (arguments
@@ -451,16 +455,16 @@
    :language 'elixir
    :feature 'elixir-constant
    `((binary_operator operator: "|>" right: (identifier)
-                      @font-lock-function-name-face)
+                      @font-lock-function-call-face)
      ((identifier) @font-lock-keyword-face
       (:match ,elixir-ts--builtin-keywords-re
               @font-lock-keyword-face))
      ((identifier) @font-lock-comment-face
       (:match "^_" @font-lock-comment-face))
      (identifier) @font-lock-function-name-face
-     ["%"] @font-lock-keyward-face
+     ["%"] @font-lock-type-face
      ["," ";"] @font-lock-keyword-face
-     ["(" ")" "[" "]" "{" "}" "<<" ">>"] @font-lock-keyword-face)
+     ["(" ")" "[" "]" "{" "}" "<<" ">>"] @font-lock-bracket-face)
 
    :language 'elixir
    :feature 'elixir-sigil
