@@ -458,7 +458,7 @@
      ((identifier) @font-lock-comment-face
       (:match "^_" @font-lock-comment-face))
      (identifier) @font-lock-function-name-face
-     ["%"] @font-lock-keyward-face
+     ["%"] @font-lock-keyword-face
      ["," ";"] @font-lock-keyword-face
      ["(" ")" "[" "]" "{" "}" "<<" ">>"] @font-lock-keyword-face)
 
