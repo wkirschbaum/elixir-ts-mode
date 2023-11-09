@@ -84,11 +84,27 @@
   '((t (:inherit font-lock-string-face)))
   "Face used for sigils in Elixir files.")
 
-(defface elixir-ts-font-atom-face
+(defface elixir-ts-comment-doc-identifier-face
+  '((t (:inherit elixir-ts-font-comment-doc-identifier-face)))
+  "Face used for doc identifiers in Elixir files.")
+
+(defface elixir-ts-comment-doc-attribute-face
+  '((t (:inherit elixir-ts-font-comment-doc-attribute-face)))
+  "Face used for doc attributes in Elixir files.")
+
+(defface elixir-ts-sigil-name-face
+  '((t (:inherit elixir-ts-font-sigil-name-face)))
+  "Face used for sigils in Elixir files.")
+
+(defface elixir-ts-atom-face
   '((t (:inherit font-lock-constant-face)))
   "Face used for atoms in Elixir files.")
 
-(defface elixir-ts-font-attribute-face
+(defface elixir-ts-keyword-key-face
+  '((t (:inherit elixir-ts-atom-face)))
+  "Face used for keyword keys in Elixir files.")
+
+(defface elixir-ts-attribute-face
   '((t (:inherit font-lock-preprocessor-face)))
   "Face used for attributes in Elixir files.")
 
@@ -383,9 +399,9 @@
    :language 'elixir
    :feature 'elixir-doc
    `((unary_operator
-      operator: "@" @elixir-ts-font-comment-doc-attribute-face
+      operator: "@" @elixir-ts-comment-doc-attribute-face
       operand: (call
-                target: (identifier) @elixir-ts-font-comment-doc-identifier-face
+                target: (identifier) @elixir-ts-comment-doc-identifier-face
                 ;; Arguments can be optional, so adding another
                 ;; entry without arguments.
                 ;; If we don't handle then we don't apply font
@@ -400,13 +416,13 @@
                   (keywords) @font-lock-doc-face
                   ]))
       (:match ,elixir-ts--doc-keywords-re
-              @elixir-ts-font-comment-doc-identifier-face))
+              @elixir-ts-comment-doc-identifier-face))
      (unary_operator
-      operator: "@" @elixir-ts-font-comment-doc-attribute-face
+      operator: "@" @elixir-ts-comment-doc-attribute-face
       operand: (call
-                target: (identifier) @elixir-ts-font-comment-doc-identifier-face)
+                target: (identifier) @elixir-ts-comment-doc-identifier-face)
       (:match ,elixir-ts--doc-keywords-re
-              @elixir-ts-font-comment-doc-identifier-face)))
+              @elixir-ts-comment-doc-identifier-face)))
 
    :language 'elixir
    :feature 'elixir-string
@@ -414,29 +430,25 @@
 
    :language 'elixir
    :feature 'elixir-operator
-   :override t
    `(["!"] @font-lock-negation-char-face
-     (binary_operator operator: _ @font-lock-operator-face)
-     ((identifier) @font-lock-builtin-face
-      (:match ,elixir-ts--builtin-keywords-re
-              @font-lock-builtin-face))
      ["%"] @font-lock-bracket-face
-     ["," ";"] @font-lock-keyword-face
+     ["," ";"] @font-lock-operator-face
      ["(" ")" "[" "]" "{" "}" "<<" ">>"] @font-lock-bracket-face)
 
    :language 'elixir
    :feature 'elixir-data-type
    '((alias) @font-lock-type-face
-     (atom) @elixir-ts-font-atom-face
-     [(keyword) (quoted_keyword)] @elixir-ts-font-atom-face
-     [(boolean) (nil)] @elixir-ts-font-atom-face
-     (unary_operator operator: "@" @elixir-ts-font-attribute-face
+     (atom) @elixir-ts-atom-face
+     (keywords (pair key: (keyword) @elixir-ts-keyword-key-face))
+     [(keyword) (quoted_keyword)] @elixir-ts-atom-face
+     [(boolean) (nil)] @elixir-ts-atom-face
+     (unary_operator operator: "@" @elixir-ts-attribute-face
                      operand: [
-                               (identifier) @elixir-ts-font-attribute-face
+                               (identifier) @elixir-ts-attribute-face
                                (call target: (identifier)
-                                     @elixir-ts-font-attribute-face)
-                               (boolean) @elixir-ts-font-attribute-face
-                               (nil) @elixir-ts-font-attribute-face
+                                     @elixir-ts-attribute-face)
+                               (boolean) @elixir-ts-attribute-face
+                               (nil) @elixir-ts-attribute-face
                                ])
      (operator_identifier) @font-lock-operator-face)
 
@@ -447,37 +459,20 @@
      (binary_operator
       operator: _ @font-lock-keyword-face
       (:match ,elixir-ts--reserved-keywords-re @font-lock-keyword-face))
+     (binary_operator operator: _ @font-lock-operator-face)
      (call
       target: (identifier) @font-lock-keyword-face
       (:match ,elixir-ts--definition-keywords-re @font-lock-keyword-face))
      (call
       target: (identifier) @font-lock-keyword-face
       (:match ,elixir-ts--kernel-keywords-re @font-lock-keyword-face)))
-
-   :language 'elixir
-   :feature 'elixir-keyword
-   `(,elixir-ts--reserved-keywords-vector
-     @font-lock-keyword-face
-     (binary_operator
-      operator: _ @font-lock-keyword-face
-      (:match ,elixir-ts--reserved-keywords-re @font-lock-keyword-face))
-     (call
-      target: (identifier) @font-lock-keyword-face
-      (:match ,elixir-ts--definition-keywords-re @font-lock-keyword-face))
-     (call
-      target: (identifier) @font-lock-keyword-face
-      (:match ,elixir-ts--kernel-keywords-re @font-lock-keyword-face)))
-
-   :language 'elixir
-   :feature 'elixir-string
-   '([(string) (charlist)] @font-lock-string-face)
 
    :language 'elixir
    :feature 'elixir-sigil
    :override t
    `((sigil
-      (sigil_name) @elixir-ts-font-sigil-name-face
-      (:match "^[^HF]$" @elixir-ts-font-sigil-name-face))
+      (sigil_name) @elixir-ts-sigil-name-face
+      (:match "^[^HF]$" @elixir-ts-sigil-name-face))
      @font-lock-string-face
      (sigil
       (sigil_name) @font-lock-regexp-face
@@ -485,20 +480,23 @@
      @font-lock-regexp-face
      (sigil
       "~" @font-lock-string-face
-      (sigil_name) @elixir-ts-font-sigil-name-face
+      (sigil_name) @elixir-ts-sigil-name-face
       quoted_start: _ @font-lock-string-face
       quoted_end: _ @font-lock-string-face
-      (:match "^[HF]$" @elixir-ts-font-sigil-name-face)))
+      (:match "^[HF]$" @elixir-ts-sigil-name-face)))
 
    :language 'elixir
    :feature 'elixir-function-call
    '((call target: (identifier) @font-lock-function-call-face)
+     (unary_operator operator: "&" @font-lock-operator-face
+                     operand: (binary_operator
+                               left: (identifier)
+                               @font-lock-function-call-face
+                               operator: "/" right: (integer)))
      (call
       target: (dot right: (identifier) @font-lock-function-call-face))
      (unary_operator operator: "&" @font-lock-variable-name-face
-                     operand: (integer) @font-lock-variable-name-face)
-     (unary_operator operator: "&" @font-lock-function-call-face
-                     operand: _))
+                     operand: (integer) @font-lock-variable-name-face))
 
    :language 'elixir
    :feature 'elixir-number
@@ -506,7 +504,14 @@
 
    :language 'elixir
    :feature 'elixir-variable
-   '((identifier) @font-lock-variable-name-face))
+   '((identifier) @font-lock-variable-name-face)
+
+  :language 'elixir
+  :feature 'elixir-builtin
+  :override t
+  `(((identifier) @font-lock-builtin-face
+    (:match ,elixir-ts--builtin-keywords-re
+            @font-lock-builtin-face))))
 
   "Tree-sitter font-lock settings.")
 
@@ -678,10 +683,14 @@ Return nil if NODE is not a defun node or doesn't have a name."
     ;; Font-lock.
     (setq-local treesit-font-lock-settings elixir-ts--font-lock-settings)
     (setq-local treesit-font-lock-feature-list
-                '(( elixir-comment elixir-constant elixir-doc )
-                  ( elixir-string elixir-keyword elixir-unary-operator
-                    elixir-call elixir-operator )
-                  ( elixir-sigil elixir-string-escape elixir-string-interpolation)))
+                  '(( elixir-comment elixir-constant elixir-doc elixir-function-name
+                      heex-comment heex-keyword heex-doctype )
+                    ( elixir-string elixir-keyword elixir-data-type
+                      heex-component heex-tag heex-attribute heex-string)
+                    ( elixir-sigil elixir-number elixir-operator elixir-variable
+                      elixir-function-call elixir-builtin)
+                    ( elixir-string-escape
+                      elixir-string-interpolation )))
 
     ;; Imenu.
     (setq-local treesit-simple-imenu-settings
@@ -718,8 +727,7 @@ Return nil if NODE is not a defun node or doesn't have a name."
                     ( elixir-string elixir-keyword elixir-data-type
                       heex-component heex-tag heex-attribute heex-string)
                     ( elixir-sigil elixir-number elixir-operator elixir-variable
-                      elixir-function-call)
-                    ( elixir-string-escape
+                      elixir-function-call elixir-builtin elixir-string-escape
                       elixir-string-interpolation ))))
 
     (treesit-major-mode-setup)
