@@ -344,7 +344,7 @@
                   (treesit-node-start
                    (treesit-node-parent
                     (treesit-node-at (point) 'elixir))))
-                  0)))))
+                0)))))
 
 (defvar elixir-ts--font-lock-settings
   (treesit-font-lock-rules
@@ -397,6 +397,15 @@
                   (arguments ((identifier)) @font-lock-variable-use-face)))))
 
    :language 'elixir
+   :feature 'elixir-string
+   '((interpolation
+      "#{" @font-lock-escape-face
+      "}" @font-lock-escape-face)
+     (string (quoted_content) @font-lock-string-face)
+     (charlist (quoted_content) @font-lock-string-face)
+     ["\"" "'"] @font-lock-string-face)
+
+   :language 'elixir
    :feature 'elixir-doc
    `((unary_operator
       operator: "@" @elixir-ts-comment-doc-attribute-face
@@ -424,21 +433,24 @@
       (:match ,elixir-ts--doc-keywords-re
               @elixir-ts-comment-doc-identifier-face)))
 
-  :language 'elixir
-  :feature 'elixir-string
-  '((string
-     [
-      (interpolation
-       "#{" @font-lock-escape-face
-       "}" @font-lock-escape-face)])
-    (charlist
-     [
-      (interpolation
-       "#{" @font-lock-escape-face
-       "}" @font-lock-escape-face)])
-    (string (quoted_content) @font-lock-string-face)
-    (charlist (quoted_content) @font-lock-string-face)
-    ["\"" "'"] @font-lock-string-face)
+   :language 'elixir
+   :feature 'elixir-sigil
+   `((sigil
+      (sigil_name) @elixir-ts-sigil-name-face
+      (quoted_content) @font-lock-string-face
+      ;; HEEx and Surface templates will handled by
+      ;; heex-ts-mode if its available.
+      (:match "^[^HF]$" @elixir-ts-sigil-name-face))
+     @font-lock-string-face
+     (sigil
+      (sigil_name) @font-lock-regexp-face
+      (:match "^[rR]$" @font-lock-regexp-face))
+     @font-lock-regexp-face
+     (sigil
+      "~" @font-lock-string-face
+      (sigil_name) @font-lock-string-face
+      quoted_start: _ @font-lock-string-face
+      quoted_end: _ @font-lock-string-face))
 
    :language 'elixir
    :feature 'elixir-operator
@@ -480,24 +492,6 @@
       (:match ,elixir-ts--kernel-keywords-re @font-lock-keyword-face)))
 
    :language 'elixir
-   :feature 'elixir-sigil
-   :override t
-   `((sigil
-      (sigil_name) @elixir-ts-sigil-name-face
-      (:match "^[^HF]$" @elixir-ts-sigil-name-face))
-     @font-lock-string-face
-     (sigil
-      (sigil_name) @font-lock-regexp-face
-      (:match "^[rR]$" @font-lock-regexp-face))
-     @font-lock-regexp-face
-     (sigil
-      "~" @font-lock-string-face
-      (sigil_name) @elixir-ts-sigil-name-face
-      quoted_start: _ @font-lock-string-face
-      quoted_end: _ @font-lock-string-face
-      (:match "^[HF]$" @elixir-ts-sigil-name-face)))
-
-   :language 'elixir
    :feature 'elixir-function-call
    '((call target: (identifier) @font-lock-function-call-face)
      (unary_operator operator: "&" @font-lock-operator-face
@@ -523,12 +517,12 @@
    :feature 'elixir-variable
    '((identifier) @font-lock-variable-name-face)
 
-  :language 'elixir
-  :feature 'elixir-builtin
-  :override t
-  `(((identifier) @font-lock-builtin-face
-    (:match ,elixir-ts--builtin-keywords-re
-            @font-lock-builtin-face))))
+   :language 'elixir
+   :feature 'elixir-builtin
+   :override t
+   `(((identifier) @font-lock-builtin-face
+      (:match ,elixir-ts--builtin-keywords-re
+              @font-lock-builtin-face))))
 
   "Tree-sitter font-lock settings.")
 
@@ -747,10 +741,10 @@ Return nil if NODE is not a defun node or doesn't have a name."
 
 ;;;###autoload
 (progn
-      (add-to-list 'auto-mode-alist '("\\.elixir\\'" . elixir-ts-mode))
-      (add-to-list 'auto-mode-alist '("\\.ex\\'" . elixir-ts-mode))
-      (add-to-list 'auto-mode-alist '("\\.exs\\'" . elixir-ts-mode))
-      (add-to-list 'auto-mode-alist '("mix\\.lock" . elixir-ts-mode)))
+  (add-to-list 'auto-mode-alist '("\\.elixir\\'" . elixir-ts-mode))
+  (add-to-list 'auto-mode-alist '("\\.ex\\'" . elixir-ts-mode))
+  (add-to-list 'auto-mode-alist '("\\.exs\\'" . elixir-ts-mode))
+  (add-to-list 'auto-mode-alist '("mix\\.lock" . elixir-ts-mode)))
 
 (provide 'elixir-ts-mode)
 
