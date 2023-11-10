@@ -507,6 +507,24 @@
    '((identifier) @font-lock-variable-name-face)
 
   :language 'elixir
+  :feature 'elixir-string-escape
+  :override t
+  `((escape_sequence) @font-lock-escape-face)
+
+  :language 'elixir
+  :feature 'elixir-string-interpolation
+  '((string
+     [
+      (interpolation
+       "#{" @font-lock-escape-face
+       "}" @font-lock-escape-face)])
+    (charlist
+     [
+      (interpolation
+       "#{" @font-lock-escape-face
+       "}" @font-lock-escape-face)]))
+
+  :language 'elixir
   :feature 'elixir-builtin
   :override t
   `(((identifier) @font-lock-builtin-face
@@ -688,8 +706,7 @@ Return nil if NODE is not a defun node or doesn't have a name."
                     ( elixir-string elixir-keyword elixir-data-type
                       heex-component heex-tag heex-attribute heex-string)
                     ( elixir-sigil elixir-number elixir-operator elixir-variable
-                      elixir-function-call elixir-builtin)
-                    ( elixir-string-escape
+                      elixir-function-call elixir-builtin elixir-string-escape
                       elixir-string-interpolation )))
 
     ;; Imenu.
