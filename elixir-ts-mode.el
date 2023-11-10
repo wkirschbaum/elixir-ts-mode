@@ -74,39 +74,48 @@
 
 (defface elixir-ts-font-comment-doc-identifier-face
   '((t (:inherit font-lock-doc-face)))
-  "Face used for doc identifiers in Elixir files.")
+  "Face used for doc identifiers in Elixir files."
+  :group 'elixir-ts)
 
 (defface elixir-ts-font-comment-doc-attribute-face
   '((t (:inherit font-lock-doc-face)))
-  "Face used for doc attributes in Elixir files.")
+  "Face used for doc attributes in Elixir files."
+  :group 'elixir-ts)
 
 (defface elixir-ts-font-sigil-name-face
   '((t (:inherit font-lock-string-face)))
-  "Face used for sigils in Elixir files.")
+  "Face used for sigils in Elixir files."
+  :group 'elixir-ts)
 
 (defface elixir-ts-comment-doc-identifier-face
   '((t (:inherit elixir-ts-font-comment-doc-identifier-face)))
-  "Face used for doc identifiers in Elixir files.")
+  "Face used for doc identifiers in Elixir files."
+  :group 'elixir-ts)
 
 (defface elixir-ts-comment-doc-attribute-face
   '((t (:inherit elixir-ts-font-comment-doc-attribute-face)))
-  "Face used for doc attributes in Elixir files.")
+  "Face used for doc attributes in Elixir files."
+  :group 'elixir-ts)
 
 (defface elixir-ts-sigil-name-face
   '((t (:inherit elixir-ts-font-sigil-name-face)))
-  "Face used for sigils in Elixir files.")
+  "Face used for sigils in Elixir files."
+  :group 'elixir-ts)
 
 (defface elixir-ts-atom-face
   '((t (:inherit font-lock-constant-face)))
-  "Face used for atoms in Elixir files.")
+  "Face used for atoms in Elixir files."
+  :group 'elixir-ts)
 
 (defface elixir-ts-keyword-key-face
   '((t (:inherit elixir-ts-atom-face)))
-  "Face used for keyword keys in Elixir files.")
+  "Face used for keyword keys in Elixir files."
+  :group 'elixir-ts)
 
 (defface elixir-ts-attribute-face
   '((t (:inherit font-lock-preprocessor-face)))
-  "Face used for attributes in Elixir files.")
+  "Face used for attributes in Elixir files."
+  :group 'elixir-ts)
 
 (defconst elixir-ts--sexp-regexp
   (rx bol
