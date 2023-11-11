@@ -411,6 +411,7 @@
       "#{" @font-lock-escape-face
       "}" @font-lock-escape-face)
      (string (quoted_content) @font-lock-string-face)
+     (quoted_keyword (quoted_content) @font-lock-string-face)
      (charlist (quoted_content) @font-lock-string-face)
      ["\"" "'"] @font-lock-string-face)
 
