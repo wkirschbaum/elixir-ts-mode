@@ -67,25 +67,39 @@
 
 (defcustom elixir-ts-indent-offset 2
   "Indentation of Elixir statements."
-  :version "29.1"
   :type 'integer
   :safe 'integerp
   :group 'elixir-ts)
 
 (defface elixir-ts-font-comment-doc-identifier-face
   '((t (:inherit font-lock-doc-face)))
-  "Face used for doc identifiers in Elixir files."
+  "Face used for doc identifiers in Elixir files.
+
+This variable is obsolete.  Use elixir-ts-comment-doc-identifier-face."
   :group 'elixir-ts)
+(make-obsolete-variable 'elixir-ts-font-comment-doc-identifier-face
+                        'elixir-ts-comment-doc-identifier-face
+                        "1.4")
 
 (defface elixir-ts-font-comment-doc-attribute-face
   '((t (:inherit font-lock-doc-face)))
-  "Face used for doc attributes in Elixir files."
+  "Face used for doc attributes in Elixir files.
+
+This variable is obsolete.  Use elixir-ts-comment-doc-identifier-face instead."
   :group 'elixir-ts)
+(make-obsolete-variable 'elixir-ts-font-comment-doc-attribute-face
+                        'elixir-ts-comment-doc-identifier-face
+                        "1.4")
 
 (defface elixir-ts-font-sigil-name-face
   '((t (:inherit font-lock-string-face)))
-  "Face used for sigils in Elixir files."
+  "Face used for sigils in Elixir files.
+
+This variable is obsolete.  Use elixir-ts-sigil-name-face instead."
   :group 'elixir-ts)
+(make-obsolete-variable 'elixir-ts-font-sigil-name-face
+                        'elixir-ts-sigil-name-face
+                        "1.4")
 
 (defface elixir-ts-comment-doc-identifier-face
   '((t (:inherit elixir-ts-font-comment-doc-identifier-face)))
