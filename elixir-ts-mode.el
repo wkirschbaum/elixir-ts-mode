@@ -725,7 +725,7 @@ Return nil if NODE is not a defun node or doesn't have a name."
     ;; Font-lock.
     (setq-local treesit-font-lock-settings elixir-ts--font-lock-settings)
     (setq-local treesit-font-lock-feature-list
-                '(( elixir-comment elixir-constant elixir-doc elixir-function-name)
+                '(( elixir-comment elixir-doc elixir-function-name)
                   ( elixir-string elixir-keyword elixir-data-type)
                   ( elixir-sigil elixir-number elixir-operator elixir-variable
                     elixir-function-call elixir-builtin elixir-string-escape)))
@@ -760,7 +760,7 @@ Return nil if NODE is not a defun node or doesn't have a name."
                           heex-ts--indent-rules))
 
       (setq-local treesit-font-lock-feature-list
-                  '(( elixir-comment elixir-constant elixir-doc elixir-function-name
+                  '(( elixir-comment elixir-doc elixir-function-name
                       heex-comment heex-keyword heex-doctype )
                     ( elixir-string elixir-keyword elixir-data-type
                       heex-component heex-tag heex-attribute heex-string)
