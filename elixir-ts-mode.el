@@ -426,16 +426,6 @@ This variable is obsolete.  Use elixir-ts-sigil-name-face instead."
                   (arguments ((identifier)) @font-lock-variable-use-face)))))
 
    :language 'elixir
-   :feature 'elixir-string
-   '((interpolation
-      "#{" @font-lock-escape-face
-      "}" @font-lock-escape-face)
-     (string (quoted_content) @font-lock-string-face)
-     (quoted_keyword (quoted_content) @font-lock-string-face)
-     (charlist (quoted_content) @font-lock-string-face)
-     ["\"" "'" "\"\"\""] @font-lock-string-face)
-
-   :language 'elixir
    :feature 'elixir-doc
    `((unary_operator
       operator: "@" @elixir-ts-comment-doc-attribute-face
@@ -462,6 +452,16 @@ This variable is obsolete.  Use elixir-ts-sigil-name-face instead."
                 target: (identifier) @elixir-ts-comment-doc-identifier-face)
       (:match ,elixir-ts--doc-keywords-re
               @elixir-ts-comment-doc-identifier-face)))
+
+   :language 'elixir
+   :feature 'elixir-string
+   '((interpolation
+      "#{" @font-lock-escape-face
+      "}" @font-lock-escape-face)
+     (string (quoted_content) @font-lock-string-face)
+     (quoted_keyword (quoted_content) @font-lock-string-face)
+     (charlist (quoted_content) @font-lock-string-face)
+     ["\"" "'" "\"\"\""] @font-lock-string-face)
 
    :language 'elixir
    :feature 'elixir-sigil
