@@ -72,10 +72,11 @@
   :group 'elixir-ts)
 
 (defcustom elixir-ts-mode-hook nil
-  "Hook called by `elixir-ts-mode'."
+  "Hook run after entering `elixir-ts-mode'."
   :type 'hook
   :options '(eglot-ensure)
-  :group 'elixir-ts)
+  :group 'elixir-ts
+  :version "1.4")
 
 (defface elixir-ts-font-comment-doc-identifier-face
   '((t (:inherit font-lock-doc-face)))
