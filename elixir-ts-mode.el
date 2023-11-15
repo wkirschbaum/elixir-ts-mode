@@ -677,6 +677,12 @@ Return nil if NODE is not a defun node or doesn't have a name."
     (save-excursion
       (newline 1 t))))
 
+(defcustom elixir-ts-mode-hook '()
+  "Hook run after entering Elixir mode."
+  :group 'elixir-ts
+  :type 'hook
+  :options (list #'eglot-ensure))
+
 ;;;###autoload
 (define-derived-mode elixir-ts-mode prog-mode "Elixir"
   "Major mode for editing Elixir, powered by tree-sitter."
