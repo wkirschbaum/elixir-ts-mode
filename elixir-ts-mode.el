@@ -71,6 +71,12 @@
   :safe 'integerp
   :group 'elixir-ts)
 
+(defcustom elixir-ts-mode-hook nil
+  "Hook called by `elixir-ts-mode'."
+  :type 'hook
+  :options '(eglot-ensure)
+  :group 'elixir-ts)
+
 (defface elixir-ts-font-comment-doc-identifier-face
   '((t (:inherit font-lock-doc-face)))
   "Face used for doc identifiers in Elixir files.
@@ -676,12 +682,6 @@ Return nil if NODE is not a defun node or doesn't have a name."
       (insert (make-string 2 last-command-event)))
     (save-excursion
       (newline 1 t))))
-
-(defcustom elixir-ts-mode-hook '()
-  "Hook run after entering Elixir mode."
-  :group 'elixir-ts
-  :type 'hook
-  :options (list #'eglot-ensure))
 
 ;;;###autoload
 (define-derived-mode elixir-ts-mode prog-mode "Elixir"
