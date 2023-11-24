@@ -379,12 +379,6 @@ This variable is obsolete.  Use elixir-ts-sigil-name-face instead."
 (defvar elixir-ts--font-lock-settings
   (treesit-font-lock-rules
    :language 'elixir
-   :feature 'elixir-comment
-   '((comment) @font-lock-comment-face
-     ((identifier) @font-lock-comment-face
-      (:match "^_" @font-lock-comment-face)))
-
-   :language 'elixir
    :feature 'elixir-function-name
    `((call target: (identifier) @target-identifier
            (arguments (identifier) @font-lock-function-name-face)
@@ -413,6 +407,14 @@ This variable is obsolete.  Use elixir-ts-sigil-name-face instead."
              left: (call target: (identifier) @font-lock-function-name-face)))
            (do_block)
            (:match ,elixir-ts--definition-keywords-re @target-identifier)))
+
+   ;; A function definition like 'def _foo' is valid, but we should
+   ;; not apply the comment-face unless its a non-function identifier.
+   :language 'elixir
+   :feature 'elixir-comment
+   '((comment) @font-lock-comment-face
+     ((identifier) @font-lock-comment-face
+      (:match "^_" @font-lock-comment-face)))
 
    :language 'elixir
    :feature 'elixir-function-call
