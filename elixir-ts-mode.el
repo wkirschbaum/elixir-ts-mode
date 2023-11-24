@@ -3,7 +3,7 @@
 ;; Copyright (C) 2022, 2023 Wilhelm H Kirschbaum
 
 ;; Author           : Wilhelm H Kirschbaum
-;; Version          : 1.4
+;; Version          : 1.5
 ;; URL              : https://github.com/wkirschbaum/elixir-ts-mode
 ;; Package-Requires : ((emacs "29.1") (heex-ts-mode "1.3"))
 ;; Created          : November 2022
@@ -112,9 +112,25 @@ This variable is obsolete.  Use elixir-ts-sigil-name-face instead."
   '((t (:inherit elixir-ts-font-comment-doc-identifier-face)))
   "Face used for doc identifiers in Elixir files."
   :group 'elixir-ts)
+(make-obsolete-variable 'elixir-ts-comment-doc-identifier-face
+                        'elixir-ts-font-sigil-name
+                        "1.5")
+
+(defface elixir-ts-comment-doc-identifier
+  '((t (:inherit elixir-ts-comment-doc-identifier-face)))
+  "Face used for doc identifiers in Elixir files."
+  :group 'elixir-ts)
 
 (defface elixir-ts-comment-doc-attribute-face
   '((t (:inherit elixir-ts-font-comment-doc-attribute-face)))
+  "Face used for doc attributes in Elixir files."
+  :group 'elixir-ts)
+(make-obsolete-variable 'elixir-ts-comment-doc-attribute-face
+                        'elixir-ts-comment-doc-attribute
+                        "1.5")
+
+(defface elixir-ts-comment-doc-attribute
+  '((t (:inherit elixir-ts-comment-doc-attribute-face)))
   "Face used for doc attributes in Elixir files."
   :group 'elixir-ts)
 
@@ -122,9 +138,25 @@ This variable is obsolete.  Use elixir-ts-sigil-name-face instead."
   '((t (:inherit elixir-ts-font-sigil-name-face)))
   "Face used for sigils in Elixir files."
   :group 'elixir-ts)
+(make-obsolete-variable 'elixir-ts-sigil-name-face
+                        'elixir-ts-sigil-name
+                        "1.5")
+
+(defface elixir-ts-sigil-name
+  '((t (:inherit elixir-ts-sigil-name-face)))
+  "Face used for sigils in Elixir files."
+  :group 'elixir-ts)
 
 (defface elixir-ts-atom-face
   '((t (:inherit font-lock-constant-face)))
+  "Face used for atoms in Elixir files."
+  :group 'elixir-ts)
+(make-obsolete-variable 'elixir-ts-atom-face
+                        'elixir-ts-atom
+                        "1.5")
+
+(defface elixir-ts-atom
+  '((t (:inherit elixir-ts-atom-face)))
   "Face used for atoms in Elixir files."
   :group 'elixir-ts)
 
@@ -132,9 +164,25 @@ This variable is obsolete.  Use elixir-ts-sigil-name-face instead."
   '((t (:inherit elixir-ts-atom-face)))
   "Face used for keyword keys in Elixir files."
   :group 'elixir-ts)
+(make-obsolete-variable 'elixir-ts-keyword-key-face
+                        'elixir-ts-keyword-key
+                        "1.5")
+
+(defface elixir-ts-keyword-key
+  '((t (:inherit elixir-ts-keyword-key-face)))
+  "Face used for keyword keys in Elixir files."
+  :group 'elixir-ts)
 
 (defface elixir-ts-attribute-face
   '((t (:inherit font-lock-preprocessor-face)))
+  "Face used for attributes in Elixir files."
+  :group 'elixir-ts)
+(make-obsolete-variable 'elixir-ts-attribute-face
+                        'elixir-ts-attribute
+                        "1.5")
+
+(defface elixir-ts-attribute
+  '((t (:inherit elixir-ts-attribute-face)))
   "Face used for attributes in Elixir files."
   :group 'elixir-ts)
 
@@ -432,9 +480,9 @@ This variable is obsolete.  Use elixir-ts-sigil-name-face instead."
    :language 'elixir
    :feature 'elixir-doc
    `((unary_operator
-      operator: "@" @elixir-ts-comment-doc-attribute-face
+      operator: "@" @elixir-ts-comment-doc-attribute
       operand: (call
-                target: (identifier) @elixir-ts-comment-doc-identifier-face
+                target: (identifier) @elixir-ts-comment-doc-identifier
                 ;; Arguments can be optional, so adding another
                 ;; entry without arguments.
                 ;; If we don't handle then we don't apply font
@@ -449,13 +497,13 @@ This variable is obsolete.  Use elixir-ts-sigil-name-face instead."
                   (keywords) @font-lock-doc-face
                   ]))
       (:match ,elixir-ts--doc-keywords-re
-              @elixir-ts-comment-doc-identifier-face))
+              @elixir-ts-comment-doc-identifier))
      (unary_operator
-      operator: "@" @elixir-ts-comment-doc-attribute-face
+      operator: "@" @elixir-ts-comment-doc-attribute
       operand: (call
-                target: (identifier) @elixir-ts-comment-doc-identifier-face)
+                target: (identifier) @elixir-ts-comment-doc-identifier)
       (:match ,elixir-ts--doc-keywords-re
-              @elixir-ts-comment-doc-identifier-face)))
+              @elixir-ts-comment-doc-identifier)))
 
    :language 'elixir
    :feature 'elixir-string
@@ -470,11 +518,11 @@ This variable is obsolete.  Use elixir-ts-sigil-name-face instead."
    :language 'elixir
    :feature 'elixir-sigil
    `((sigil
-      (sigil_name) @elixir-ts-sigil-name-face
+      (sigil_name) @elixir-ts-sigil-name
       (quoted_content) @font-lock-string-face
       ;; HEEx and Surface templates will handled by
       ;; heex-ts-mode if its available.
-      (:match "^[^HF]$" @elixir-ts-sigil-name-face))
+      (:match "^[^HF]$" @elixir-ts-sigil-name))
      @font-lock-string-face
      (sigil
       (sigil_name) @font-lock-regexp-face
@@ -496,17 +544,17 @@ This variable is obsolete.  Use elixir-ts-sigil-name-face instead."
    :language 'elixir
    :feature 'elixir-data-type
    '((alias) @font-lock-type-face
-     (atom) @elixir-ts-atom-face
-     (keywords (pair key: (keyword) @elixir-ts-keyword-key-face))
-     [(keyword) (quoted_keyword)] @elixir-ts-atom-face
-     [(boolean) (nil)] @elixir-ts-atom-face
-     (unary_operator operator: "@" @elixir-ts-attribute-face
+     (atom) @elixir-ts-atom
+     (keywords (pair key: (keyword) @elixir-ts-keyword-key))
+     [(keyword) (quoted_keyword)] @elixir-ts-atom
+     [(boolean) (nil)] @elixir-ts-atom
+     (unary_operator operator: "@" @elixir-ts-attribute
                      operand: [
-                               (identifier) @elixir-ts-attribute-face
+                               (identifier) @elixir-ts-attribute
                                (call target: (identifier)
-                                     @elixir-ts-attribute-face)
-                               (boolean) @elixir-ts-attribute-face
-                               (nil) @elixir-ts-attribute-face
+                                     @elixir-ts-attribute)
+                               (boolean) @elixir-ts-attribute
+                               (nil) @elixir-ts-attribute
                                ])
      (operator_identifier) @font-lock-operator-face)
 
