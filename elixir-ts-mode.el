@@ -408,8 +408,9 @@ This variable is obsolete.  Use elixir-ts-sigil-name-face instead."
            (do_block)
            (:match ,elixir-ts--definition-keywords-re @target-identifier)))
 
-   ;; A function definition like 'def _foo' is valid, but we should
-   ;; not apply the comment-face unless its a non-function identifier.
+   ;; A function definition like "def _foo" is valid, but we should
+   ;; not apply the comment-face unless its a non-function identifier, so
+   ;; the comment matches has to be after the function matches.
    :language 'elixir
    :feature 'elixir-comment
    '((comment) @font-lock-comment-face
