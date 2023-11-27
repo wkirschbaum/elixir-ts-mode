@@ -454,7 +454,12 @@ This variable is obsolete.  Use elixir-ts-sigil-name-face instead."
             (binary_operator
              left: (call target: (identifier) @font-lock-function-name-face)))
            (do_block)
-           (:match ,elixir-ts--definition-keywords-re @target-identifier)))
+           (:match ,elixir-ts--definition-keywords-re @target-identifier))
+     (unary_operator
+      operator: "@"
+      (call (arguments
+             (binary_operator
+              left: (call target: (identifier) @font-lock-function-name-face))))))
 
    ;; A function definition like "def _foo" is valid, but we should
    ;; not apply the comment-face unless its a non-function identifier, so
@@ -463,10 +468,10 @@ This variable is obsolete.  Use elixir-ts-sigil-name-face instead."
    :feature 'elixir-comment
    '((comment) @font-lock-comment-face
      ((identifier) @font-lock-comment-face
-      (:match "^_" @font-lock-comment-face)))
+      (:match "^_[a-z]\\|^_$" @font-lock-comment-face)))
 
    :language 'elixir
-   :feature 'elixir-function-call
+   :feature 'elixir-variable
    `((call target: (identifier)
            (arguments
             (binary_operator
@@ -475,7 +480,8 @@ This variable is obsolete.  Use elixir-ts-sigil-name-face instead."
      (call target: (identifier)
            (arguments
             (call target: (identifier)
-                  (arguments ((identifier)) @font-lock-variable-use-face)))))
+                  (arguments ((identifier)) @font-lock-variable-use-face))))
+     (dot left: (identifier) @font-lock-variable-use-face operator: "." ))
 
    :language 'elixir
    :feature 'elixir-doc
@@ -543,8 +549,7 @@ This variable is obsolete.  Use elixir-ts-sigil-name-face instead."
 
    :language 'elixir
    :feature 'elixir-data-type
-   '((alias) @font-lock-type-face
-     (atom) @elixir-ts-atom
+   '([(atom) (alias)] @font-lock-type-face
      (keywords (pair key: (keyword) @elixir-ts-keyword-key))
      [(keyword) (quoted_keyword)] @elixir-ts-atom
      [(boolean) (nil)] @elixir-ts-atom
@@ -584,7 +589,9 @@ This variable is obsolete.  Use elixir-ts-sigil-name-face instead."
      (call
       target: (dot right: (identifier) @font-lock-function-call-face))
      (unary_operator operator: "&" @font-lock-variable-name-face
-                     operand: (integer) @font-lock-variable-name-face))
+                     operand: (integer) @font-lock-variable-name-face)
+     (unary_operator operator: "&" @font-lock-operator-face
+                     operand: (list)))
 
    :language 'elixir
    :feature 'elixir-string-escape
@@ -597,7 +604,16 @@ This variable is obsolete.  Use elixir-ts-sigil-name-face instead."
 
    :language 'elixir
    :feature 'elixir-variable
-   '((identifier) @font-lock-variable-name-face)
+   '((binary_operator left: (identifier) @font-lock-variable-name-face)
+     (binary_operator right: (identifier) @font-lock-variable-name-face)
+     (arguments ( (identifier) @font-lock-variable-name-face))
+     (tuple (identifier) @font-lock-variable-name-face)
+     (list (identifier) @font-lock-variable-name-face)
+     (pair value: (identifier) @font-lock-variable-name-face)
+     (body (identifier) @font-lock-variable-name-face)
+     (unary_operator operand: (identifier) @font-lock-variable-name-face)
+     (interpolation (identifier) @font-lock-variable-name-face)
+     (do_block (identifier) @font-lock-variable-name-face))
 
    :language 'elixir
    :feature 'elixir-builtin
@@ -778,8 +794,9 @@ Return nil if NODE is not a defun node or doesn't have a name."
     (setq-local treesit-font-lock-feature-list
                 '(( elixir-comment elixir-doc elixir-function-name)
                   ( elixir-string elixir-keyword elixir-data-type)
-                  ( elixir-sigil elixir-number elixir-operator elixir-variable
-                    elixir-function-call elixir-builtin elixir-string-escape)))
+                  ( elixir-sigil elixir-variable elixir-builtin
+                    elixir-string-escape)
+                  ( elixir-function-call elixir-operator elixir-number )))
 
     ;; Imenu.
     (setq-local treesit-simple-imenu-settings
@@ -814,9 +831,10 @@ Return nil if NODE is not a defun node or doesn't have a name."
                   '(( elixir-comment elixir-doc elixir-function-name
                       heex-comment heex-keyword heex-doctype )
                     ( elixir-string elixir-keyword elixir-data-type
-                      heex-component heex-tag heex-attribute heex-string)
-                    ( elixir-sigil elixir-number elixir-operator elixir-variable
-                      elixir-function-call elixir-builtin elixir-string-escape))))
+                      heex-component heex-tag heex-attribute heex-string )
+                    ( elixir-sigil elixir-variable elixir-builtin
+                      elixir-string-escape)
+                    ( elixir-function-call elixir-operator elixir-number ))))
 
     (treesit-major-mode-setup)
     (setq-local syntax-propertize-function #'elixir-ts--syntax-propertize)))

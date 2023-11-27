@@ -4,6 +4,9 @@
 [![MELPA](https://melpa.org/packages/elixir-ts-mode-badge.svg)](https://melpa.org/#/elixir-ts-mode)
 ![CI](https://github.com/wkirschbaum/elixir-ts-mode/actions/workflows/ci.yml/badge.svg)
 
+This package is a backport from Emacs core for the use with Emacs
+29.1. Please report bugs or submit patches to the Emacs directly: https://www.gnu.org/software/emacs/manual/html_node/emacs/Bugs.html.
+
 For an implementation without tree-sitter support please have a
 look at: https://github.com/elixir-editors/emacs-elixir
 
