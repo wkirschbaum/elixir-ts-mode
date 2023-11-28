@@ -3,7 +3,7 @@
 ;; Copyright (C) 2022, 2023 Wilhelm H Kirschbaum
 
 ;; Author           : Wilhelm H Kirschbaum
-;; Version          : 1.5
+;; Version          : 1.6
 ;; URL              : https://github.com/wkirschbaum/elixir-ts-mode
 ;; Package-Requires : ((emacs "29.1") (heex-ts-mode "1.3"))
 ;; Created          : November 2022
@@ -549,7 +549,8 @@ This variable is obsolete.  Use elixir-ts-sigil-name-face instead."
 
    :language 'elixir
    :feature 'elixir-data-type
-   '([(atom) (alias)] @font-lock-type-face
+   '((alias) @font-lock-type-face
+     (atom) @elixir-ts-atom
      (keywords (pair key: (keyword) @elixir-ts-keyword-key))
      [(keyword) (quoted_keyword)] @elixir-ts-atom
      [(boolean) (nil)] @elixir-ts-atom

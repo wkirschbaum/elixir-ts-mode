@@ -1,5 +1,11 @@
 # Changelog for elixir-ts-mode ( MELPA )
 
+## v1.6
+### 1. Enhancements
+
+### 2. Bug fixes
+  * [font] Apply elixir-ts-atom face to standalone atoms.
+
 ## v1.5
 
 This version will change some font features to only be applied for
