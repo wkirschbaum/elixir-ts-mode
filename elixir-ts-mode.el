@@ -1,6 +1,6 @@
 ;;; elixir-ts-mode.el --- Major mode for Elixir with tree-sitter support -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2022, 2023 Wilhelm H Kirschbaum
+;; Copyright (C) 2022-2024 Wilhelm H Kirschbaum
 
 ;; Author           : Wilhelm H Kirschbaum
 ;; Version          : 1.6
@@ -31,9 +31,10 @@
 
 ;; * Indent
 
-;; elixir-ts-mode tries to replicate the indentation provided by
+;;
+;; `elixir-ts-mode' tries to replicate the indentation provided by
 ;; mix format, but will come with some minor differences.
-
+;;
 ;; * IMenu
 ;; * Navigation
 ;; * Which-fun
@@ -71,6 +72,11 @@
   :safe 'integerp
   :group 'elixir-ts)
 
+;; 'define-derived-mode' doesn't expose the generated mode hook
+;; variable to Custom, because we are not smart enough to provide the
+;; ':options' for hook variables.  Also, some packages modify hook
+;; variables.  The below is done because users of this mode explicitly
+;; requested the hook to be customizable via Custom.
 (defcustom elixir-ts-mode-hook nil
   "Hook run after entering `elixir-ts-mode'."
   :type 'hook
@@ -202,7 +208,10 @@ This variable is obsolete.  Use elixir-ts-sigil-name-face instead."
     "defoverridable" "defp" "defprotocol" "defstruct"))
 
 (defconst elixir-ts--definition-keywords-re
-  (concat "^" (regexp-opt elixir-ts--definition-keywords) "$"))
+  (concat "^" (regexp-opt
+               (append elixir-ts--definition-keywords
+                       elixir-ts--test-definition-keywords))
+          "$"))
 
 (defconst elixir-ts--kernel-keywords
   '("alias" "case" "cond" "else" "for" "if" "import" "quote"
@@ -461,28 +470,6 @@ This variable is obsolete.  Use elixir-ts-sigil-name-face instead."
              (binary_operator
               left: (call target: (identifier) @font-lock-function-name-face))))))
 
-   ;; A function definition like "def _foo" is valid, but we should
-   ;; not apply the comment-face unless its a non-function identifier, so
-   ;; the comment matches has to be after the function matches.
-   :language 'elixir
-   :feature 'elixir-comment
-   '((comment) @font-lock-comment-face
-     ((identifier) @font-lock-comment-face
-      (:match "^_[a-z]\\|^_$" @font-lock-comment-face)))
-
-   :language 'elixir
-   :feature 'elixir-variable
-   `((call target: (identifier)
-           (arguments
-            (binary_operator
-             (call target: (identifier)
-                   (arguments ((identifier) @font-lock-variable-use-face))))))
-     (call target: (identifier)
-           (arguments
-            (call target: (identifier)
-                  (arguments ((identifier)) @font-lock-variable-use-face))))
-     (dot left: (identifier) @font-lock-variable-use-face operator: "." ))
-
    :language 'elixir
    :feature 'elixir-doc
    `((unary_operator
@@ -549,8 +536,7 @@ This variable is obsolete.  Use elixir-ts-sigil-name-face instead."
 
    :language 'elixir
    :feature 'elixir-data-type
-   '((alias) @font-lock-type-face
-     (atom) @elixir-ts-atom
+   '([(atom) (alias)] @font-lock-type-face
      (keywords (pair key: (keyword) @elixir-ts-keyword-key))
      [(keyword) (quoted_keyword)] @elixir-ts-atom
      [(boolean) (nil)] @elixir-ts-atom
@@ -594,6 +580,29 @@ This variable is obsolete.  Use elixir-ts-sigil-name-face instead."
      (unary_operator operator: "&" @font-lock-operator-face
                      operand: (list)))
 
+   ;; A function definition like "def _foo" is valid, but we should
+   ;; not apply the comment-face unless its a non-function identifier, so
+   ;; the comment matches has to be after the function matches.
+   :language 'elixir
+   :feature 'elixir-comment
+   '((comment) @font-lock-comment-face
+     ((identifier) @font-lock-comment-face
+      (:match "^_[a-z]\\|^_$" @font-lock-comment-face)))
+
+
+   :language 'elixir
+   :feature 'elixir-variable
+   `((call target: (identifier)
+           (arguments
+            (binary_operator
+             (call target: (identifier)
+                   (arguments ((identifier) @font-lock-variable-use-face))))))
+     (call target: (identifier)
+           (arguments
+            (call target: (identifier)
+                  (arguments ((identifier)) @font-lock-variable-use-face))))
+     (dot left: (identifier) @font-lock-variable-use-face operator: "." ))
+
    :language 'elixir
    :feature 'elixir-string-escape
    :override t
@@ -614,7 +623,9 @@ This variable is obsolete.  Use elixir-ts-sigil-name-face instead."
      (body (identifier) @font-lock-variable-name-face)
      (unary_operator operand: (identifier) @font-lock-variable-name-face)
      (interpolation (identifier) @font-lock-variable-name-face)
-     (do_block (identifier) @font-lock-variable-name-face))
+     (do_block (identifier) @font-lock-variable-name-face)
+     (access_call target: (identifier) @font-lock-variable-name-face)
+     (access_call "[" key: (identifier) @font-lock-variable-name-face "]"))
 
    :language 'elixir
    :feature 'elixir-builtin
@@ -798,6 +809,7 @@ Return nil if NODE is not a defun node or doesn't have a name."
                   ( elixir-sigil elixir-variable elixir-builtin
                     elixir-string-escape)
                   ( elixir-function-call elixir-operator elixir-number )))
+
 
     ;; Imenu.
     (setq-local treesit-simple-imenu-settings
