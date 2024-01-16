@@ -536,7 +536,8 @@ This variable is obsolete.  Use elixir-ts-sigil-name-face instead."
 
    :language 'elixir
    :feature 'elixir-data-type
-   '([(atom) (alias)] @font-lock-type-face
+   '((alias) @font-lock-type-face
+     (atom) @elixir-ts-atom
      (keywords (pair key: (keyword) @elixir-ts-keyword-key))
      [(keyword) (quoted_keyword)] @elixir-ts-atom
      [(boolean) (nil)] @elixir-ts-atom
