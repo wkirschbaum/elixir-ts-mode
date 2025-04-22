@@ -5,7 +5,7 @@
 ![CI](https://github.com/wkirschbaum/elixir-ts-mode/actions/workflows/ci.yml/badge.svg)
 
 > [!NOTE]  
-> This package is a backport from Emacs core for the use with Emacs 29.1. Please report bugs or submit patches to the Emacs directly: https://www.gnu.org/software/emacs/manual/html_node/emacs/Bugs.html.
+> This package was a backport from Emacs 30.1 for the use with Emacs 29.1 and won't receive any additional updates.
 
 For an implementation without tree-sitter support please have a
 look at: https://github.com/elixir-editors/emacs-elixir
